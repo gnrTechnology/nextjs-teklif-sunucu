@@ -23,14 +23,46 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     If Len(firmaAdi) = 0 Then firmaAdi = "EPRON"
     userAdi = Trim$(GetSetting("ilhan", "Settings", "TBveren", ""))
 
-    ' targetWb, ExecuteDynamicFunction tarafindan cagiran xlam olarak gecirilir.
-    ' Application.Workbooks add-in xlam dosyalarini GORMEZ; bu nedenle
-    ' dogrudan targetWb kullanmak tek guvenilir yontemdir.
-    On Error Resume Next
-    dosyaAdi = targetWb.Name
-    dosyaYolu = targetWb.FullName
-    On Error GoTo 0
-    If Len(dosyaAdi) = 0 Then dosyaAdi = "bilinmiyor.xlam"
+    ' IHLAl TESPİTI - dosyaAdi belirleme stratejisi:
+    '
+    ' 1. ONCELIK: Workbook_Open'in Registry'e yazdigi "startingAddin" anahtari.
+    '    Workbook_Open'da "SaveSetting "ilhan","Settings","startingAddin",ThisWorkbook.FullName"
+    '    satiri olmalidir. Kopya dosya da ayni kodu tasidigi icin otomatik calisir.
+    '    Bu sayede Application.Run hangi zInternet'i bulursa bulsun doğru xlam bilinir.
+    '
+    ' 2. FALLBACK: targetWb.Name (ExecuteDynamicFunction'in pasladigi workbook).
+    '    teklif.xlam aktifken bu her zaman "teklif.xlam" donebilir; bu nedenle
+    '    registry onceliklıdir.
+    Dim startingAddinPath As String
+    startingAddinPath = Trim(GetSetting("ilhan", "Settings", "startingAddin", ""))
+
+    If Len(startingAddinPath) > 0 Then
+        ' Registry'den tam yol alindi → dosya adini cikart
+        Dim sepIdx As Long
+        Dim ci As Long
+        sepIdx = 0
+        For ci = Len(startingAddinPath) To 1 Step -1
+            If Mid(startingAddinPath, ci, 1) = "\" Or Mid(startingAddinPath, ci, 1) = "/" Then
+                sepIdx = ci
+                Exit For
+            End If
+        Next ci
+        dosyaYolu = startingAddinPath
+        If sepIdx > 0 Then
+            dosyaAdi = Mid(startingAddinPath, sepIdx + 1)
+        Else
+            dosyaAdi = startingAddinPath
+        End If
+        Debug.Print "[getLicense] startingAddin registry: " & dosyaAdi
+    Else
+        ' Fallback: targetWb
+        On Error Resume Next
+        dosyaAdi = targetWb.Name
+        dosyaYolu = targetWb.FullName
+        On Error GoTo 0
+        If Len(dosyaAdi) = 0 Then dosyaAdi = "bilinmiyor.xlam"
+        Debug.Print "[getLicense] Fallback targetWb: " & dosyaAdi
+    End If
 
     Debug.Print "[getLicense] firmaAdi: " & firmaAdi
     Debug.Print "[getLicense] userAdi:  " & userAdi
