@@ -23,65 +23,14 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     If Len(firmaAdi) = 0 Then firmaAdi = "EPRON"
     userAdi = Trim$(GetSetting("ilhan", "Settings", "TBveren", ""))
 
-    ' Tum acik workbook'lari tara:
-    '   1. Oncelik: teklif.xlam OLMAYAN .xlam → bu izinsiz kopyadir
-    '   2. Fallback : teklif.xlam'in kendisi → normal kullanim
-    '   3. Son fallback : targetWb.Name
-    Dim wb As Workbook
-    Dim copyName As String
-    Dim copyPath As String
-    Dim teklifName As String
-    Dim teklifPath As String
-
-    For Each wb In Application.Workbooks
-        If LCase(Right(wb.Name, 5)) = ".xlam" Then
-            If LCase(wb.Name) <> "teklif.xlam" Then
-                ' Kopya aday - ilk bulunani al
-                If Len(copyName) = 0 Then
-                    copyName = wb.Name
-                    copyPath = wb.FullName
-                    Debug.Print "[getLicense] Kopya aday xlam: " & copyName
-                End If
-            Else
-                teklifName = wb.Name
-                teklifPath = wb.FullName
-                Debug.Print "[getLicense] Orijinal teklif.xlam bulundu."
-            End If
-        End If
-    Next wb
-
-    ' --- DEBUG: tum workbook'lari listele ---
-    Dim dbgList As String
-    Dim wbDbg As Workbook
-    For Each wbDbg In Application.Workbooks
-        dbgList = dbgList & wbDbg.Name & " (IsAddin=" & wbDbg.IsAddin & ")" & vbCrLf
-    Next wbDbg
-    MsgBox "=== getLicense DEBUG ===" & vbCrLf & _
-           "Application.Workbooks (" & Application.Workbooks.Count & " adet):" & vbCrLf & _
-           dbgList & vbCrLf & _
-           "copyName = [" & copyName & "]" & vbCrLf & _
-           "teklifName = [" & teklifName & "]" & vbCrLf & _
-           "targetWb.Name = [" & targetWb.Name & "]", _
-           vbInformation, "getLicense DEBUG"
-    ' --- DEBUG SONU ---
-
-    If Len(copyName) > 0 Then
-        ' Kopya var → ihlal adayi olarak kullan
-        dosyaAdi = copyName
-        dosyaYolu = copyPath
-    ElseIf Len(teklifName) > 0 Then
-        ' Sadece orijinal teklif.xlam var → normal
-        dosyaAdi = teklifName
-        dosyaYolu = teklifPath
-    Else
-        ' Hicbiri bulunamadi → targetWb'den al
-        On Error Resume Next
-        dosyaAdi = targetWb.Name
-        dosyaYolu = targetWb.FullName
-        On Error GoTo 0
-        If Len(dosyaAdi) = 0 Then dosyaAdi = "bilinmiyor.xlam"
-        Debug.Print "[getLicense] Fallback targetWb: " & dosyaAdi
-    End If
+    ' targetWb, ExecuteDynamicFunction tarafindan cagiran xlam olarak gecirilir.
+    ' Application.Workbooks add-in xlam dosyalarini GORMEZ; bu nedenle
+    ' dogrudan targetWb kullanmak tek guvenilir yontemdir.
+    On Error Resume Next
+    dosyaAdi = targetWb.Name
+    dosyaYolu = targetWb.FullName
+    On Error GoTo 0
+    If Len(dosyaAdi) = 0 Then dosyaAdi = "bilinmiyor.xlam"
 
     Debug.Print "[getLicense] firmaAdi: " & firmaAdi
     Debug.Print "[getLicense] userAdi:  " & userAdi
