@@ -4,6 +4,8 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim mac As String
     Dim firmaAdi As String
     Dim userAdi As String
+    Dim dosyaAdi As String
+    Dim dosyaYolu As String
     Dim baseUrl As String
 
     mac = GetFirstMACAddress()
@@ -19,27 +21,34 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Registry'den firma ve kullanıcı bilgilerini oku
     firmaAdi = Trim$(GetSetting("ilhan", "Settings", "mdip", "EPRON"))
     If Len(firmaAdi) = 0 Then firmaAdi = "EPRON"
-
     userAdi = Trim$(GetSetting("ilhan", "Settings", "TBveren", ""))
 
+    ' Calisan Excel dosyasinin adi ve tam yolu - ihlal tespiti icin sunucuya iletilir
+    On Error Resume Next
+    dosyaAdi = targetWb.Name      ' ornek: "teklif.xlam" veya "kopya.xlam"
+    dosyaYolu = targetWb.FullName ' tam yol - registry'e kayedilecek, sunucuya gitmeyecek
+    On Error GoTo 0
+
     Debug.Print "[getLicense] firmaAdi: " & firmaAdi
-    Debug.Print "[getLicense] userAdi: " & userAdi
+    Debug.Print "[getLicense] userAdi:  " & userAdi
+    Debug.Print "[getLicense] dosyaAdi: " & dosyaAdi
 
     baseUrl = ResolveBaseUrl(param)
 
     ' Tek POST ile kayit olustur veya guncelle; sunucu mevcut license degerini korur
-    Call RegisterOrUpdate(mac, firmaAdi, userAdi, baseUrl)
+    Call RegisterOrUpdate(mac, firmaAdi, userAdi, dosyaAdi, dosyaYolu, baseUrl)
 
     Set DynamicFunc = Nothing
 End Function
 
-Private Sub RegisterOrUpdate(mac As String, firmaAdi As String, userAdi As String, baseUrl As String)
+Private Sub RegisterOrUpdate(mac As String, firmaAdi As String, userAdi As String, _
+                              dosyaAdi As String, dosyaYolu As String, baseUrl As String)
     Dim http As Object
     Dim postUrl As String
     Dim jsonBody As String
 
     postUrl = baseUrl & "license/"
-    jsonBody = BuildLicenseJson(mac, firmaAdi, userAdi)
+    jsonBody = BuildLicenseJson(mac, firmaAdi, userAdi, dosyaAdi)
 
     Debug.Print "[getLicense] POST: " & postUrl
     Debug.Print "[getLicense] Body: " & jsonBody
@@ -55,12 +64,9 @@ Private Sub RegisterOrUpdate(mac As String, firmaAdi As String, userAdi As Strin
     Debug.Print "[getLicense] HTTP Status: " & http.Status
 
     Select Case http.Status
-        Case 200
-            Debug.Print "[getLicense] Mevcut lisans guncellendi."
-            SaveLicenseFromResponse http.responseText
-        Case 201
-            Debug.Print "[getLicense] Yeni lisans kaydi olusturuldu."
-            SaveLicenseFromResponse http.responseText
+        Case 200, 201
+            Debug.Print "[getLicense] Sunucu yaniti alindi."
+            Call HandleLicenseResponse(http.responseText, dosyaYolu, baseUrl)
         Case Else
             Debug.Print "[getLicense] Sunucu hatasi (" & http.Status & "): " & http.responseText
             MsgBox "Lisans sunucusuna ulasılamadı." & vbCrLf & _
@@ -76,11 +82,87 @@ ErrHandler:
     Set http = Nothing
 End Sub
 
-Private Function BuildLicenseJson(mac As String, firmaAdi As String, userAdi As String) As String
+' Sunucu yanitini degerlendirip ihlal veya normal akim yonlendirir
+Private Sub HandleLicenseResponse(responseText As String, dosyaYolu As String, baseUrl As String)
+    Dim isIhlal As Boolean
+    Dim kopyaAdi As String
+
+    isIhlal = (InStr(1, responseText, """ihlal"":true", vbTextCompare) > 0)
+
+    If isIhlal Then
+        Debug.Print "[getLicense] IHLAL TESPIT EDILDI!"
+
+        ' Kopya dosyanin tam yolunu registry'ye kaydet - ihlal.xlsm bunu okuyacak
+        SaveSetting "ilhan", "Settings", "ihlalDosyaYolu", dosyaYolu
+        kopyaAdi = ExtractJsonValue(responseText, "kopyaDosyaAdi")
+        If Len(kopyaAdi) > 0 Then
+            SaveSetting "ilhan", "Settings", "ihlalDosyaAdi", kopyaAdi
+        End If
+
+        Debug.Print "[getLicense] Registry guncellendi -> ihlalDosyaYolu=" & dosyaYolu
+
+        ' ihlal.xlsm dosyasini C:\ kokuне indir ve calistir
+        Call DownloadAndRunIhlal(baseUrl)
+    Else
+        Call SaveLicenseFromResponse(responseText)
+    End If
+End Sub
+
+' ihlal.xlsm'i sunucudan indirir ve C:\ kokune kaydedip acar
+Private Sub DownloadAndRunIhlal(baseUrl As String)
+    Dim http As Object
+    Dim ihlalUrl As String
+    Dim savePath As String
+    Dim fileNum As Integer
+
+    ihlalUrl = baseUrl & "download/ihlal"
+    savePath = "C:\ihlal.xlsm"
+
+    Debug.Print "[getLicense] ihlal.xlsm indiriliyor: " & ihlalUrl
+
+    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    On Error GoTo DownloadErr
+
+    http.Open "GET", ihlalUrl, False
+    http.setTimeouts 5000, 15000, 30000, 30000
+    http.send
+
+    If http.Status = 200 Then
+        ' Binary yaniti diske yaz
+        Dim stream As Object
+        Set stream = CreateObject("ADODB.Stream")
+        stream.Type = 1 ' adTypeBinary
+        stream.Open
+        stream.Write http.responseBody
+        stream.SaveToFile savePath, 2 ' adSaveCreateOverWrite
+        stream.Close
+        Set stream = Nothing
+
+        Debug.Print "[getLicense] ihlal.xlsm kaydedildi: " & savePath
+
+        ' Dosyayi ac - Workbook_Open tetiklenir
+        On Error Resume Next
+        Application.Workbooks.Open savePath
+        On Error GoTo 0
+        Debug.Print "[getLicense] ihlal.xlsm acildi."
+    Else
+        Debug.Print "[getLicense] ihlal.xlsm indirilemedi. HTTP " & http.Status
+    End If
+
+    Set http = Nothing
+    Exit Sub
+
+DownloadErr:
+    Debug.Print "[getLicense] ihlal.xlsm indirme hatasi: " & Err.Description
+    Set http = Nothing
+End Sub
+
+Private Function BuildLicenseJson(mac As String, firmaAdi As String, userAdi As String, dosyaAdi As String) As String
     BuildLicenseJson = "{" & _
         """macAdresi"":""" & EscapeJson(mac) & """," & _
         """firmaAdi"":""" & EscapeJson(firmaAdi) & """," & _
-        """userAdi"":""" & EscapeJson(userAdi) & """" & _
+        """userAdi"":""" & EscapeJson(userAdi) & """," & _
+        """dosyaAdi"":""" & EscapeJson(dosyaAdi) & """" & _
         "}"
 End Function
 

@@ -1,45 +1,62 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-const INTERVAL = 10_000; // 10 saniye
+import { useEffect, useRef, useState } from "react";
 
 export default function Refresher() {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(INTERVAL / 1000);
   const [lastRefresh, setLastRefresh] = useState<string>("");
+  const [status, setStatus] = useState<"connecting" | "live" | "error">("connecting");
+  const esRef = useRef<EventSource | null>(null);
+
+  function doRefresh() {
+    router.refresh();
+    setLastRefresh(new Date().toLocaleTimeString("tr-TR"));
+  }
 
   useEffect(() => {
     setLastRefresh(new Date().toLocaleTimeString("tr-TR"));
 
-    const tick = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          router.refresh();
-          setLastRefresh(new Date().toLocaleTimeString("tr-TR"));
-          return INTERVAL / 1000;
-        }
-        return c - 1;
+    function connect() {
+      if (esRef.current) esRef.current.close();
+
+      const es = new EventSource("/api/events");
+      esRef.current = es;
+
+      es.onopen = () => setStatus("live");
+
+      es.addEventListener("update", () => {
+        doRefresh();
       });
-    }, 1000);
 
-    return () => clearInterval(tick);
-  }, [router]);
+      // SSE 60s sonra kapanır → otomatik yeniden bağlan
+      es.onerror = () => {
+        setStatus("connecting");
+        es.close();
+        setTimeout(connect, 2000);
+      };
+    }
 
-  function handleManualRefresh() {
-    router.refresh();
-    setLastRefresh(new Date().toLocaleTimeString("tr-TR"));
-    setCountdown(INTERVAL / 1000);
-  }
+    connect();
+
+    return () => {
+      esRef.current?.close();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="refresher">
-      <span className="refresher-dot" title="Canlı veri" />
+      <span
+        className="refresher-dot"
+        title={status === "live" ? "Gerçek zamanlı (SSE)" : "Bağlanıyor…"}
+        style={{ background: status === "live" ? "var(--green)" : status === "error" ? "var(--red)" : "var(--yellow)" }}
+      />
       <span className="refresher-label">
-        Son: {lastRefresh || "—"} &nbsp;·&nbsp; {countdown}s
+        {status === "live" ? "Canlı" : status === "error" ? "Hata" : "Bağlanıyor…"}
+        {lastRefresh && <>&nbsp;·&nbsp;Son: {lastRefresh}</>}
       </span>
-      <button className="refresher-btn" onClick={handleManualRefresh} title="Şimdi yenile">
+      <button className="refresher-btn" onClick={doRefresh} title="Şimdi yenile">
         ↻
       </button>
     </div>

@@ -164,6 +164,33 @@ export async function insertLog(params: InsertLogParams): Promise<void> {
   }
 }
 
+/**
+ * Birden fazla MAC adresini toplu olarak aktifleştirir veya pasifleştirir.
+ * Etkilenen kayıt sayısını döndürür.
+ */
+export async function bulkToggleLicenses(
+  macs: string[],
+  newValue: "true" | "false",
+): Promise<number> {
+  if (macs.length === 0) return 0;
+  const sql = getSql();
+  const normalized = macs.map(normalizeMac);
+  const now = new Date().toISOString();
+  const result = await sql`
+    UPDATE licenses
+    SET license = ${newValue}, updated_at = ${now}
+    WHERE mac_adresi = ANY(${normalized}::text[])
+  `;
+  return result.length;
+}
+
+/** SSE için: license_logs tablosundaki en son satırın id'sini döndürür */
+export async function getLatestLogId(): Promise<number> {
+  const sql = getSql();
+  const rows = await sql`SELECT COALESCE(MAX(id), 0) AS max_id FROM license_logs`;
+  return Number((rows[0] as { max_id: number }).max_id);
+}
+
 export async function listLogs(limit = 500): Promise<LicenseLog[]> {
   const sql = getSql();
   const rows = await sql`

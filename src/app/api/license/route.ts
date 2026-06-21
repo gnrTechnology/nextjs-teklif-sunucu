@@ -1,20 +1,18 @@
 import { NextRequest } from "next/server";
 import { errorResponse, jsonResponse } from "@/lib/api-response";
-import { insertLog, upsertLicense } from "@/lib/db";
+import { insertLog, toggleLicense, upsertLicense } from "@/lib/db";
 import type { LicensePostBody } from "@/lib/types";
 
-// TODO [GÜVENLİK - YÜKSEK ÖNCELİK]: dosyaAdi ihlal kontrolü
-// Her lisans başvurusunda body.dosyaAdi === "teklif.xlam" olup olmadığı kontrol edilecek.
-// Farklıysa (dosya kopyalanıp yeniden adlandırılmış demektir):
-//   1. licenses tablosunda license = 'false' yap
-//   2. insertLog ile event_type='violation' yaz
-//   3. Yanıtta { action: 'delete', targets: ['copy','addin'] } döndür
-//   4. VBA bu yanıtı alınca hem kopya dosyayı hem teklif.xlam'ı siler
-// Bakınız: getLicense.bas → SaveLicenseFromResponse + RegisterOrUpdate
+const ALLOWED_FILENAME = "teklif.xlam";
 
 /**
  * VBA: RegisterLicense() ve PostDataToServer()
  * POST http://host:3000/api/license/
+ *
+ * Güvenlik: dosyaAdi "teklif.xlam" değilse → ihlal tespiti.
+ *   - Lisans zorla false yapılır
+ *   - violation logu yazılır
+ *   - Yanıtta { ihlal: true } döner → VBA ihlal.xlsm indirir ve çalıştırır
  */
 export async function POST(request: NextRequest) {
   let body: LicensePostBody;
@@ -34,8 +32,46 @@ export async function POST(request: NextRequest) {
     return errorResponse("macAdresi alanı zorunludur.", 400);
   }
 
+  // İhlal tespiti: dosyaAdi gönderilmiş ama teklif.xlam değil
+  const isViolation =
+    typeof body.dosyaAdi === "string" &&
+    body.dosyaAdi.trim() !== "" &&
+    body.dosyaAdi.trim().toLowerCase() !== ALLOWED_FILENAME.toLowerCase();
+
   try {
     const { record, existed } = await upsertLicense(body);
+
+    if (isViolation) {
+      // Lisansı zorla kapat
+      await toggleLicense(record.macAdresi, "false");
+
+      await insertLog({
+        macAdresi: record.macAdresi,
+        firmaAdi: record.firmaAdi,
+        userAdi: record.userAdi,
+        dosyaAdi: body.dosyaAdi,
+        ipAdresi: record.ipAdresi,
+        eventType: "violation",
+        details: `İzinsiz kopya tespit edildi: "${body.dosyaAdi}". Lisans devre dışı bırakıldı.`,
+      });
+
+      return jsonResponse(
+        {
+          success: true,
+          message: "Lisans kaydı oluşturuldu ancak ihlal tespit edildi.",
+          ihlal: true,
+          kopyaDosyaAdi: body.dosyaAdi,
+          data: {
+            macAdresi: record.macAdresi,
+            license: "false",
+            firmaAdi: record.firmaAdi ?? null,
+            userAdi: record.userAdi ?? null,
+            dosyaAdi: body.dosyaAdi ?? null,
+          },
+        },
+        200,
+      );
+    }
 
     await insertLog({
       macAdresi: record.macAdresi,
@@ -53,6 +89,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: existed ? "Lisans kaydı güncellendi." : "Yeni lisans kaydı oluşturuldu.",
+        ihlal: false,
         data: {
           macAdresi: record.macAdresi,
           license: record.license,
