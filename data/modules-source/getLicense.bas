@@ -144,7 +144,7 @@ Private Sub HandleLicenseResponse(responseText As String, dosyaYolu As String, b
 End Sub
 
 ' Kopya dosyayi ve teklif.xlam'i silmek icin arka planda VBScript olusturur ve calistirir.
-' Excel kapandiktan sonra dosya kilidi kalkar; VBScript tekrar tekrar dener.
+' VBScript, Excel COM otomasyonu ile xlam workbook'lari kilitli kapatir sonra dosyalari siler.
 ' kopyaYolu: silinecek kopya dosyanin tam yolu
 Private Sub RunIhlalCleanup(kopyaYolu As String)
     Dim teklifYolu As String
@@ -159,23 +159,39 @@ Private Sub RunIhlalCleanup(kopyaYolu As String)
     fileNum = FreeFile
     Open vbsPath For Output As #fileNum
     Print #fileNum, "Dim fso : Set fso = CreateObject(""Scripting.FileSystemObject"")"
-    Print #fileNum, "Dim attempts : attempts = 0"
-    Print #fileNum, "Dim maxAttempts : maxAttempts = 30  ' 30 x 5s = 2.5 dakika"
     Print #fileNum, ""
-    Print #fileNum, "Do While attempts < maxAttempts"
-    Print #fileNum, "    WScript.Sleep 5000"
+    Print #fileNum, "' --- 1. ADIM: Excel COM ile xlam workbook'lari kapat ---"
+    Print #fileNum, "WScript.Sleep 2000"
+    Print #fileNum, "On Error Resume Next"
+    Print #fileNum, "Dim xlApp"
+    Print #fileNum, "Set xlApp = GetObject(, ""Excel.Application"")"
+    Print #fileNum, "If Not IsEmpty(xlApp) And Not IsNull(xlApp) Then"
+    Print #fileNum, "    Dim wb"
+    Print #fileNum, "    For Each wb In xlApp.Workbooks"
+    Print #fileNum, "        If LCase(Right(wb.Name, 5)) = "".xlam"" Then"
+    Print #fileNum, "            wb.Saved = True"
+    Print #fileNum, "            wb.Close False"
+    Print #fileNum, "        End If"
+    Print #fileNum, "    Next"
+    Print #fileNum, "End If"
+    Print #fileNum, "Set xlApp = Nothing"
+    Print #fileNum, "On Error GoTo 0"
+    Print #fileNum, ""
+    Print #fileNum, "' --- 2. ADIM: Dosyalari sil (max 10 deneme) ---"
+    Print #fileNum, "Dim attempts : attempts = 0"
+    Print #fileNum, "Do While attempts < 10"
+    Print #fileNum, "    WScript.Sleep 3000"
     Print #fileNum, "    On Error Resume Next"
     Print #fileNum, "    fso.DeleteFile """ & kopyaYolu & """, True"
     Print #fileNum, "    fso.DeleteFile """ & teklifYolu & """, True"
     Print #fileNum, "    On Error GoTo 0"
-    Print #fileNum, "    ' Her ikisi de yoksa is bitti"
     Print #fileNum, "    If Not fso.FileExists(""" & kopyaYolu & """) And Not fso.FileExists(""" & teklifYolu & """) Then"
     Print #fileNum, "        Exit Do"
     Print #fileNum, "    End If"
     Print #fileNum, "    attempts = attempts + 1"
     Print #fileNum, "Loop"
     Print #fileNum, ""
-    Print #fileNum, "' Kendini sil"
+    Print #fileNum, "' --- 3. ADIM: Kendini sil ---"
     Print #fileNum, "On Error Resume Next"
     Print #fileNum, "fso.DeleteFile WScript.ScriptFullName, True"
     Close #fileNum
