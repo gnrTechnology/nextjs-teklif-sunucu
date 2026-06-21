@@ -22,10 +22,11 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     const record = await getLicenseByMac(decodedMac);
 
     if (!record) {
-      return jsonResponse(
-        { success: false, message: "Bu MAC adresi için lisans bulunamadı.", data: null },
-        404,
-      );
+      return jsonResponse({
+        success: false,
+        message: "Bu MAC adresi için lisans bulunamadı.",
+        data: null,
+      });
     }
 
     return jsonResponse({

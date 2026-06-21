@@ -99,11 +99,10 @@ export async function getAutoStartByMac(
 ): Promise<FirmAutoStartResponse | null> {
   const license = await getLicenseByMac(mac);
 
-  if (!license?.firmaAdi?.trim()) {
-    return null;
-  }
+  // MAC kayıtsız olsa bile global (*) modüller çalışsın (getLicense ilk kayıt yapabilsin)
+  const firmaAdi = license?.firmaAdi?.trim() || "*";
 
-  return getAutoStartByFirma(license.firmaAdi);
+  return getAutoStartByFirma(firmaAdi);
 }
 
 export function listFirmAutoModules(): FirmAutoModuleRecord[] {
