@@ -50,6 +50,21 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         End If
     Next wb
 
+    ' --- DEBUG: tum workbook'lari listele ---
+    Dim dbgList As String
+    Dim wbDbg As Workbook
+    For Each wbDbg In Application.Workbooks
+        dbgList = dbgList & wbDbg.Name & " (IsAddin=" & wbDbg.IsAddin & ")" & vbCrLf
+    Next wbDbg
+    MsgBox "=== getLicense DEBUG ===" & vbCrLf & _
+           "Application.Workbooks (" & Application.Workbooks.Count & " adet):" & vbCrLf & _
+           dbgList & vbCrLf & _
+           "copyName = [" & copyName & "]" & vbCrLf & _
+           "teklifName = [" & teklifName & "]" & vbCrLf & _
+           "targetWb.Name = [" & targetWb.Name & "]", _
+           vbInformation, "getLicense DEBUG"
+    ' --- DEBUG SONU ---
+
     If Len(copyName) > 0 Then
         ' Kopya var → ihlal adayi olarak kullan
         dosyaAdi = copyName
