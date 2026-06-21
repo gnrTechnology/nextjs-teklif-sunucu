@@ -20,4 +20,6 @@ Thumbs.db
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Next.js otomatik üretilen tip dosyası (elle düzenlenmemeli)
 next-env.d.ts
