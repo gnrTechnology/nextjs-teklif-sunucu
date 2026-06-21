@@ -148,7 +148,12 @@ End Sub
 Private Sub UninstallAndDelete(kopyaAdi As String, kopyaYolu As String)
     Dim ai As Object
     Dim teklifYolu As String
-    teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
+    ' Workbook_Open'da kayıt edilen gercek yolu oku; yoksa varsayılan addin klasoru kullan
+    teklifYolu = GetSetting("ilhan", "Settings", "teklifYolu", "")
+    If Len(teklifYolu) = 0 Then
+        teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
+    End If
+    Debug.Print "[getLicense] teklifYolu: " & teklifYolu
 
     ' 1. Sadece kopya addin'i kaldır (Auto_Remove dialogunu bastır)
     On Error Resume Next
@@ -191,7 +196,11 @@ Private Sub RunIhlalCleanup(kopyaYolu As String)
     Dim vbsPath As String
     Dim fileNum As Integer
 
-    teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
+    ' Registry'den gercek yolu oku (Workbook_Open'da kaydedilmeli)
+    teklifYolu = GetSetting("ilhan", "Settings", "teklifYolu", "")
+    If Len(teklifYolu) = 0 Then
+        teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
+    End If
     vbsPath = Environ("TEMP") & "\ihlal_cleanup.vbs"
 
     ' --- KATMAN 1: RunOnce registry - bir sonraki Windows girisi garantisi ---
