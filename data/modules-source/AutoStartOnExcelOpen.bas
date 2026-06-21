@@ -70,7 +70,8 @@ Private Sub ExecuteAutoStartList(jsonText As String)
             Application.Wait Now + TimeValue("00:00:" & Format(delaySeconds, "00"))
         End If
 
-        Debug.Print "[AutoStartOnExcelOpen] zInternet.RunRemoteCode: " & methodName
+        'Debug.Print "[AutoStartOnExcelOpen] zInternet.RunRemoteCode: " & methodName
+        
         Application.Run "zInternet.RunRemoteCode", methodName
 
         searchFrom = pos + Len(methodName) + 10
