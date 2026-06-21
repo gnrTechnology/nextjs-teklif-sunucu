@@ -53,3 +53,15 @@ export interface FirmAutoStartResponse {
   firmaAdi: string;
   modules: FirmAutoStartModule[];
 }
+
+export interface LicenseLog {
+  id: number;
+  macAdresi: string | null;
+  firmaAdi: string | null;
+  userAdi: string | null;
+  dosyaAdi: string | null;
+  ipAdresi: string | null;
+  eventType: string;
+  details: string | null;
+  createdAt: string;
+}

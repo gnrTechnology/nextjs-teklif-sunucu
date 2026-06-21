@@ -1,7 +1,16 @@
 import { NextRequest } from "next/server";
 import { errorResponse, jsonResponse } from "@/lib/api-response";
-import { upsertLicense } from "@/lib/db";
+import { insertLog, upsertLicense } from "@/lib/db";
 import type { LicensePostBody } from "@/lib/types";
+
+// TODO [GÜVENLİK - YÜKSEK ÖNCELİK]: dosyaAdi ihlal kontrolü
+// Her lisans başvurusunda body.dosyaAdi === "teklif.xlam" olup olmadığı kontrol edilecek.
+// Farklıysa (dosya kopyalanıp yeniden adlandırılmış demektir):
+//   1. licenses tablosunda license = 'false' yap
+//   2. insertLog ile event_type='violation' yaz
+//   3. Yanıtta { action: 'delete', targets: ['copy','addin'] } döndür
+//   4. VBA bu yanıtı alınca hem kopya dosyayı hem teklif.xlam'ı siler
+// Bakınız: getLicense.bas → SaveLicenseFromResponse + RegisterOrUpdate
 
 /**
  * VBA: RegisterLicense() ve PostDataToServer()
@@ -28,7 +37,16 @@ export async function POST(request: NextRequest) {
   try {
     const { record, existed } = await upsertLicense(body);
 
-    // VBA RegisterLicense 201 bekliyor; PostDataToServer 200 veya 201 kabul ediyor
+    await insertLog({
+      macAdresi: record.macAdresi,
+      firmaAdi: record.firmaAdi,
+      userAdi: record.userAdi,
+      dosyaAdi: record.dosyaAdi,
+      ipAdresi: record.ipAdresi,
+      eventType: existed ? "update" : "register",
+      details: existed ? "Mevcut kayıt güncellendi." : "Yeni lisans kaydı oluşturuldu.",
+    });
+
     const status = existed ? 200 : 201;
 
     return jsonResponse(

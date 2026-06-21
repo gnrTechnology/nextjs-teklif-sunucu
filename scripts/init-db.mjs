@@ -50,5 +50,22 @@ for (const col of dropCols) {
 await sql`ALTER TABLE licenses ADD COLUMN IF NOT EXISTS user_adi VARCHAR(255)`;
 await sql`CREATE INDEX IF NOT EXISTS idx_licenses_firma_adi ON licenses (firma_adi)`;
 
+// Denetim logu tablosu
+await sql`
+  CREATE TABLE IF NOT EXISTS license_logs (
+    id         BIGSERIAL PRIMARY KEY,
+    mac_adresi VARCHAR(17),
+    firma_adi  VARCHAR(255),
+    user_adi   VARCHAR(255),
+    dosya_adi  VARCHAR(255),
+    ip_adresi  VARCHAR(45),
+    event_type VARCHAR(50) NOT NULL DEFAULT 'register',
+    details    TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`;
+await sql`CREATE INDEX IF NOT EXISTS idx_license_logs_mac ON license_logs (mac_adresi)`;
+await sql`CREATE INDEX IF NOT EXISTS idx_license_logs_created ON license_logs (created_at DESC)`;
+
 console.log("Neon licenses tablosu hazır.");
 console.log("Kolonlar: mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, license, created_at, updated_at");

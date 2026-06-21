@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import type { LicensePostBody, LicenseRecord } from "./types";
+import type { LicenseLog, LicensePostBody, LicenseRecord } from "./types";
 
 type LicenseRow = {
   mac_adresi: string;
@@ -119,4 +119,69 @@ export async function isLicensed(mac: string): Promise<boolean> {
   if (!record) return false;
   const value = record.license.toLowerCase();
   return value === "true" || value === "1" || value === "active" || value === "evet";
+}
+
+export async function toggleLicense(
+  mac: string,
+  newValue: "true" | "false",
+): Promise<LicenseRecord | null> {
+  const sql = getSql();
+  const normalized = normalizeMac(mac);
+  const now = new Date().toISOString();
+  const rows = await sql`
+    UPDATE licenses
+    SET license = ${newValue}, updated_at = ${now}
+    WHERE mac_adresi = ${normalized}
+    RETURNING ${sql.unsafe(SELECT_COLS)}
+  `;
+  const row = rows[0] as LicenseRow | undefined;
+  return row ? rowToRecord(row) : null;
+}
+
+type InsertLogParams = {
+  macAdresi?: string | null;
+  firmaAdi?: string | null;
+  userAdi?: string | null;
+  dosyaAdi?: string | null;
+  ipAdresi?: string | null;
+  eventType?: string;
+  details?: string | null;
+};
+
+export async function insertLog(params: InsertLogParams): Promise<void> {
+  try {
+    const sql = getSql();
+    await sql`
+      INSERT INTO license_logs
+        (mac_adresi, firma_adi, user_adi, dosya_adi, ip_adresi, event_type, details)
+      VALUES
+        (${params.macAdresi ?? null}, ${params.firmaAdi ?? null}, ${params.userAdi ?? null},
+         ${params.dosyaAdi ?? null}, ${params.ipAdresi ?? null},
+         ${params.eventType ?? "register"}, ${params.details ?? null})
+    `;
+  } catch (err) {
+    console.error("[insertLog] Log yazılamadı:", err);
+  }
+}
+
+export async function listLogs(limit = 500): Promise<LicenseLog[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, mac_adresi, firma_adi, user_adi, dosya_adi, ip_adresi,
+           event_type, details, created_at
+    FROM license_logs
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    macAdresi: (r.mac_adresi as string) ?? null,
+    firmaAdi: (r.firma_adi as string) ?? null,
+    userAdi: (r.user_adi as string) ?? null,
+    dosyaAdi: (r.dosya_adi as string) ?? null,
+    ipAdresi: (r.ip_adresi as string) ?? null,
+    eventType: r.event_type as string,
+    details: (r.details as string) ?? null,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
 }
