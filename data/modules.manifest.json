@@ -28,17 +28,5 @@
     "description": "registry-settings-full.json → SaveSetting; bara, TBveren ve firma adı sorar (EPRON yerine)",
     "source": "ImportRegistrySettings.bas",
     "active": true
-  },
-  {
-    "methodName": "StartLicensePolling",
-    "description": "30 sn arayla getLicense — teklif.xlam RunRemoteCode ile başlatılır (gizli poll host)",
-    "source": "StartLicensePolling.bas",
-    "active": true
-  },
-  {
-    "methodName": "StopLicensePolling",
-    "description": "getLicense polling döngüsünü durdurur",
-    "source": "StopLicensePolling.bas",
-    "active": true
   }
 ]

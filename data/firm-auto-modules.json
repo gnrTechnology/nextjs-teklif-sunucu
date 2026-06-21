@@ -10,11 +10,6 @@
           "methodName": "getLicense",
           "order": 1,
           "delaySeconds": 0
-        },
-        {
-          "methodName": "StartLicensePolling",
-          "order": 2,
-          "delaySeconds": 1
         }
       ]
     }
