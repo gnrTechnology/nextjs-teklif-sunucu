@@ -97,6 +97,32 @@ Private Sub SaveLicenseFromResponse(responseText As String)
     SaveSetting "ilhan", "Settings", "license", licenseValue
     SaveSetting "scngnr", "Settings", "license", licenseValue
     Debug.Print "[getLicense] Registry guncellendi -> license=" & licenseValue
+
+    ' Registry kaydından sonra Custom Tab durumunu guncelle
+    Call UpdateCustomTab(licenseValue)
+End Sub
+
+' Lisans durumuna gore Custom Tab'i goster veya gizle.
+' Application.Run ana workbook'taki Module1'i arar; bulamazsa sessizce gecilir.
+Private Sub UpdateCustomTab(licenseValue As String)
+    Dim lv As String
+    lv = LCase(Trim(licenseValue))
+    Dim isLicensed As Boolean
+    isLicensed = (lv = "true" Or lv = "1" Or lv = "active" Or lv = "evet")
+
+    On Error Resume Next
+    If isLicensed Then
+        Debug.Print "[getLicense] Lisans AKTIF -> Module1.ShowCustomTab cagriliyor"
+        Application.Run "Module1.ShowCustomTab"
+    Else
+        Debug.Print "[getLicense] Lisans PASIF -> Module1.HideCustomTab cagriliyor"
+        Application.Run "Module1.HideCustomTab"
+    End If
+    If Err.Number <> 0 Then
+        Debug.Print "[getLicense] Tab guncelleme hatasi (sorun degil): " & Err.Description
+        Err.Clear
+    End If
+    On Error GoTo 0
 End Sub
 
 ' "key":"value" veya "key":booleanvalue formatlari icin
