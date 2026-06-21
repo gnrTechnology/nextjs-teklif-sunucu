@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import type { LicensePostBody, LicenseRecord, VeritabaniTeklifItem } from "./types";
+import type { LicensePostBody, LicenseRecord } from "./types";
 
 type LicenseRow = {
   mac_adresi: string;
@@ -7,15 +7,6 @@ type LicenseRow = {
   firma_adi: string | null;
   user_adi: string | null;
   dosya_adi: string | null;
-  proje_adi: string | null;
-  proje_kisa_adresi: string | null;
-  teklif_para_birimi_usd: string | null;
-  teklif_para_birimi_euro: string | null;
-  teklif_para_birimi_genel: string | null;
-  genel_gider: string | null;
-  kar: string | null;
-  m31_degeri: string | null;
-  veritabani_teklif: VeritabaniTeklifItem[] | null;
   license: string;
   created_at: string;
   updated_at: string;
@@ -36,20 +27,16 @@ function rowToRecord(row: LicenseRow): LicenseRecord {
     firmaAdi: row.firma_adi ?? undefined,
     userAdi: row.user_adi ?? undefined,
     dosyaAdi: row.dosya_adi ?? undefined,
-    projeAdi: row.proje_adi ?? undefined,
-    projeKisaAdresi: row.proje_kisa_adresi ?? undefined,
-    teklifParaBirimiUSD: row.teklif_para_birimi_usd ?? undefined,
-    teklifParaBirimiEuro: row.teklif_para_birimi_euro ?? undefined,
-    teklifParaBirimiGenel: row.teklif_para_birimi_genel ?? undefined,
-    genelGider: row.genel_gider ?? undefined,
-    kar: row.kar ?? undefined,
-    m31Degeri: row.m31_degeri ?? undefined,
-    veritabaniTeklif: row.veritabani_teklif ?? undefined,
     license: row.license,
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
   };
 }
+
+const SELECT_COLS = `
+  mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi,
+  license, created_at, updated_at
+`;
 
 /** MAC adresini tutarlı anahtar formatına çevirir (AA:BB:CC:DD:EE:FF) */
 export function normalizeMac(mac: string): string {
@@ -66,11 +53,7 @@ export async function getLicenseByMac(
   const sql = getSql();
   const normalized = normalizeMac(mac);
   const rows = await sql`
-    SELECT
-      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
-      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
-      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
-      veritabani_teklif, license, created_at, updated_at
+    SELECT ${sql.unsafe(SELECT_COLS)}
     FROM licenses
     WHERE mac_adresi = ${normalized}
     LIMIT 1
@@ -80,9 +63,9 @@ export async function getLicenseByMac(
 }
 
 /**
- * Yeni kayıt oluşturur veya mevcut kaydı günceller.
  * Tek SQL sorgusu: INSERT ... ON CONFLICT DO UPDATE ... RETURNING
- * xmax = 0 → yeni satır (INSERT), xmax > 0 → güncelleme (UPDATE)
+ * xmax = 0 → yeni satır, xmax > 0 → güncelleme
+ * COALESCE ile gelen null değerler mevcut değerleri ezmez.
  */
 export async function upsertLicense(
   body: LicensePostBody,
@@ -91,55 +74,29 @@ export async function upsertLicense(
   const normalizedMac = normalizeMac(body.macAdresi);
   const now = new Date().toISOString();
 
-  const veritabaniTeklifJson = body.veritabaniTeklif
-    ? JSON.stringify(body.veritabaniTeklif)
-    : null;
-
   const rows = await sql`
     INSERT INTO licenses (
-      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
-      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
-      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
-      veritabani_teklif, license, created_at, updated_at
+      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi,
+      license, created_at, updated_at
     ) VALUES (
       ${normalizedMac},
       ${body.ipAdresi ?? null},
       ${body.firmaAdi ?? null},
       ${body.userAdi ?? null},
       ${body.dosyaAdi ?? null},
-      ${body.projeAdi ?? null},
-      ${body.projeKisaAdresi ?? null},
-      ${body.teklifParaBirimiUSD ?? null},
-      ${body.teklifParaBirimiEuro ?? null},
-      ${body.teklifParaBirimiGenel ?? null},
-      ${body.genelGider ?? null},
-      ${body.kar ?? null},
-      ${body.m31Degeri ?? null},
-      ${veritabaniTeklifJson}::jsonb,
       'true',
       ${now},
       ${now}
     )
     ON CONFLICT (mac_adresi) DO UPDATE SET
-      ip_adresi              = COALESCE(EXCLUDED.ip_adresi,              licenses.ip_adresi),
-      firma_adi              = COALESCE(EXCLUDED.firma_adi,              licenses.firma_adi),
-      user_adi               = COALESCE(EXCLUDED.user_adi,               licenses.user_adi),
-      dosya_adi              = COALESCE(EXCLUDED.dosya_adi,              licenses.dosya_adi),
-      proje_adi              = COALESCE(EXCLUDED.proje_adi,              licenses.proje_adi),
-      proje_kisa_adresi      = COALESCE(EXCLUDED.proje_kisa_adresi,      licenses.proje_kisa_adresi),
-      teklif_para_birimi_usd = COALESCE(EXCLUDED.teklif_para_birimi_usd, licenses.teklif_para_birimi_usd),
-      teklif_para_birimi_euro= COALESCE(EXCLUDED.teklif_para_birimi_euro,licenses.teklif_para_birimi_euro),
-      teklif_para_birimi_genel=COALESCE(EXCLUDED.teklif_para_birimi_genel,licenses.teklif_para_birimi_genel),
-      genel_gider            = COALESCE(EXCLUDED.genel_gider,            licenses.genel_gider),
-      kar                    = COALESCE(EXCLUDED.kar,                    licenses.kar),
-      m31_degeri             = COALESCE(EXCLUDED.m31_degeri,             licenses.m31_degeri),
-      veritabani_teklif      = COALESCE(EXCLUDED.veritabani_teklif,      licenses.veritabani_teklif),
-      updated_at             = EXCLUDED.updated_at
+      ip_adresi  = COALESCE(EXCLUDED.ip_adresi,  licenses.ip_adresi),
+      firma_adi  = COALESCE(EXCLUDED.firma_adi,  licenses.firma_adi),
+      user_adi   = COALESCE(EXCLUDED.user_adi,   licenses.user_adi),
+      dosya_adi  = COALESCE(EXCLUDED.dosya_adi,  licenses.dosya_adi),
+      updated_at = EXCLUDED.updated_at
     RETURNING
-      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
-      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
-      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
-      veritabani_teklif, license, created_at, updated_at,
+      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi,
+      license, created_at, updated_at,
       (xmax::text::int > 0) AS existed
   `;
 
@@ -150,11 +107,7 @@ export async function upsertLicense(
 export async function listLicenses(): Promise<LicenseRecord[]> {
   const sql = getSql();
   const rows = await sql`
-    SELECT
-      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
-      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
-      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
-      veritabani_teklif, license, created_at, updated_at
+    SELECT ${sql.unsafe(SELECT_COLS)}
     FROM licenses
     ORDER BY updated_at DESC
   `;

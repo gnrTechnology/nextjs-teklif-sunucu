@@ -1,51 +1,29 @@
-<<<<<<< HEAD
 -- Neon PostgreSQL: lisans tablosu
--- Neon SQL Editor veya psql ile bir kez çalıştırın.
+-- Neon SQL Editor'da çalıştırın.
 
 CREATE TABLE IF NOT EXISTS licenses (
   mac_adresi VARCHAR(17) PRIMARY KEY,
-  ip_adresi VARCHAR(45),
-  firma_adi VARCHAR(255),
-  user_adi VARCHAR(255),
-  dosya_adi VARCHAR(255),
-  proje_adi VARCHAR(255),
-  proje_kisa_adresi TEXT,
-  teklif_para_birimi_usd VARCHAR(50),
-  teklif_para_birimi_euro VARCHAR(50),
-  teklif_para_birimi_genel VARCHAR(50),
-  genel_gider VARCHAR(50),
-  kar VARCHAR(50),
-  m31_degeri VARCHAR(50),
-  veritabani_teklif JSONB,
-  license VARCHAR(50) NOT NULL DEFAULT 'true',
+  ip_adresi  VARCHAR(45),
+  firma_adi  VARCHAR(255),
+  user_adi   VARCHAR(255),
+  dosya_adi  VARCHAR(255),
+  license    VARCHAR(50) NOT NULL DEFAULT 'true',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_licenses_firma_adi ON licenses (firma_adi);
-=======
--- Neon PostgreSQL: lisans tablosu
--- Neon SQL Editor veya psql ile bir kez çalıştırın.
+-- Mevcut tabloda fazla kolonlar varsa temizle
+ALTER TABLE licenses DROP COLUMN IF EXISTS proje_adi;
+ALTER TABLE licenses DROP COLUMN IF EXISTS proje_kisa_adresi;
+ALTER TABLE licenses DROP COLUMN IF EXISTS teklif_para_birimi_usd;
+ALTER TABLE licenses DROP COLUMN IF EXISTS teklif_para_birimi_euro;
+ALTER TABLE licenses DROP COLUMN IF EXISTS teklif_para_birimi_genel;
+ALTER TABLE licenses DROP COLUMN IF EXISTS genel_gider;
+ALTER TABLE licenses DROP COLUMN IF EXISTS kar;
+ALTER TABLE licenses DROP COLUMN IF EXISTS m31_degeri;
+ALTER TABLE licenses DROP COLUMN IF EXISTS veritabani_teklif;
 
-CREATE TABLE IF NOT EXISTS licenses (
-  mac_adresi VARCHAR(17) PRIMARY KEY,
-  ip_adresi VARCHAR(45),
-  firma_adi VARCHAR(255),
-  user_adi VARCHAR(255),
-  dosya_adi VARCHAR(255),
-  proje_adi VARCHAR(255),
-  proje_kisa_adresi TEXT,
-  teklif_para_birimi_usd VARCHAR(50),
-  teklif_para_birimi_euro VARCHAR(50),
-  teklif_para_birimi_genel VARCHAR(50),
-  genel_gider VARCHAR(50),
-  kar VARCHAR(50),
-  m31_degeri VARCHAR(50),
-  veritabani_teklif JSONB,
-  license VARCHAR(50) NOT NULL DEFAULT 'true',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- user_adi yoksa ekle
+ALTER TABLE licenses ADD COLUMN IF NOT EXISTS user_adi VARCHAR(255);
 
 CREATE INDEX IF NOT EXISTS idx_licenses_firma_adi ON licenses (firma_adi);
->>>>>>> 1057c5c83b00dbc2e40b55b442239b0d43d0937c

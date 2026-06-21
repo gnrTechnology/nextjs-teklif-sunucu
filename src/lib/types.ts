@@ -4,27 +4,9 @@ export interface LicenseRecord {
   firmaAdi?: string;
   userAdi?: string;
   dosyaAdi?: string;
-  projeAdi?: string;
-  projeKisaAdresi?: string;
-  teklifParaBirimiUSD?: string;
-  teklifParaBirimiEuro?: string;
-  teklifParaBirimiGenel?: string;
-  genelGider?: string;
-  kar?: string;
-  m31Degeri?: string;
-  veritabaniTeklif?: VeritabaniTeklifItem[];
   license: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface VeritabaniTeklifItem {
-  colB?: string;
-  colC?: string;
-  colD?: string;
-  colF?: string;
-  colG?: string;
-  colParaBirimi?: string;
 }
 
 export interface LicensePostBody {
@@ -33,15 +15,6 @@ export interface LicensePostBody {
   firmaAdi?: string;
   userAdi?: string;
   dosyaAdi?: string;
-  projeAdi?: string;
-  projeKisaAdresi?: string;
-  teklifParaBirimiUSD?: string;
-  teklifParaBirimiEuro?: string;
-  teklifParaBirimiGenel?: string;
-  genelGider?: string;
-  kar?: string;
-  m31Degeri?: string;
-  veritabaniTeklif?: VeritabaniTeklifItem[];
 }
 
 export interface ModulePostBody {
