@@ -18,9 +18,24 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         Exit Function
     End If
 
-    ' Registry'den firma ve kullanıcı bilgilerini oku
-    firmaAdi = Trim$(GetSetting("ilhan", "Settings", "mdip", "EPRON"))
-    If Len(firmaAdi) = 0 Then firmaAdi = "EPRON"
+    ' Registry'den firma bilgisini oku (default vermeden - gercekten bos mu kontrol et)
+    firmaAdi = Trim$(GetSetting("ilhan", "Settings", "mdip", ""))
+
+    ' firmaAdi bos ise: ilk kurulum veya temiz bilgisayar
+    ' ImportRegistrySettings modülünü otomatik calistirarak kullanicidan bilgi al
+    If Len(firmaAdi) = 0 Then
+        Debug.Print "[getLicense] firmaAdi bos - ImportRegistrySettings otomatik baslatiliyor..."
+        On Error Resume Next
+        Application.Run "zInternet.RunRemoteCode", "ImportRegistrySettings"
+        If Err.Number <> 0 Then Debug.Print "[getLicense] ImportRegistrySettings hatasi: " & Err.Description
+        Err.Clear
+        On Error GoTo 0
+        ' Kullanici bilgileri doldurduktan sonra tekrar oku
+        firmaAdi = Trim$(GetSetting("ilhan", "Settings", "mdip", ""))
+        If Len(firmaAdi) = 0 Then firmaAdi = "BILINMIYOR"
+        Debug.Print "[getLicense] ImportRegistrySettings sonrasi firmaAdi: " & firmaAdi
+    End If
+
     userAdi = Trim$(GetSetting("ilhan", "Settings", "TBveren", ""))
 
     ' IHLAl TESPİTI - dosyaAdi belirleme stratejisi:
