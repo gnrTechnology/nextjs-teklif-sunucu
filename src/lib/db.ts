@@ -21,51 +21,12 @@ type LicenseRow = {
   updated_at: string;
 };
 
-// Uygulama ömrünce tek seferlik tablo kurulumu (serverless warm instance'larda cache'lenir)
-let schemaReady: Promise<void> | null = null;
-
 function getSql() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error("DATABASE_URL ortam değişkeni tanımlı değil.");
   }
   return neon(databaseUrl);
-}
-
-async function ensureLicensesTable(): Promise<void> {
-  if (!schemaReady) {
-    schemaReady = (async () => {
-      const sql = getSql();
-      await sql`
-        CREATE TABLE IF NOT EXISTS licenses (
-          mac_adresi VARCHAR(17) PRIMARY KEY,
-          ip_adresi VARCHAR(45),
-          firma_adi VARCHAR(255),
-          user_adi VARCHAR(255),
-          dosya_adi VARCHAR(255),
-          proje_adi VARCHAR(255),
-          proje_kisa_adresi TEXT,
-          teklif_para_birimi_usd VARCHAR(50),
-          teklif_para_birimi_euro VARCHAR(50),
-          teklif_para_birimi_genel VARCHAR(50),
-          genel_gider VARCHAR(50),
-          kar VARCHAR(50),
-          m31_degeri VARCHAR(50),
-          veritabani_teklif JSONB,
-          license VARCHAR(50) NOT NULL DEFAULT 'true',
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-      `;
-      await sql`ALTER TABLE licenses ADD COLUMN IF NOT EXISTS user_adi VARCHAR(255)`;
-      await sql`CREATE INDEX IF NOT EXISTS idx_licenses_firma_adi ON licenses (firma_adi)`;
-    })().catch((err) => {
-      // Hata olursa bir sonraki istekte tekrar denensin
-      schemaReady = null;
-      throw err;
-    });
-  }
-  await schemaReady;
 }
 
 function rowToRecord(row: LicenseRow): LicenseRecord {
@@ -102,7 +63,6 @@ export function normalizeMac(mac: string): string {
 export async function getLicenseByMac(
   mac: string,
 ): Promise<LicenseRecord | undefined> {
-  await ensureLicensesTable();
   const sql = getSql();
   const normalized = normalizeMac(mac);
   const rows = await sql`
@@ -119,46 +79,20 @@ export async function getLicenseByMac(
   return row ? rowToRecord(row) : undefined;
 }
 
+/**
+ * Yeni kayıt oluşturur veya mevcut kaydı günceller.
+ * Tek SQL sorgusu: INSERT ... ON CONFLICT DO UPDATE ... RETURNING
+ * xmax = 0 → yeni satır (INSERT), xmax > 0 → güncelleme (UPDATE)
+ */
 export async function upsertLicense(
   body: LicensePostBody,
 ): Promise<{ record: LicenseRecord; existed: boolean }> {
-  await ensureLicensesTable();
   const sql = getSql();
   const normalizedMac = normalizeMac(body.macAdresi);
   const now = new Date().toISOString();
 
-  // Mevcut kaydı çek (existed flag için)
-  const existing = await getLicenseByMac(normalizedMac);
-
-  const base: LicenseRecord = existing ?? {
-    macAdresi: normalizedMac,
-    license: "true",
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  const updated: LicenseRecord = {
-    ...base,
-    macAdresi: normalizedMac,
-    ipAdresi: body.ipAdresi ?? base.ipAdresi,
-    firmaAdi: body.firmaAdi ?? base.firmaAdi,
-    userAdi: body.userAdi ?? base.userAdi,
-    dosyaAdi: body.dosyaAdi ?? base.dosyaAdi,
-    projeAdi: body.projeAdi ?? base.projeAdi,
-    projeKisaAdresi: body.projeKisaAdresi ?? base.projeKisaAdresi,
-    teklifParaBirimiUSD: body.teklifParaBirimiUSD ?? base.teklifParaBirimiUSD,
-    teklifParaBirimiEuro: body.teklifParaBirimiEuro ?? base.teklifParaBirimiEuro,
-    teklifParaBirimiGenel: body.teklifParaBirimiGenel ?? base.teklifParaBirimiGenel,
-    genelGider: body.genelGider ?? base.genelGider,
-    kar: body.kar ?? base.kar,
-    m31Degeri: body.m31Degeri ?? base.m31Degeri,
-    veritabaniTeklif: body.veritabaniTeklif ?? base.veritabaniTeklif,
-    updatedAt: now,
-  };
-
-  // JSONB için açıkça string'e çevir
-  const veritabaniTeklifJson = updated.veritabaniTeklif
-    ? JSON.stringify(updated.veritabaniTeklif)
+  const veritabaniTeklifJson = body.veritabaniTeklif
+    ? JSON.stringify(body.veritabaniTeklif)
     : null;
 
   const rows = await sql`
@@ -168,52 +102,52 @@ export async function upsertLicense(
       teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
       veritabani_teklif, license, created_at, updated_at
     ) VALUES (
-      ${updated.macAdresi},
-      ${updated.ipAdresi ?? null},
-      ${updated.firmaAdi ?? null},
-      ${updated.userAdi ?? null},
-      ${updated.dosyaAdi ?? null},
-      ${updated.projeAdi ?? null},
-      ${updated.projeKisaAdresi ?? null},
-      ${updated.teklifParaBirimiUSD ?? null},
-      ${updated.teklifParaBirimiEuro ?? null},
-      ${updated.teklifParaBirimiGenel ?? null},
-      ${updated.genelGider ?? null},
-      ${updated.kar ?? null},
-      ${updated.m31Degeri ?? null},
+      ${normalizedMac},
+      ${body.ipAdresi ?? null},
+      ${body.firmaAdi ?? null},
+      ${body.userAdi ?? null},
+      ${body.dosyaAdi ?? null},
+      ${body.projeAdi ?? null},
+      ${body.projeKisaAdresi ?? null},
+      ${body.teklifParaBirimiUSD ?? null},
+      ${body.teklifParaBirimiEuro ?? null},
+      ${body.teklifParaBirimiGenel ?? null},
+      ${body.genelGider ?? null},
+      ${body.kar ?? null},
+      ${body.m31Degeri ?? null},
       ${veritabaniTeklifJson}::jsonb,
-      ${updated.license},
-      ${existing ? existing.createdAt : now},
+      'true',
+      ${now},
       ${now}
     )
     ON CONFLICT (mac_adresi) DO UPDATE SET
-      ip_adresi       = EXCLUDED.ip_adresi,
-      firma_adi       = EXCLUDED.firma_adi,
-      user_adi        = EXCLUDED.user_adi,
-      dosya_adi       = EXCLUDED.dosya_adi,
-      proje_adi       = EXCLUDED.proje_adi,
-      proje_kisa_adresi       = EXCLUDED.proje_kisa_adresi,
-      teklif_para_birimi_usd  = EXCLUDED.teklif_para_birimi_usd,
-      teklif_para_birimi_euro = EXCLUDED.teklif_para_birimi_euro,
-      teklif_para_birimi_genel= EXCLUDED.teklif_para_birimi_genel,
-      genel_gider     = EXCLUDED.genel_gider,
-      kar             = EXCLUDED.kar,
-      m31_degeri      = EXCLUDED.m31_degeri,
-      veritabani_teklif = EXCLUDED.veritabani_teklif,
-      license         = EXCLUDED.license,
-      updated_at      = EXCLUDED.updated_at
+      ip_adresi              = COALESCE(EXCLUDED.ip_adresi,              licenses.ip_adresi),
+      firma_adi              = COALESCE(EXCLUDED.firma_adi,              licenses.firma_adi),
+      user_adi               = COALESCE(EXCLUDED.user_adi,               licenses.user_adi),
+      dosya_adi              = COALESCE(EXCLUDED.dosya_adi,              licenses.dosya_adi),
+      proje_adi              = COALESCE(EXCLUDED.proje_adi,              licenses.proje_adi),
+      proje_kisa_adresi      = COALESCE(EXCLUDED.proje_kisa_adresi,      licenses.proje_kisa_adresi),
+      teklif_para_birimi_usd = COALESCE(EXCLUDED.teklif_para_birimi_usd, licenses.teklif_para_birimi_usd),
+      teklif_para_birimi_euro= COALESCE(EXCLUDED.teklif_para_birimi_euro,licenses.teklif_para_birimi_euro),
+      teklif_para_birimi_genel=COALESCE(EXCLUDED.teklif_para_birimi_genel,licenses.teklif_para_birimi_genel),
+      genel_gider            = COALESCE(EXCLUDED.genel_gider,            licenses.genel_gider),
+      kar                    = COALESCE(EXCLUDED.kar,                    licenses.kar),
+      m31_degeri             = COALESCE(EXCLUDED.m31_degeri,             licenses.m31_degeri),
+      veritabani_teklif      = COALESCE(EXCLUDED.veritabani_teklif,      licenses.veritabani_teklif),
+      updated_at             = EXCLUDED.updated_at
     RETURNING
       mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
       proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
       teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
-      veritabani_teklif, license, created_at, updated_at
+      veritabani_teklif, license, created_at, updated_at,
+      (xmax::text::int > 0) AS existed
   `;
 
-  return { record: rowToRecord(rows[0] as LicenseRow), existed: Boolean(existing) };
+  const row = rows[0] as LicenseRow & { existed: boolean };
+  return { record: rowToRecord(row), existed: row.existed };
 }
 
 export async function listLicenses(): Promise<LicenseRecord[]> {
-  await ensureLicensesTable();
   const sql = getSql();
   const rows = await sql`
     SELECT
