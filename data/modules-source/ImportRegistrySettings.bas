@@ -18,7 +18,7 @@ ErrHandler:
 End Function
 
 Public Sub ImportAllRegistrySettings()
-    RunImportAllRegistrySettings "http://localhost:3000/api/"
+    RunImportAllRegistrySettings "nextjs-teklif-sunucu.vercel.app/"
 End Sub
 
 Private Sub RunImportAllRegistrySettings(Optional apiBaseUrl As Variant)
