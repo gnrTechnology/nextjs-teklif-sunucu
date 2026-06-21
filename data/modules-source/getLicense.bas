@@ -11,6 +11,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
 
     If Len(mac) < 10 Or Left(mac, 5) = "HATA:" Or mac = "MAC_BULUNAMADI" Then
         Debug.Print "[getLicense] Gecersiz MAC, cikiliyor."
+        MsgBox "MAC adresi alınamadı. Lisans kaydı yapılamıyor.", vbExclamation, "getLicense"
         Set DynamicFunc = Nothing
         Exit Function
     End If
@@ -25,72 +26,53 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Debug.Print "[getLicense] userAdi: " & userAdi
 
     baseUrl = ResolveBaseUrl(param)
-    Call CheckAndRegisterLicense(mac, firmaAdi, userAdi, baseUrl)
+
+    ' Tek POST ile kayit olustur veya guncelle; sunucu mevcut license degerini korur
+    Call RegisterOrUpdate(mac, firmaAdi, userAdi, baseUrl)
 
     Set DynamicFunc = Nothing
 End Function
 
-Private Sub CheckAndRegisterLicense(mac As String, firmaAdi As String, userAdi As String, baseUrl As String)
+Private Sub RegisterOrUpdate(mac As String, firmaAdi As String, userAdi As String, baseUrl As String)
     Dim http As Object
-    Dim getUrl As String
     Dim postUrl As String
     Dim jsonBody As String
 
-    getUrl = baseUrl & "license/" & mac & "/"
-    Debug.Print "[getLicense] GET: " & getUrl
-
-    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-    On Error GoTo ErrHandler
-
-    http.Open "GET", getUrl, False
-    http.setTimeouts 5000, 10000, 30000, 30000
-    http.send
-
-    Debug.Print "[getLicense] GET Status: " & http.Status
-
-    If http.Status = 200 Then
-        Debug.Print "[getLicense] Lisans mevcut, guncelleniyor."
-        ' Mevcut kaydi firmaAdi/userAdi ile guncelle
-        postUrl = baseUrl & "license/"
-        jsonBody = BuildLicenseJson(mac, firmaAdi, userAdi)
-        http.Open "POST", postUrl, False
-        http.setTimeouts 5000, 10000, 30000, 30000
-        http.setRequestHeader "Content-Type", "application/json"
-        http.send jsonBody
-        Debug.Print "[getLicense] POST (guncelle) Status: " & http.Status
-        If http.Status = 200 Or http.Status = 201 Then
-            SaveLicenseFromResponse http.responseText
-        End If
-        Set http = Nothing
-        Exit Sub
-    End If
-
-    ' Lisans yok, yeni kayit olustur
     postUrl = baseUrl & "license/"
     jsonBody = BuildLicenseJson(mac, firmaAdi, userAdi)
 
-    Debug.Print "[getLicense] POST (yeni): " & postUrl
+    Debug.Print "[getLicense] POST: " & postUrl
     Debug.Print "[getLicense] Body: " & jsonBody
+
+    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    On Error GoTo ErrHandler
 
     http.Open "POST", postUrl, False
     http.setTimeouts 5000, 10000, 30000, 30000
     http.setRequestHeader "Content-Type", "application/json"
     http.send jsonBody
 
-    Debug.Print "[getLicense] POST Status: " & http.Status
+    Debug.Print "[getLicense] HTTP Status: " & http.Status
 
-    If http.Status = 200 Or http.Status = 201 Then
-        Debug.Print "[getLicense] Lisans kaydedildi."
-        SaveLicenseFromResponse http.responseText
-    Else
-        Debug.Print "[getLicense] Lisans kayit hatasi: " & http.responseText
-    End If
+    Select Case http.Status
+        Case 200
+            Debug.Print "[getLicense] Mevcut lisans guncellendi."
+            SaveLicenseFromResponse http.responseText
+        Case 201
+            Debug.Print "[getLicense] Yeni lisans kaydi olusturuldu."
+            SaveLicenseFromResponse http.responseText
+        Case Else
+            Debug.Print "[getLicense] Sunucu hatasi (" & http.Status & "): " & http.responseText
+            MsgBox "Lisans sunucusuna ulasılamadı." & vbCrLf & _
+                   "HTTP " & http.Status & ": " & http.responseText, vbExclamation, "getLicense"
+    End Select
 
     Set http = Nothing
     Exit Sub
 
 ErrHandler:
-    Debug.Print "[getLicense] Hata: " & Err.Description
+    Debug.Print "[getLicense] Baglanti hatasi: " & Err.Description
+    MsgBox "Bağlantı hatası: " & Err.Description, vbCritical, "getLicense"
     Set http = Nothing
 End Sub
 
@@ -103,45 +85,53 @@ Private Function BuildLicenseJson(mac As String, firmaAdi As String, userAdi As 
 End Function
 
 Private Sub SaveLicenseFromResponse(responseText As String)
+    ' Sunucudan gelen license degerini (true/false) registry'e yaz
     Dim licenseValue As String
 
     licenseValue = ExtractJsonValue(responseText, "license")
-    If Len(licenseValue) = 0 Then Exit Sub
+    If Len(licenseValue) = 0 Then
+        Debug.Print "[getLicense] Response'ta license degeri bulunamadi."
+        Exit Sub
+    End If
 
     SaveSetting "ilhan", "Settings", "license", licenseValue
     SaveSetting "scngnr", "Settings", "license", licenseValue
-    Debug.Print "[getLicense] License registry'e kaydedildi: " & licenseValue
+    Debug.Print "[getLicense] Registry guncellendi -> license=" & licenseValue
 End Sub
 
+' "key":"value" veya "key":booleanvalue formatlari icin
 Private Function ExtractJsonValue(jsonText As String, key As String) As String
     Dim searchKey As String
     Dim p1 As Long
     Dim p2 As Long
+    Dim ch As String
 
     searchKey = """" & key & """:"
     p1 = InStr(1, jsonText, searchKey, vbTextCompare)
     If p1 = 0 Then Exit Function
 
     p1 = p1 + Len(searchKey)
+
     ' Bosluk atla
     Do While p1 <= Len(jsonText) And Mid$(jsonText, p1, 1) = " "
         p1 = p1 + 1
     Loop
 
     If Mid$(jsonText, p1, 1) = """" Then
-        ' String deger
+        ' Tirnak icindeki string
         p1 = p1 + 1
         p2 = InStr(p1, jsonText, """")
         If p2 > p1 Then
             ExtractJsonValue = Mid$(jsonText, p1, p2 - p1)
         End If
     Else
-        ' Sayisal veya boolean deger
+        ' Tirnak olmayan deger (true, false, sayi)
         p2 = p1
         Do While p2 <= Len(jsonText)
-            Dim ch As String
             ch = Mid$(jsonText, p2, 1)
-            If ch = "," Or ch = "}" Or ch = "]" Or ch = " " Then Exit Do
+            If ch = "," Or ch = "}" Or ch = "]" Or ch = " " Or ch = vbCr Or ch = vbLf Then
+                Exit Do
+            End If
             p2 = p2 + 1
         Loop
         ExtractJsonValue = Mid$(jsonText, p1, p2 - p1)
