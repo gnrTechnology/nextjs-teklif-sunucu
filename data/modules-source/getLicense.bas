@@ -23,28 +23,50 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     If Len(firmaAdi) = 0 Then firmaAdi = "EPRON"
     userAdi = Trim$(GetSetting("ilhan", "Settings", "TBveren", ""))
 
-    ' Calisan add-in dosyasini bul.
-    ' Once targetWb deneriz; gecersizse tum acik .xlam dosyalarini tarariz.
-    On Error Resume Next
-    dosyaAdi = targetWb.Name
-    dosyaYolu = targetWb.FullName
-    On Error GoTo 0
+    ' Tum acik workbook'lari tara:
+    '   1. Oncelik: teklif.xlam OLMAYAN .xlam → bu izinsiz kopyadir
+    '   2. Fallback : teklif.xlam'in kendisi → normal kullanim
+    '   3. Son fallback : targetWb.Name
+    Dim wb As Workbook
+    Dim copyName As String
+    Dim copyPath As String
+    Dim teklifName As String
+    Dim teklifPath As String
 
-    ' targetWb gecersiz veya .xlam degil → acik workbook'larda .xlam ara
-    If Len(dosyaAdi) = 0 Or LCase(Right(dosyaAdi, 5)) <> ".xlam" Then
-        Dim wb As Workbook
-        For Each wb In Application.Workbooks
-            If LCase(Right(wb.Name, 5)) = ".xlam" Then
-                dosyaAdi = wb.Name
-                dosyaYolu = wb.FullName
-                Debug.Print "[getLicense] xlam taramada bulundu: " & dosyaAdi
-                Exit For
+    For Each wb In Application.Workbooks
+        If LCase(Right(wb.Name, 5)) = ".xlam" Then
+            If LCase(wb.Name) <> "teklif.xlam" Then
+                ' Kopya aday - ilk bulunani al
+                If Len(copyName) = 0 Then
+                    copyName = wb.Name
+                    copyPath = wb.FullName
+                    Debug.Print "[getLicense] Kopya aday xlam: " & copyName
+                End If
+            Else
+                teklifName = wb.Name
+                teklifPath = wb.FullName
+                Debug.Print "[getLicense] Orijinal teklif.xlam bulundu."
             End If
-        Next wb
-    End If
+        End If
+    Next wb
 
-    ' Hala bos ise bilinmiyor olarak isaretle
-    If Len(dosyaAdi) = 0 Then dosyaAdi = "bilinmiyor.xlam"
+    If Len(copyName) > 0 Then
+        ' Kopya var → ihlal adayi olarak kullan
+        dosyaAdi = copyName
+        dosyaYolu = copyPath
+    ElseIf Len(teklifName) > 0 Then
+        ' Sadece orijinal teklif.xlam var → normal
+        dosyaAdi = teklifName
+        dosyaYolu = teklifPath
+    Else
+        ' Hicbiri bulunamadi → targetWb'den al
+        On Error Resume Next
+        dosyaAdi = targetWb.Name
+        dosyaYolu = targetWb.FullName
+        On Error GoTo 0
+        If Len(dosyaAdi) = 0 Then dosyaAdi = "bilinmiyor.xlam"
+        Debug.Print "[getLicense] Fallback targetWb: " & dosyaAdi
+    End If
 
     Debug.Print "[getLicense] firmaAdi: " & firmaAdi
     Debug.Print "[getLicense] userAdi:  " & userAdi
