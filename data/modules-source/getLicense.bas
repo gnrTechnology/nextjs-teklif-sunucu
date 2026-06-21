@@ -136,16 +136,49 @@ Private Sub HandleLicenseResponse(responseText As String, dosyaYolu As String, b
 
         Debug.Print "[getLicense] Registry guncellendi -> ihlalDosyaYolu=" & dosyaYolu
 
-        ' Arkaplanda VBScript ile dosyalari sil (Excel kapaninca kilitsiz kalir)
-        Call RunIhlalCleanup(dosyaYolu)
+        ' AddIns.Installed=False ile kopya addin'i Excel'den kaldir (dosya kilidini acar)
+        Call UninstallAndDelete(kopyaAdi, dosyaYolu)
     Else
         Call SaveLicenseFromResponse(responseText)
     End If
 End Sub
 
-' Kopya dosyayi ve teklif.xlam'i silmek icin arka planda VBScript olusturur ve calistirir.
-' VBScript, Excel COM otomasyonu ile xlam workbook'lari kilitli kapatir sonra dosyalari siler.
-' kopyaYolu: silinecek kopya dosyanin tam yolu
+' Application.AddIns ile kopya addin'i kaldir, kilidi ac, sonra VBScript ile dosyayi sil.
+Private Sub UninstallAndDelete(kopyaAdi As String, kopyaYolu As String)
+    Dim ai As Object
+    Dim teklifYolu As String
+    teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
+
+    ' 1. Application.AddIns uzerinden kopya addin'i kaldır (dosya kilidini serbest birakir)
+    On Error Resume Next
+    For Each ai In Application.AddIns
+        If ai.Installed Then
+            Debug.Print "[getLicense] AddIn bulundu: " & ai.Name
+            ' Hem kopya addin'i hem teklif.xlam'i kaldır
+            ai.Installed = False
+            Debug.Print "[getLicense] Kaldırıldı: " & ai.Name
+        End If
+    Next ai
+    On Error GoTo 0
+
+    ' 2. Kısa bekleme - Excel addin'i bellekten temizlesin
+    Application.Wait Now + TimeValue("00:00:02")
+
+    ' 3. Dogrudan Kill ile dene (kilit kalktıysa hemen siler)
+    On Error Resume Next
+    Kill kopyaYolu
+    Debug.Print "[getLicense] Kill kopya: " & (Err.Number = 0)
+    Err.Clear
+    Kill teklifYolu
+    Debug.Print "[getLicense] Kill teklif: " & (Err.Number = 0)
+    Err.Clear
+    On Error GoTo 0
+
+    ' 4. Hala varsa (Excel acikken tam serbest kalmadiysa) VBScript ile arka planda bekle-sil
+    Call RunIhlalCleanup(kopyaYolu)
+End Sub
+
+' Fallback: dosyalar hala kilitliyse VBScript ile Excel kapaninca sil.
 Private Sub RunIhlalCleanup(kopyaYolu As String)
     Dim teklifYolu As String
     Dim vbsPath As String
