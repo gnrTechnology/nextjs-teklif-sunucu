@@ -84,7 +84,7 @@ export async function upsertLicense(
       ${body.firmaAdi ?? null},
       ${body.userAdi ?? null},
       ${body.dosyaAdi ?? null},
-      'true',
+      'false',
       ${now},
       ${now}
     )
