@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "teklif-sunucu",
   "version": "0.1.0",
@@ -27,3 +28,34 @@
     "typescript": "^5"
   }
 }
+=======
+{
+  "name": "teklif-sunucu",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "start:prod": "next start -H 0.0.0.0 -p 3000",
+    "lint": "eslint",
+    "sync-modules": "node scripts/sync-modules.js",
+    "init-db": "node scripts/init-db.mjs",
+    "create-poll-host": "powershell -ExecutionPolicy Bypass -File scripts/create-poll-host.ps1"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "typescript": "^5"
+  }
+}
+>>>>>>> 1057c5c83b00dbc2e40b55b442239b0d43d0937c
