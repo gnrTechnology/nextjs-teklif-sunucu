@@ -21,14 +21,13 @@ type LicenseRow = {
   updated_at: string;
 };
 
+// Uygulama ömrünce tek seferlik tablo kurulumu (serverless warm instance'larda cache'lenir)
 let schemaReady: Promise<void> | null = null;
 
 function getSql() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    throw new Error(
-      "DATABASE_URL ortam değişkeni tanımlı değil. .env.example dosyasına bakın.",
-    );
+    throw new Error("DATABASE_URL ortam değişkeni tanımlı değil.");
   }
   return neon(databaseUrl);
 }
@@ -60,9 +59,12 @@ async function ensureLicensesTable(): Promise<void> {
       `;
       await sql`ALTER TABLE licenses ADD COLUMN IF NOT EXISTS user_adi VARCHAR(255)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_licenses_firma_adi ON licenses (firma_adi)`;
-    })();
+    })().catch((err) => {
+      // Hata olursa bir sonraki istekte tekrar denensin
+      schemaReady = null;
+      throw err;
+    });
   }
-
   await schemaReady;
 }
 
@@ -105,49 +107,35 @@ export async function getLicenseByMac(
   const normalized = normalizeMac(mac);
   const rows = await sql`
     SELECT
-      mac_adresi,
-      ip_adresi,
-      firma_adi,
-      user_adi,
-      dosya_adi,
-      proje_adi,
-      proje_kisa_adresi,
-      teklif_para_birimi_usd,
-      teklif_para_birimi_euro,
-      teklif_para_birimi_genel,
-      genel_gider,
-      kar,
-      m31_degeri,
-      veritabani_teklif,
-      license,
-      created_at,
-      updated_at
+      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
+      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
+      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
+      veritabani_teklif, license, created_at, updated_at
     FROM licenses
     WHERE mac_adresi = ${normalized}
     LIMIT 1
   `;
-
   const row = rows[0] as LicenseRow | undefined;
   return row ? rowToRecord(row) : undefined;
 }
 
 export async function upsertLicense(
   body: LicensePostBody,
-): Promise<LicenseRecord> {
+): Promise<{ record: LicenseRecord; existed: boolean }> {
   await ensureLicensesTable();
   const sql = getSql();
   const normalizedMac = normalizeMac(body.macAdresi);
-  const existing = await getLicenseByMac(normalizedMac);
   const now = new Date().toISOString();
 
-  const base: LicenseRecord =
-    existing ??
-    ({
-      macAdresi: normalizedMac,
-      license: "true",
-      createdAt: now,
-      updatedAt: now,
-    } satisfies LicenseRecord);
+  // Mevcut kaydı çek (existed flag için)
+  const existing = await getLicenseByMac(normalizedMac);
+
+  const base: LicenseRecord = existing ?? {
+    macAdresi: normalizedMac,
+    license: "true",
+    createdAt: now,
+    updatedAt: now,
+  };
 
   const updated: LicenseRecord = {
     ...base,
@@ -159,10 +147,8 @@ export async function upsertLicense(
     projeAdi: body.projeAdi ?? base.projeAdi,
     projeKisaAdresi: body.projeKisaAdresi ?? base.projeKisaAdresi,
     teklifParaBirimiUSD: body.teklifParaBirimiUSD ?? base.teklifParaBirimiUSD,
-    teklifParaBirimiEuro:
-      body.teklifParaBirimiEuro ?? base.teklifParaBirimiEuro,
-    teklifParaBirimiGenel:
-      body.teklifParaBirimiGenel ?? base.teklifParaBirimiGenel,
+    teklifParaBirimiEuro: body.teklifParaBirimiEuro ?? base.teklifParaBirimiEuro,
+    teklifParaBirimiGenel: body.teklifParaBirimiGenel ?? base.teklifParaBirimiGenel,
     genelGider: body.genelGider ?? base.genelGider,
     kar: body.kar ?? base.kar,
     m31Degeri: body.m31Degeri ?? base.m31Degeri,
@@ -170,25 +156,17 @@ export async function upsertLicense(
     updatedAt: now,
   };
 
+  // JSONB için açıkça string'e çevir
+  const veritabaniTeklifJson = updated.veritabaniTeklif
+    ? JSON.stringify(updated.veritabaniTeklif)
+    : null;
+
   const rows = await sql`
     INSERT INTO licenses (
-      mac_adresi,
-      ip_adresi,
-      firma_adi,
-      user_adi,
-      dosya_adi,
-      proje_adi,
-      proje_kisa_adresi,
-      teklif_para_birimi_usd,
-      teklif_para_birimi_euro,
-      teklif_para_birimi_genel,
-      genel_gider,
-      kar,
-      m31_degeri,
-      veritabani_teklif,
-      license,
-      created_at,
-      updated_at
+      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
+      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
+      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
+      veritabani_teklif, license, created_at, updated_at
     ) VALUES (
       ${updated.macAdresi},
       ${updated.ipAdresi ?? null},
@@ -203,48 +181,35 @@ export async function upsertLicense(
       ${updated.genelGider ?? null},
       ${updated.kar ?? null},
       ${updated.m31Degeri ?? null},
-      ${updated.veritabaniTeklif ?? null},
+      ${veritabaniTeklifJson}::jsonb,
       ${updated.license},
       ${existing ? existing.createdAt : now},
       ${now}
     )
     ON CONFLICT (mac_adresi) DO UPDATE SET
-      ip_adresi = EXCLUDED.ip_adresi,
-      firma_adi = EXCLUDED.firma_adi,
-      user_adi = EXCLUDED.user_adi,
-      dosya_adi = EXCLUDED.dosya_adi,
-      proje_adi = EXCLUDED.proje_adi,
-      proje_kisa_adresi = EXCLUDED.proje_kisa_adresi,
-      teklif_para_birimi_usd = EXCLUDED.teklif_para_birimi_usd,
+      ip_adresi       = EXCLUDED.ip_adresi,
+      firma_adi       = EXCLUDED.firma_adi,
+      user_adi        = EXCLUDED.user_adi,
+      dosya_adi       = EXCLUDED.dosya_adi,
+      proje_adi       = EXCLUDED.proje_adi,
+      proje_kisa_adresi       = EXCLUDED.proje_kisa_adresi,
+      teklif_para_birimi_usd  = EXCLUDED.teklif_para_birimi_usd,
       teklif_para_birimi_euro = EXCLUDED.teklif_para_birimi_euro,
-      teklif_para_birimi_genel = EXCLUDED.teklif_para_birimi_genel,
-      genel_gider = EXCLUDED.genel_gider,
-      kar = EXCLUDED.kar,
-      m31_degeri = EXCLUDED.m31_degeri,
+      teklif_para_birimi_genel= EXCLUDED.teklif_para_birimi_genel,
+      genel_gider     = EXCLUDED.genel_gider,
+      kar             = EXCLUDED.kar,
+      m31_degeri      = EXCLUDED.m31_degeri,
       veritabani_teklif = EXCLUDED.veritabani_teklif,
-      license = EXCLUDED.license,
-      updated_at = EXCLUDED.updated_at
+      license         = EXCLUDED.license,
+      updated_at      = EXCLUDED.updated_at
     RETURNING
-      mac_adresi,
-      ip_adresi,
-      firma_adi,
-      user_adi,
-      dosya_adi,
-      proje_adi,
-      proje_kisa_adresi,
-      teklif_para_birimi_usd,
-      teklif_para_birimi_euro,
-      teklif_para_birimi_genel,
-      genel_gider,
-      kar,
-      m31_degeri,
-      veritabani_teklif,
-      license,
-      created_at,
-      updated_at
+      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
+      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
+      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
+      veritabani_teklif, license, created_at, updated_at
   `;
 
-  return rowToRecord(rows[0] as LicenseRow);
+  return { record: rowToRecord(rows[0] as LicenseRow), existed: Boolean(existing) };
 }
 
 export async function listLicenses(): Promise<LicenseRecord[]> {
@@ -252,27 +217,13 @@ export async function listLicenses(): Promise<LicenseRecord[]> {
   const sql = getSql();
   const rows = await sql`
     SELECT
-      mac_adresi,
-      ip_adresi,
-      firma_adi,
-      user_adi,
-      dosya_adi,
-      proje_adi,
-      proje_kisa_adresi,
-      teklif_para_birimi_usd,
-      teklif_para_birimi_euro,
-      teklif_para_birimi_genel,
-      genel_gider,
-      kar,
-      m31_degeri,
-      veritabani_teklif,
-      license,
-      created_at,
-      updated_at
+      mac_adresi, ip_adresi, firma_adi, user_adi, dosya_adi, proje_adi,
+      proje_kisa_adresi, teklif_para_birimi_usd, teklif_para_birimi_euro,
+      teklif_para_birimi_genel, genel_gider, kar, m31_degeri,
+      veritabani_teklif, license, created_at, updated_at
     FROM licenses
     ORDER BY updated_at DESC
   `;
-
   return (rows as LicenseRow[]).map(rowToRecord);
 }
 
@@ -280,10 +231,5 @@ export async function isLicensed(mac: string): Promise<boolean> {
   const record = await getLicenseByMac(mac);
   if (!record) return false;
   const value = record.license.toLowerCase();
-  return (
-    value === "true" ||
-    value === "1" ||
-    value === "active" ||
-    value === "evet"
-  );
+  return value === "true" || value === "1" || value === "active" || value === "evet";
 }

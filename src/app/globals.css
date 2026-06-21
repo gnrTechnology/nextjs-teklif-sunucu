@@ -1,49 +1,123 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-card-hover: #1f2233;
+  --bg-header: #13151f;
+  --border: #2a2d3e;
+  --border-strong: #3a3d52;
+  --text: #e8eaf0;
+  --text-muted: #7b82a0;
+  --text-dim: #555b75;
+  --accent: #6c8ef5;
+  --accent-dim: rgba(108, 142, 245, 0.12);
+  --green: #3ecf8e;
+  --green-dim: rgba(62, 207, 142, 0.12);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.12);
+  --yellow: #fbbf24;
+  --yellow-dim: rgba(251, 191, 36, 0.12);
+  --code-bg: rgba(108, 142, 245, 0.1);
+  --code-text: #a5b4fc;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  --radius: 10px;
+  --radius-sm: 6px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #f0f2f8;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8f9ff;
+    --bg-header: #ffffff;
+    --border: #e2e5f0;
+    --border-strong: #c8cde0;
+    --text: #1a1d2e;
+    --text-muted: #5a6080;
+    --text-dim: #9099b8;
+    --accent: #4f6ef0;
+    --accent-dim: rgba(79, 110, 240, 0.08);
+    --green: #16a34a;
+    --green-dim: rgba(22, 163, 74, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --yellow: #d97706;
+    --yellow-dim: rgba(217, 119, 6, 0.08);
+    --code-bg: rgba(79, 110, 240, 0.08);
+    --code-text: #4f6ef0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
   }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html {
-  height: 100%;
+  color-scheme: dark;
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+@media (prefers-color-scheme: light) {
+  html { color-scheme: light; }
 }
 
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+a { color: inherit; text-decoration: none; }
+
+/* ── Refresher widget ── */
+.refresher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.refresher-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.refresher-label {
+  white-space: nowrap;
+}
+
+.refresher-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.refresher-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
 }
