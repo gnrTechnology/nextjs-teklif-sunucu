@@ -18,7 +18,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     return errorResponse("Geçersiz MAC adresi.", 400);
   }
 
-  const autoStart = getAutoStartByMac(decodedMac);
+  const autoStart = await getAutoStartByMac(decodedMac);
 
   if (!autoStart) {
     return jsonResponse({

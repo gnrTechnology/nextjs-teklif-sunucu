@@ -2,6 +2,7 @@ export interface LicenseRecord {
   macAdresi: string;
   ipAdresi?: string;
   firmaAdi?: string;
+  userAdi?: string;
   dosyaAdi?: string;
   projeAdi?: string;
   projeKisaAdresi?: string;
@@ -30,6 +31,7 @@ export interface LicensePostBody {
   macAdresi: string;
   ipAdresi?: string;
   firmaAdi?: string;
+  userAdi?: string;
   dosyaAdi?: string;
   projeAdi?: string;
   projeKisaAdresi?: string;

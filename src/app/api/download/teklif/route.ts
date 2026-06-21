@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     return errorResponse("macAdresi alanı zorunludur.", 400);
   }
 
-  if (!isLicensed(body.macAdresi)) {
+  if (!(await isLicensed(body.macAdresi))) {
     return errorResponse(
       "Bu MAC adresi için aktif lisans bulunamadı. Önce lisans kaydı yapılmalıdır.",
       403,

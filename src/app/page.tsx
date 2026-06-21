@@ -5,8 +5,8 @@ import { listLicenses } from "@/lib/db";
 import { listModules } from "@/lib/modules";
 import styles from "./page.module.css";
 
-export default function Home() {
-  const licenses = listLicenses();
+export default async function Home() {
+  const licenses = await listLicenses();
   const modules = listModules();
   const firmAutoModules = listFirmAutoModules();
 
@@ -48,6 +48,7 @@ export default function Home() {
               <tr>
                 <th>MAC</th>
                 <th>Firma</th>
+                <th>Kullanıcı</th>
                 <th>Lisans</th>
                 <th>Dosya</th>
                 <th>Güncelleme</th>
@@ -58,6 +59,7 @@ export default function Home() {
                 <tr key={item.macAdresi}>
                   <td>{item.macAdresi}</td>
                   <td>{item.firmaAdi ?? "—"}</td>
+                  <td>{item.userAdi ?? "—"}</td>
                   <td>{item.license}</td>
                   <td>{item.dosyaAdi ?? "—"}</td>
                   <td>{new Date(item.updatedAt).toLocaleString("tr-TR")}</td>

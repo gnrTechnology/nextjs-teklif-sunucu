@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
     return errorResponse("macAdresi alanı zorunludur.", 400);
   }
 
-  const existed = Boolean(getLicenseByMac(body.macAdresi));
-  const record = upsertLicense(body);
+  const existed = Boolean(await getLicenseByMac(body.macAdresi));
+  const record = await upsertLicense(body);
 
   // VBA RegisterLicense 201 bekliyor; PostDataToServer 200 veya 201 kabul ediyor
   const status = existed ? 200 : 201;
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
         macAdresi: record.macAdresi,
         license: record.license,
         firmaAdi: record.firmaAdi ?? null,
+        userAdi: record.userAdi ?? null,
         dosyaAdi: record.dosyaAdi ?? null,
         ipAdresi: record.ipAdresi ?? null,
       },
