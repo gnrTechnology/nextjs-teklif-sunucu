@@ -143,22 +143,27 @@ Private Sub HandleLicenseResponse(responseText As String, dosyaYolu As String, b
     End If
 End Sub
 
-' Application.AddIns ile kopya addin'i kaldir, kilidi ac, sonra VBScript ile dosyayi sil.
+' Application.AddIns ile SADECE kopya addin'i kaldir, kilidi ac, sonra VBScript ile sil.
+' teklif.xlam dahil diger addinlere dokunulmaz.
 Private Sub UninstallAndDelete(kopyaAdi As String, kopyaYolu As String)
     Dim ai As Object
     Dim teklifYolu As String
     teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
 
-    ' 1. Application.AddIns uzerinden kopya addin'i kaldır (dosya kilidini serbest birakir)
+    ' 1. Sadece kopya addin'i kaldır (Auto_Remove dialogunu bastır)
     On Error Resume Next
+    Application.DisplayAlerts = False
     For Each ai In Application.AddIns
         If ai.Installed Then
-            Debug.Print "[getLicense] AddIn bulundu: " & ai.Name
-            ' Hem kopya addin'i hem teklif.xlam'i kaldır
-            ai.Installed = False
-            Debug.Print "[getLicense] Kaldırıldı: " & ai.Name
+            ' Sadece kopyaAdi eslesen addin'i kaldır, teklif.xlam'a dokunma
+            If LCase(ai.Name) = LCase(kopyaAdi) Then
+                Debug.Print "[getLicense] Kopya addin kaldırılıyor: " & ai.Name
+                ai.Installed = False
+                Debug.Print "[getLicense] Kaldırıldı: " & ai.Name
+            End If
         End If
     Next ai
+    Application.DisplayAlerts = True
     On Error GoTo 0
 
     ' 2. Kısa bekleme - Excel addin'i bellekten temizlesin
