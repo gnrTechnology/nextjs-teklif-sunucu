@@ -1,0 +1,33 @@
+[
+  {
+    "firmaAdi": "*",
+    "description": "Tüm firmalar için ortak modüller",
+    "enabled": true,
+    "onExcelOpen": {
+      "enabled": true,
+      "modules": [
+        {
+          "methodName": "getLicense",
+          "order": 1,
+          "delaySeconds": 0
+        },
+        {
+          "methodName": "StartLicensePolling",
+          "order": 2,
+          "delaySeconds": 1
+        }
+      ]
+    }
+  },
+  {
+    "firmaAdi": "EPRON",
+    "description": "EPRON'a özel: eklenti güncelleme",
+    "enabled": true,
+    "onExcelOpen": {
+      "enabled": true,
+      "modules": [
+
+      ]
+    }
+  }
+]

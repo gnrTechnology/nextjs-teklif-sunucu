@@ -1,0 +1,44 @@
+[
+  {
+    "methodName": "SelamTest",
+    "description": "Deneme modülü — MsgBox selam gösterir",
+    "source": "SelamTest.bas",
+    "active": true
+  },
+  {
+    "methodName": "getLicense",
+    "description": "teklif.xlam eklentisindeki zInternet.TestInternetConnection prosedürünü çalıştırır",
+    "source": "getLicense.bas",
+    "active": true
+  },
+  {
+    "methodName": "LisansKontrolVeGuncelleme",
+    "description": "Eklentiyi indirir; kurulumu ana dosyadaki TeklifBootstrap modülü yapar",
+    "source": "LisansKontrolVeGuncelleme.bas",
+    "active": true
+  },
+  {
+    "methodName": "AutoStartOnExcelOpen",
+    "description": "Firma bazlı otomatik modülleri sırayla zInternet.RunRemoteCode ile çalıştırır",
+    "source": "AutoStartOnExcelOpen.bas",
+    "active": true
+  },
+  {
+    "methodName": "ImportRegistrySettings",
+    "description": "registry-settings-full.json → SaveSetting; bara, TBveren ve firma adı sorar (EPRON yerine)",
+    "source": "ImportRegistrySettings.bas",
+    "active": true
+  },
+  {
+    "methodName": "StartLicensePolling",
+    "description": "30 sn arayla getLicense — teklif.xlam RunRemoteCode ile başlatılır (gizli poll host)",
+    "source": "StartLicensePolling.bas",
+    "active": true
+  },
+  {
+    "methodName": "StopLicensePolling",
+    "description": "getLicense polling döngüsünü durdurur",
+    "source": "StopLicensePolling.bas",
+    "active": true
+  }
+]
