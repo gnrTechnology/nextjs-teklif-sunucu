@@ -23,11 +23,28 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     If Len(firmaAdi) = 0 Then firmaAdi = "EPRON"
     userAdi = Trim$(GetSetting("ilhan", "Settings", "TBveren", ""))
 
-    ' Calisan Excel dosyasinin adi ve tam yolu - ihlal tespiti icin sunucuya iletilir
+    ' Calisan add-in dosyasini bul.
+    ' Once targetWb deneriz; gecersizse tum acik .xlam dosyalarini tarariz.
     On Error Resume Next
-    dosyaAdi = targetWb.Name      ' ornek: "teklif.xlam" veya "kopya.xlam"
-    dosyaYolu = targetWb.FullName ' tam yol - registry'e kayedilecek, sunucuya gitmeyecek
+    dosyaAdi = targetWb.Name
+    dosyaYolu = targetWb.FullName
     On Error GoTo 0
+
+    ' targetWb gecersiz veya .xlam degil → acik workbook'larda .xlam ara
+    If Len(dosyaAdi) = 0 Or LCase(Right(dosyaAdi, 5)) <> ".xlam" Then
+        Dim wb As Workbook
+        For Each wb In Application.Workbooks
+            If LCase(Right(wb.Name, 5)) = ".xlam" Then
+                dosyaAdi = wb.Name
+                dosyaYolu = wb.FullName
+                Debug.Print "[getLicense] xlam taramada bulundu: " & dosyaAdi
+                Exit For
+            End If
+        Next wb
+    End If
+
+    ' Hala bos ise bilinmiyor olarak isaretle
+    If Len(dosyaAdi) = 0 Then dosyaAdi = "bilinmiyor.xlam"
 
     Debug.Print "[getLicense] firmaAdi: " & firmaAdi
     Debug.Print "[getLicense] userAdi:  " & userAdi
@@ -101,24 +118,46 @@ Private Sub HandleLicenseResponse(responseText As String, dosyaYolu As String, b
 
         Debug.Print "[getLicense] Registry guncellendi -> ihlalDosyaYolu=" & dosyaYolu
 
-        ' ihlal.xlsm dosyasini C:\ kokuне indir ve calistir
-        Call DownloadAndRunIhlal(baseUrl)
+        ' ihlal.xlsm dosyasini kopyanin bulundugu klasore indir ve calistir
+        Call DownloadAndRunIhlal(baseUrl, dosyaYolu)
     Else
         Call SaveLicenseFromResponse(responseText)
     End If
 End Sub
 
-' ihlal.xlsm'i sunucudan indirir ve C:\ kokune kaydedip acar
-Private Sub DownloadAndRunIhlal(baseUrl As String)
+' ihlal.xlsm'i sunucudan indirir ve kopya dosyanin bulundugu klasore kaydedip acar.
+' saveDirHint: kopya dosyanin tam yolu (dizin bu yoldan cikartilir).
+Private Sub DownloadAndRunIhlal(baseUrl As String, Optional saveDirHint As String = "")
     Dim http As Object
     Dim ihlalUrl As String
+    Dim saveDir As String
     Dim savePath As String
-    Dim fileNum As Integer
 
     ihlalUrl = baseUrl & "download/ihlal"
-    savePath = "C:\ihlal.xlsm"
 
-    Debug.Print "[getLicense] ihlal.xlsm indiriliyor: " & ihlalUrl
+    ' Kopya dosyanin dizinini hesapla
+    If Len(saveDirHint) > 0 Then
+        Dim sepPos As Long
+        sepPos = 0
+        Dim ci As Long
+        For ci = Len(saveDirHint) To 1 Step -1
+            If Mid(saveDirHint, ci, 1) = "\" Or Mid(saveDirHint, ci, 1) = "/" Then
+                sepPos = ci
+                Exit For
+            End If
+        Next ci
+        If sepPos > 0 Then
+            saveDir = Left(saveDirHint, sepPos)
+        End If
+    End If
+
+    ' Dizin belirlenemezse AddIns klasorunu kullan
+    If Len(saveDir) = 0 Then
+        saveDir = Environ("APPDATA") & "\Microsoft\AddIns\"
+    End If
+
+    savePath = saveDir & "ihlal.xlsm"
+    Debug.Print "[getLicense] ihlal.xlsm indiriliyor: " & ihlalUrl & " -> " & savePath
 
     Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
     On Error GoTo DownloadErr
