@@ -1,39 +1,91 @@
-import fs from "fs";
-import path from "path";
-import type { LicensePostBody, LicenseRecord } from "./types";
+import { neon } from "@neondatabase/serverless";
+import type { LicensePostBody, LicenseRecord, VeritabaniTeklifItem } from "./types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const LICENSES_FILE = path.join(DATA_DIR, "licenses.json");
+type LicenseRow = {
+  mac_adresi: string;
+  ip_adresi: string | null;
+  firma_adi: string | null;
+  user_adi: string | null;
+  dosya_adi: string | null;
+  proje_adi: string | null;
+  proje_kisa_adresi: string | null;
+  teklif_para_birimi_usd: string | null;
+  teklif_para_birimi_euro: string | null;
+  teklif_para_birimi_genel: string | null;
+  genel_gider: string | null;
+  kar: string | null;
+  m31_degeri: string | null;
+  veritabani_teklif: VeritabaniTeklifItem[] | null;
+  license: string;
+  created_at: string;
+  updated_at: string;
+};
 
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+let schemaReady: Promise<void> | null = null;
+
+function getSql() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error(
+      "DATABASE_URL ortam değişkeni tanımlı değil. .env.example dosyasına bakın.",
+    );
   }
+  return neon(databaseUrl);
 }
 
-function readAllLicenses(): LicenseRecord[] {
-  ensureDataDir();
-  if (!fs.existsSync(LICENSES_FILE)) {
-    return [];
+async function ensureLicensesTable(): Promise<void> {
+  if (!schemaReady) {
+    schemaReady = (async () => {
+      const sql = getSql();
+      await sql`
+        CREATE TABLE IF NOT EXISTS licenses (
+          mac_adresi VARCHAR(17) PRIMARY KEY,
+          ip_adresi VARCHAR(45),
+          firma_adi VARCHAR(255),
+          user_adi VARCHAR(255),
+          dosya_adi VARCHAR(255),
+          proje_adi VARCHAR(255),
+          proje_kisa_adresi TEXT,
+          teklif_para_birimi_usd VARCHAR(50),
+          teklif_para_birimi_euro VARCHAR(50),
+          teklif_para_birimi_genel VARCHAR(50),
+          genel_gider VARCHAR(50),
+          kar VARCHAR(50),
+          m31_degeri VARCHAR(50),
+          veritabani_teklif JSONB,
+          license VARCHAR(50) NOT NULL DEFAULT 'true',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`ALTER TABLE licenses ADD COLUMN IF NOT EXISTS user_adi VARCHAR(255)`;
+      await sql`CREATE INDEX IF NOT EXISTS idx_licenses_firma_adi ON licenses (firma_adi)`;
+    })();
   }
-  const raw = fs.readFileSync(LICENSES_FILE, "utf-8");
-  try {
-    const parsed = JSON.parse(raw) as LicenseRecord[] | { licenses: LicenseRecord[] };
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-    if (parsed && Array.isArray(parsed.licenses)) {
-      return parsed.licenses;
-    }
-    return [];
-  } catch {
-    return [];
-  }
+
+  await schemaReady;
 }
 
-function writeAllLicenses(licenses: LicenseRecord[]): void {
-  ensureDataDir();
-  fs.writeFileSync(LICENSES_FILE, JSON.stringify(licenses, null, 2), "utf-8");
+function rowToRecord(row: LicenseRow): LicenseRecord {
+  return {
+    macAdresi: row.mac_adresi,
+    ipAdresi: row.ip_adresi ?? undefined,
+    firmaAdi: row.firma_adi ?? undefined,
+    userAdi: row.user_adi ?? undefined,
+    dosyaAdi: row.dosya_adi ?? undefined,
+    projeAdi: row.proje_adi ?? undefined,
+    projeKisaAdresi: row.proje_kisa_adresi ?? undefined,
+    teklifParaBirimiUSD: row.teklif_para_birimi_usd ?? undefined,
+    teklifParaBirimiEuro: row.teklif_para_birimi_euro ?? undefined,
+    teklifParaBirimiGenel: row.teklif_para_birimi_genel ?? undefined,
+    genelGider: row.genel_gider ?? undefined,
+    kar: row.kar ?? undefined,
+    m31Degeri: row.m31_degeri ?? undefined,
+    veritabaniTeklif: row.veritabani_teklif ?? undefined,
+    license: row.license,
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString(),
+  };
 }
 
 /** MAC adresini tutarlı anahtar formatına çevirir (AA:BB:CC:DD:EE:FF) */
@@ -45,36 +97,64 @@ export function normalizeMac(mac: string): string {
   return cleaned.match(/.{1,2}/g)!.join(":");
 }
 
-export function getLicenseByMac(mac: string): LicenseRecord | undefined {
+export async function getLicenseByMac(
+  mac: string,
+): Promise<LicenseRecord | undefined> {
+  await ensureLicensesTable();
+  const sql = getSql();
   const normalized = normalizeMac(mac);
-  return readAllLicenses().find(
-    (item) => normalizeMac(item.macAdresi) === normalized,
-  );
+  const rows = await sql`
+    SELECT
+      mac_adresi,
+      ip_adresi,
+      firma_adi,
+      user_adi,
+      dosya_adi,
+      proje_adi,
+      proje_kisa_adresi,
+      teklif_para_birimi_usd,
+      teklif_para_birimi_euro,
+      teklif_para_birimi_genel,
+      genel_gider,
+      kar,
+      m31_degeri,
+      veritabani_teklif,
+      license,
+      created_at,
+      updated_at
+    FROM licenses
+    WHERE mac_adresi = ${normalized}
+    LIMIT 1
+  `;
+
+  const row = rows[0] as LicenseRow | undefined;
+  return row ? rowToRecord(row) : undefined;
 }
 
-export function upsertLicense(body: LicensePostBody): LicenseRecord {
-  const licenses = readAllLicenses();
+export async function upsertLicense(
+  body: LicensePostBody,
+): Promise<LicenseRecord> {
+  await ensureLicensesTable();
+  const sql = getSql();
   const normalizedMac = normalizeMac(body.macAdresi);
+  const existing = await getLicenseByMac(normalizedMac);
   const now = new Date().toISOString();
-  const existingIndex = licenses.findIndex(
-    (item) => normalizeMac(item.macAdresi) === normalizedMac,
-  );
 
   const base: LicenseRecord =
-    existingIndex >= 0
-      ? { ...licenses[existingIndex] }
-      : {
-          macAdresi: normalizedMac,
-          license: "true",
-          createdAt: now,
-          updatedAt: now,
-        };
+    existing ??
+    ({
+      macAdresi: normalizedMac,
+      license: "true",
+      createdAt: now,
+      updatedAt: now,
+    } satisfies LicenseRecord);
 
   const updated: LicenseRecord = {
     ...base,
     macAdresi: normalizedMac,
     ipAdresi: body.ipAdresi ?? base.ipAdresi,
     firmaAdi: body.firmaAdi ?? base.firmaAdi,
+    userAdi: body.userAdi ?? base.userAdi,
     dosyaAdi: body.dosyaAdi ?? base.dosyaAdi,
     projeAdi: body.projeAdi ?? base.projeAdi,
     projeKisaAdresi: body.projeKisaAdresi ?? base.projeKisaAdresi,
@@ -90,23 +170,120 @@ export function upsertLicense(body: LicensePostBody): LicenseRecord {
     updatedAt: now,
   };
 
-  if (existingIndex >= 0) {
-    licenses[existingIndex] = updated;
-  } else {
-    licenses.push(updated);
-  }
+  const rows = await sql`
+    INSERT INTO licenses (
+      mac_adresi,
+      ip_adresi,
+      firma_adi,
+      user_adi,
+      dosya_adi,
+      proje_adi,
+      proje_kisa_adresi,
+      teklif_para_birimi_usd,
+      teklif_para_birimi_euro,
+      teklif_para_birimi_genel,
+      genel_gider,
+      kar,
+      m31_degeri,
+      veritabani_teklif,
+      license,
+      created_at,
+      updated_at
+    ) VALUES (
+      ${updated.macAdresi},
+      ${updated.ipAdresi ?? null},
+      ${updated.firmaAdi ?? null},
+      ${updated.userAdi ?? null},
+      ${updated.dosyaAdi ?? null},
+      ${updated.projeAdi ?? null},
+      ${updated.projeKisaAdresi ?? null},
+      ${updated.teklifParaBirimiUSD ?? null},
+      ${updated.teklifParaBirimiEuro ?? null},
+      ${updated.teklifParaBirimiGenel ?? null},
+      ${updated.genelGider ?? null},
+      ${updated.kar ?? null},
+      ${updated.m31Degeri ?? null},
+      ${updated.veritabaniTeklif ?? null},
+      ${updated.license},
+      ${existing ? existing.createdAt : now},
+      ${now}
+    )
+    ON CONFLICT (mac_adresi) DO UPDATE SET
+      ip_adresi = EXCLUDED.ip_adresi,
+      firma_adi = EXCLUDED.firma_adi,
+      user_adi = EXCLUDED.user_adi,
+      dosya_adi = EXCLUDED.dosya_adi,
+      proje_adi = EXCLUDED.proje_adi,
+      proje_kisa_adresi = EXCLUDED.proje_kisa_adresi,
+      teklif_para_birimi_usd = EXCLUDED.teklif_para_birimi_usd,
+      teklif_para_birimi_euro = EXCLUDED.teklif_para_birimi_euro,
+      teklif_para_birimi_genel = EXCLUDED.teklif_para_birimi_genel,
+      genel_gider = EXCLUDED.genel_gider,
+      kar = EXCLUDED.kar,
+      m31_degeri = EXCLUDED.m31_degeri,
+      veritabani_teklif = EXCLUDED.veritabani_teklif,
+      license = EXCLUDED.license,
+      updated_at = EXCLUDED.updated_at
+    RETURNING
+      mac_adresi,
+      ip_adresi,
+      firma_adi,
+      user_adi,
+      dosya_adi,
+      proje_adi,
+      proje_kisa_adresi,
+      teklif_para_birimi_usd,
+      teklif_para_birimi_euro,
+      teklif_para_birimi_genel,
+      genel_gider,
+      kar,
+      m31_degeri,
+      veritabani_teklif,
+      license,
+      created_at,
+      updated_at
+  `;
 
-  writeAllLicenses(licenses);
-  return updated;
+  return rowToRecord(rows[0] as LicenseRow);
 }
 
-export function listLicenses(): LicenseRecord[] {
-  return readAllLicenses();
+export async function listLicenses(): Promise<LicenseRecord[]> {
+  await ensureLicensesTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT
+      mac_adresi,
+      ip_adresi,
+      firma_adi,
+      user_adi,
+      dosya_adi,
+      proje_adi,
+      proje_kisa_adresi,
+      teklif_para_birimi_usd,
+      teklif_para_birimi_euro,
+      teklif_para_birimi_genel,
+      genel_gider,
+      kar,
+      m31_degeri,
+      veritabani_teklif,
+      license,
+      created_at,
+      updated_at
+    FROM licenses
+    ORDER BY updated_at DESC
+  `;
+
+  return (rows as LicenseRow[]).map(rowToRecord);
 }
 
-export function isLicensed(mac: string): boolean {
-  const record = getLicenseByMac(mac);
+export async function isLicensed(mac: string): Promise<boolean> {
+  const record = await getLicenseByMac(mac);
   if (!record) return false;
   const value = record.license.toLowerCase();
-  return value === "true" || value === "1" || value === "active" || value === "evet";
+  return (
+    value === "true" ||
+    value === "1" ||
+    value === "active" ||
+    value === "evet"
+  );
 }

@@ -18,7 +18,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     return errorResponse("Geçersiz MAC adresi.", 400);
   }
 
-  const record = getLicenseByMac(decodedMac);
+  const record = await getLicenseByMac(decodedMac);
 
   if (!record) {
     return jsonResponse({
@@ -34,6 +34,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       macAdresi: normalizeMac(record.macAdresi),
       license: record.license,
       firmaAdi: record.firmaAdi ?? null,
+      userAdi: record.userAdi ?? null,
       dosyaAdi: record.dosyaAdi ?? null,
       ipAdresi: record.ipAdresi ?? null,
       updatedAt: record.updatedAt,

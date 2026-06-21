@@ -94,8 +94,10 @@ export function getAutoStartByFirma(firmaAdi: string): FirmAutoStartResponse | n
   };
 }
 
-export function getAutoStartByMac(mac: string): FirmAutoStartResponse | null {
-  const license = getLicenseByMac(mac);
+export async function getAutoStartByMac(
+  mac: string,
+): Promise<FirmAutoStartResponse | null> {
+  const license = await getLicenseByMac(mac);
 
   if (!license?.firmaAdi?.trim()) {
     return null;
