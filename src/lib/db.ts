@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { neon } from "@neondatabase/serverless";
 import type { LicensePostBody, LicenseRecord, VeritabaniTeklifItem } from "./types";
 
@@ -288,8 +287,7 @@ export async function isLicensed(mac: string): Promise<boolean> {
     value === "evet"
   );
 }
-=======
-import { neon } from "@neondatabase/serverless";
+
 import type { LicensePostBody, LicenseRecord, VeritabaniTeklifItem } from "./types";
 
 type LicenseRow = {
@@ -578,4 +576,3 @@ export async function isLicensed(mac: string): Promise<boolean> {
     value === "evet"
   );
 }
->>>>>>> 1057c5c83b00dbc2e40b55b442239b0d43d0937c
