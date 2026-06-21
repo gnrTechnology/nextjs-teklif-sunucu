@@ -21,9 +21,10 @@ Private Sub RunFirmAutoStartModules(Optional apiBaseUrl As Variant)
     url = ResolveApiBaseUrl(apiBaseUrl) & "auto-start/" & mac & "/"
     Debug.Print "[AutoStartOnExcelOpen] URL: " & url
 
-    Set http = CreateObject("MSXML2.XMLHTTP.6.0")
+    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
     On Error GoTo AutoStartErr
     http.Open "GET", url, False
+    http.setTimeouts 5000, 10000, 30000, 30000
     http.send
 
     Debug.Print "[AutoStartOnExcelOpen] HTTP Status: " & http.Status
