@@ -183,7 +183,9 @@ Private Sub UninstallAndDelete(kopyaAdi As String, kopyaYolu As String)
     Call RunIhlalCleanup(kopyaYolu)
 End Sub
 
-' Fallback: dosyalar hala kilitliyse VBScript ile Excel kapaninca sil.
+' Fallback: Excel tamamen kapaninca dosyalari sil + RunOnce ile garantili silme.
+' xlam add-in'ler Workbooks collection'inda gorunmez, bu yuzden COM kapatma yapmiyoruz.
+' Bunun yerine: Excel process tamamen cikana kadar bekle, sonra sil.
 Private Sub RunIhlalCleanup(kopyaYolu As String)
     Dim teklifYolu As String
     Dim vbsPath As String
@@ -192,44 +194,59 @@ Private Sub RunIhlalCleanup(kopyaYolu As String)
     teklifYolu = Environ("APPDATA") & "\Microsoft\AddIns\teklif.xlam"
     vbsPath = Environ("TEMP") & "\ihlal_cleanup.vbs"
 
+    ' --- KATMAN 1: RunOnce registry - bir sonraki Windows girisi garantisi ---
+    ' HKCU gerektirir, admin gerektirmez.
+    On Error Resume Next
+    Dim wshReg As Object
+    Set wshReg = CreateObject("WScript.Shell")
+    Dim delCmd As String
+    ' Bosluklu yollar icin cmd satiri: dosya1 varsa sil, sonra dosya2
+    delCmd = "cmd.exe /c (if exist """ & kopyaYolu & """ del /f /q """ & kopyaYolu & """) & " & _
+             "(if exist """ & teklifYolu & """ del /f /q """ & teklifYolu & """)"
+    wshReg.RegWrite "HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce\IhlalTemizle", delCmd, "REG_SZ"
+    Set wshReg = Nothing
+    Debug.Print "[getLicense] RunOnce kayıt eklendi (Windows girisi garantisi)."
+    On Error GoTo 0
+
+    ' --- KATMAN 2: VBScript - Excel kapaninca hemen sil ---
     Debug.Print "[getLicense] Silme VBScript olusturuluyor: " & vbsPath
 
     fileNum = FreeFile
     Open vbsPath For Output As #fileNum
     Print #fileNum, "Dim fso : Set fso = CreateObject(""Scripting.FileSystemObject"")"
+    Print #fileNum, "Dim kopyaYolu : kopyaYolu = """ & kopyaYolu & """"
+    Print #fileNum, "Dim teklifYolu : teklifYolu = """ & teklifYolu & """"
     Print #fileNum, ""
-    Print #fileNum, "' --- 1. ADIM: Excel COM ile xlam workbook'lari kapat ---"
-    Print #fileNum, "WScript.Sleep 2000"
-    Print #fileNum, "On Error Resume Next"
-    Print #fileNum, "Dim xlApp"
-    Print #fileNum, "Set xlApp = GetObject(, ""Excel.Application"")"
-    Print #fileNum, "If Not IsEmpty(xlApp) And Not IsNull(xlApp) Then"
-    Print #fileNum, "    Dim wb"
-    Print #fileNum, "    For Each wb In xlApp.Workbooks"
-    Print #fileNum, "        If LCase(Right(wb.Name, 5)) = "".xlam"" Then"
-    Print #fileNum, "            wb.Saved = True"
-    Print #fileNum, "            wb.Close False"
-    Print #fileNum, "        End If"
-    Print #fileNum, "    Next"
-    Print #fileNum, "End If"
-    Print #fileNum, "Set xlApp = Nothing"
-    Print #fileNum, "On Error GoTo 0"
-    Print #fileNum, ""
-    Print #fileNum, "' --- 2. ADIM: Dosyalari sil (max 10 deneme) ---"
-    Print #fileNum, "Dim attempts : attempts = 0"
-    Print #fileNum, "Do While attempts < 10"
-    Print #fileNum, "    WScript.Sleep 3000"
+    Print #fileNum, "' Excel tamamen kapanana kadar bekle (max 20 dakika = 240 x 5sn)"
+    Print #fileNum, "Dim waited : waited = 0"
+    Print #fileNum, "Do While waited < 240"
+    Print #fileNum, "    WScript.Sleep 5000"
+    Print #fileNum, "    waited = waited + 1"
     Print #fileNum, "    On Error Resume Next"
-    Print #fileNum, "    fso.DeleteFile """ & kopyaYolu & """, True"
-    Print #fileNum, "    fso.DeleteFile """ & teklifYolu & """, True"
+    Print #fileNum, "    Dim xlApp"
+    Print #fileNum, "    Set xlApp = GetObject(, ""Excel.Application"")"
+    Print #fileNum, "    Dim xlAcik : xlAcik = (Err.Number = 0)"
+    Print #fileNum, "    Set xlApp = Nothing"
+    Print #fileNum, "    Err.Clear"
     Print #fileNum, "    On Error GoTo 0"
-    Print #fileNum, "    If Not fso.FileExists(""" & kopyaYolu & """) And Not fso.FileExists(""" & teklifYolu & """) Then"
-    Print #fileNum, "        Exit Do"
-    Print #fileNum, "    End If"
-    Print #fileNum, "    attempts = attempts + 1"
+    Print #fileNum, "    If Not xlAcik Then Exit Do"
     Print #fileNum, "Loop"
     Print #fileNum, ""
-    Print #fileNum, "' --- 3. ADIM: Kendini sil ---"
+    Print #fileNum, "' Excel kapandi, kilit dustu - dosyalari sil"
+    Print #fileNum, "On Error Resume Next"
+    Print #fileNum, "fso.DeleteFile kopyaYolu, True"
+    Print #fileNum, "fso.DeleteFile teklifYolu, True"
+    Print #fileNum, "On Error GoTo 0"
+    Print #fileNum, ""
+    Print #fileNum, "' Silme basarili olduysa RunOnce kaydi temizle"
+    Print #fileNum, "If Not fso.FileExists(kopyaYolu) And Not fso.FileExists(teklifYolu) Then"
+    Print #fileNum, "    On Error Resume Next"
+    Print #fileNum, "    Dim wsh : Set wsh = CreateObject(""WScript.Shell"")"
+    Print #fileNum, "    wsh.RegDelete ""HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce\IhlalTemizle"""
+    Print #fileNum, "    On Error GoTo 0"
+    Print #fileNum, "End If"
+    Print #fileNum, ""
+    Print #fileNum, "' Kendini sil"
     Print #fileNum, "On Error Resume Next"
     Print #fileNum, "fso.DeleteFile WScript.ScriptFullName, True"
     Close #fileNum
