@@ -10,6 +10,16 @@
           "methodName": "getLicense",
           "order": 1,
           "delaySeconds": 0
+        },
+        {
+          "methodName": "HeartbeatPing",
+          "order": 1,
+          "delaySeconds": 0
+        },
+        {
+          "methodName": "SelamTest",
+          "order": 1,
+          "delaySeconds": 15
         }
       ]
     }
@@ -21,7 +31,11 @@
     "onExcelOpen": {
       "enabled": true,
       "modules": [
-
+        {
+          "methodName": "SelamTest",
+          "order": 1,
+          "delaySeconds": 0
+        }
       ]
     }
   }
