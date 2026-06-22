@@ -1,33 +1,41 @@
-import fs from "fs";
-import path from "path";
+import {
+  listFirmAutoModulesDb,
+  getFirmAutoModuleDb,
+  ensureFirmAutoModulesTable,
+  upsertFirmAutoModuleDb,
+} from "./db";
 import { getLicenseByMac } from "./db";
 import { listRemoteModuleNames } from "./modules";
 import type { FirmAutoModuleRecord, FirmAutoStartModule, FirmAutoStartResponse } from "./types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const FIRM_AUTO_MODULES_FILE = path.join(DATA_DIR, "firm-auto-modules.json");
-
-function readAllFirmAutoModules(): FirmAutoModuleRecord[] {
-  if (!fs.existsSync(FIRM_AUTO_MODULES_FILE)) {
-    return [];
-  }
-
-  const raw = fs.readFileSync(FIRM_AUTO_MODULES_FILE, "utf-8");
+/** İlk kez çağrıldığında JSON'dan Neon'a seed eder (idempotent) */
+async function seedFromJsonIfEmpty(): Promise<void> {
   try {
-    const parsed = JSON.parse(raw) as
-      | FirmAutoModuleRecord[]
-      | { firms: FirmAutoModuleRecord[] };
-
-    if (Array.isArray(parsed)) {
-      return parsed;
+    // Sadece Node.js ortamında (sunucu) çalışır
+    const { default: fs } = await import("fs");
+    const { default: path } = await import("path");
+    const filePath = path.join(process.cwd(), "data", "firm-auto-modules.json");
+    if (!fs.existsSync(filePath)) return;
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const records: FirmAutoModuleRecord[] = JSON.parse(raw);
+    if (!Array.isArray(records)) return;
+    for (const rec of records) {
+      await upsertFirmAutoModuleDb(rec);
     }
-    if (parsed && Array.isArray(parsed.firms)) {
-      return parsed.firms;
-    }
-    return [];
   } catch {
-    return [];
+    /* seed başarısız olursa sessizce geç */
   }
+}
+
+let _seeded = false;
+async function ensureSeeded(): Promise<void> {
+  if (_seeded) return;
+  await ensureFirmAutoModulesTable();
+  const existing = await listFirmAutoModulesDb();
+  if (existing.length === 0) {
+    await seedFromJsonIfEmpty();
+  }
+  _seeded = true;
 }
 
 function normalizeFirmaAdi(firmaAdi: string): string {
@@ -48,26 +56,25 @@ function mergeModules(
   firmModules: FirmAutoStartModule[],
 ): FirmAutoStartModule[] {
   const merged = new Map<string, FirmAutoStartModule>();
-
   for (const item of globalModules) {
     merged.set(item.methodName.toLowerCase(), item);
   }
-
   for (const item of firmModules) {
     merged.set(item.methodName.toLowerCase(), item);
   }
-
   return Array.from(merged.values()).sort((a, b) => a.order - b.order);
 }
 
 export async function getAutoStartByFirma(
   firmaAdi: string,
 ): Promise<FirmAutoStartResponse | null> {
-  const normalizedFirma = normalizeFirmaAdi(firmaAdi);
-  const records = readAllFirmAutoModules().filter((item) => item.enabled !== false);
+  await ensureSeeded();
 
-  const globalConfig = records.find((item) => item.firmaAdi === "*");
-  const firmConfig = records.find(
+  const normalizedFirma = normalizeFirmaAdi(firmaAdi);
+  const allRecords = (await listFirmAutoModulesDb()).filter((item) => item.enabled !== false);
+
+  const globalConfig = allRecords.find((item) => item.firmaAdi === "*");
+  const firmConfig = allRecords.find(
     (item) =>
       item.firmaAdi !== "*" &&
       normalizeFirmaAdi(item.firmaAdi) === normalizedFirma,
@@ -83,7 +90,6 @@ export async function getAutoStartByFirma(
       ? []
       : (firmConfig?.onExcelOpen.modules ?? []);
 
-  // DB'den geçerli modül adlarını async olarak çek
   const names = await listRemoteModuleNames();
   const available = new Set(names.map((n) => n.toLowerCase()));
 
@@ -100,13 +106,16 @@ export async function getAutoStartByMac(
   mac: string,
 ): Promise<FirmAutoStartResponse | null> {
   const license = await getLicenseByMac(mac);
-
-  // MAC kayıtsız olsa bile global (*) modüller çalışsın (getLicense ilk kayıt yapabilsin)
   const firmaAdi = license?.firmaAdi?.trim() || "*";
-
   return getAutoStartByFirma(firmaAdi);
 }
 
-export function listFirmAutoModules(): FirmAutoModuleRecord[] {
-  return readAllFirmAutoModules();
+export async function listFirmAutoModules(): Promise<FirmAutoModuleRecord[]> {
+  await ensureSeeded();
+  return listFirmAutoModulesDb();
+}
+
+export async function getFirmAutoModule(firmaAdi: string): Promise<FirmAutoModuleRecord | undefined> {
+  await ensureSeeded();
+  return getFirmAutoModuleDb(firmaAdi);
 }

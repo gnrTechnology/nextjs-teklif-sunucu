@@ -5,6 +5,7 @@ import type {
   LicenseRecord,
   ModuleRecord,
   ModuleUpsertBody,
+  FirmAutoModuleRecord,
 } from "./types";
 
 type LicenseRow = {
@@ -415,6 +416,86 @@ export async function listHeartbeats(): Promise<HeartbeatRow[]> {
     ORDER BY last_seen DESC
   `;
   return rows as HeartbeatRow[];
+}
+
+// ─────────────────── FIRM AUTO MODULES ────────────────────────────────────
+
+export async function ensureFirmAutoModulesTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS firm_auto_modules (
+      firma_adi     TEXT PRIMARY KEY,
+      description   TEXT    DEFAULT '',
+      enabled       BOOLEAN DEFAULT true,
+      on_excel_open JSONB   DEFAULT '{"enabled":true,"modules":[]}',
+      updated_at    TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
+export async function listFirmAutoModulesDb(): Promise<FirmAutoModuleRecord[]> {
+  await ensureFirmAutoModulesTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT firma_adi, description, enabled, on_excel_open
+    FROM firm_auto_modules
+    ORDER BY CASE WHEN firma_adi = '*' THEN 0 ELSE 1 END, firma_adi
+  `;
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    firmaAdi: r.firma_adi as string,
+    description: (r.description as string) ?? "",
+    enabled: r.enabled as boolean,
+    onExcelOpen: r.on_excel_open as FirmAutoModuleRecord["onExcelOpen"],
+  }));
+}
+
+export async function getFirmAutoModuleDb(firmaAdi: string): Promise<FirmAutoModuleRecord | undefined> {
+  await ensureFirmAutoModulesTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT firma_adi, description, enabled, on_excel_open
+    FROM firm_auto_modules
+    WHERE LOWER(firma_adi) = LOWER(${firmaAdi})
+    LIMIT 1
+  `;
+  const r = rows[0] as Record<string, unknown> | undefined;
+  if (!r) return undefined;
+  return {
+    firmaAdi: r.firma_adi as string,
+    description: (r.description as string) ?? "",
+    enabled: r.enabled as boolean,
+    onExcelOpen: r.on_excel_open as FirmAutoModuleRecord["onExcelOpen"],
+  };
+}
+
+export async function upsertFirmAutoModuleDb(record: FirmAutoModuleRecord): Promise<void> {
+  await ensureFirmAutoModulesTable();
+  const sql = getSql();
+  const now = nowTR();
+  await sql`
+    INSERT INTO firm_auto_modules (firma_adi, description, enabled, on_excel_open, updated_at)
+    VALUES (
+      ${record.firmaAdi},
+      ${record.description ?? ""},
+      ${record.enabled ?? true},
+      ${JSON.stringify(record.onExcelOpen)}::jsonb,
+      ${now}
+    )
+    ON CONFLICT (firma_adi) DO UPDATE SET
+      description   = EXCLUDED.description,
+      enabled       = EXCLUDED.enabled,
+      on_excel_open = EXCLUDED.on_excel_open,
+      updated_at    = EXCLUDED.updated_at
+  `;
+}
+
+export async function deleteFirmAutoModuleDb(firmaAdi: string): Promise<boolean> {
+  await ensureFirmAutoModulesTable();
+  const sql = getSql();
+  const result = await sql`
+    DELETE FROM firm_auto_modules WHERE LOWER(firma_adi) = LOWER(${firmaAdi})
+  `;
+  return (result as unknown as { count: number }).count > 0;
 }
 
 // ─────────────────────────────────────────────

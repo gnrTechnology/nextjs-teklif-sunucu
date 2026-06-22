@@ -1,40 +1,21 @@
-import fs from "fs";
-import path from "path";
 import { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api-response";
+import { getFirmAutoModule } from "@/lib/firm-auto-modules";
+import { upsertFirmAutoModuleDb, deleteFirmAutoModuleDb } from "@/lib/db";
 import type { FirmAutoModuleRecord, FirmAutoStartModule } from "@/lib/types";
-
-const FILE = path.join(process.cwd(), "data", "firm-auto-modules.json");
-
-function readAll(): FirmAutoModuleRecord[] {
-  if (!fs.existsSync(FILE)) return [];
-  try {
-    const raw = fs.readFileSync(FILE, "utf-8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : parsed.firms ?? [];
-  } catch { return []; }
-}
-function writeAll(data: FirmAutoModuleRecord[]): void {
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2), "utf-8");
-}
 
 type PatchBody = {
   description?: string;
   enabled?: boolean;
   onExcelOpenEnabled?: boolean;
-  /** Modül ekle/güncelle */
   addModule?: { methodName: string; order?: number; delaySeconds?: number };
-  /** Modül sil */
   removeModule?: string;
-  /** Mevcut modülü güncelle */
   updateModule?: { methodName: string; order?: number; delaySeconds?: number };
-  /** Tüm modülleri yeniden sırala */
   reorderModules?: { methodName: string; order: number }[];
 };
 
 /**
  * PATCH /api/firm-modules/[firmaAdi]
- * Firma ayarları + modül ekle/güncelle/çıkar/sırala
  */
 export async function PATCH(
   request: NextRequest,
@@ -47,13 +28,10 @@ export async function PATCH(
   try { body = await request.json(); }
   catch { return errorResponse("Geçersiz JSON.", 400); }
 
-  const all = readAll();
-  const idx = all.findIndex(
-    (f) => f.firmaAdi.toLowerCase() === decoded.toLowerCase(),
-  );
-  if (idx === -1) return errorResponse("Firma bulunamadı.", 404);
+  const existing = await getFirmAutoModule(decoded);
+  if (!existing) return errorResponse("Firma bulunamadı.", 404);
 
-  const firm = { ...all[idx] };
+  const firm: FirmAutoModuleRecord = { ...existing };
 
   if (body.description !== undefined) firm.description = body.description;
   if (body.enabled    !== undefined) firm.enabled    = body.enabled;
@@ -88,19 +66,18 @@ export async function PATCH(
     firm.onExcelOpen = { ...firm.onExcelOpen, modules: mods };
   }
 
-  // Modül çıkar
+  // Modül çıkar + sıraları yeniden ver
   if (body.removeModule) {
     const mods = (firm.onExcelOpen.modules ?? []).filter(
       (m) => m.methodName.toLowerCase() !== body.removeModule!.toLowerCase(),
     );
-    // Sıraları yeniden ver
     mods.sort((a, b) => a.order - b.order).forEach((m, i) => (m.order = i + 1));
     firm.onExcelOpen = { ...firm.onExcelOpen, modules: mods };
   }
 
   // Toplu sıralama
   if (body.reorderModules) {
-    const mods = firm.onExcelOpen.modules ?? [];
+    const mods = [...(firm.onExcelOpen.modules ?? [])];
     body.reorderModules.forEach(({ methodName, order }) => {
       const m = mods.find((x) => x.methodName.toLowerCase() === methodName.toLowerCase());
       if (m) m.order = order;
@@ -109,12 +86,11 @@ export async function PATCH(
     firm.onExcelOpen = { ...firm.onExcelOpen, modules: mods };
   }
 
-  all[idx] = firm;
-  writeAll(all);
+  await upsertFirmAutoModuleDb(firm);
   return jsonResponse({ success: true, data: firm });
 }
 
-/** DELETE /api/firm-modules/[firmaAdi] — firma kaydını sil */
+/** DELETE /api/firm-modules/[firmaAdi] */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ firmaAdi: string }> },
@@ -124,12 +100,8 @@ export async function DELETE(
 
   if (decoded === "*") return errorResponse("Tüm-firma kaydı silinemez.", 403);
 
-  const all = readAll();
-  const filtered = all.filter(
-    (f) => f.firmaAdi.toLowerCase() !== decoded.toLowerCase(),
-  );
-  if (filtered.length === all.length) return errorResponse("Firma bulunamadı.", 404);
+  const deleted = await deleteFirmAutoModuleDb(decoded);
+  if (!deleted) return errorResponse("Firma bulunamadı.", 404);
 
-  writeAll(filtered);
   return jsonResponse({ success: true });
 }

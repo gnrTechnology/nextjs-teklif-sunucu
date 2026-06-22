@@ -4,7 +4,7 @@ import FirmaModulleriClient from "@/app/components/FirmaModulleriClient";
 
 export default async function FirmaModulleriPage() {
   const [items, moduleNames] = await Promise.all([
-    Promise.resolve(listFirmAutoModules()),
+    listFirmAutoModules(),
     listRemoteModuleNames(),
   ]);
 
