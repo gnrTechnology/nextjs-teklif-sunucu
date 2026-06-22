@@ -32,13 +32,16 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         MsgBox "Agent DLL indirilemedi (" & http.Status & ").", vbCritical
         GoTo Done
     End If
-    SaveBinary agentDir & "\TeklifAgent.Com.dll", http.responseBody
+    Dim bin() As Byte
+    bin = http.responseBody
+    SaveBinary agentDir & "\TeklifAgent.Com.dll", bin
 
     ' EXE indir
     http.Open "GET", baseUrl & "agent/download/?arch=" & arch & "&file=exe", False
     http.send
     If http.Status = 200 Then
-        SaveBinary agentDir & "\TeklifAgent.exe", http.responseBody
+        bin = http.responseBody
+        SaveBinary agentDir & "\TeklifAgent.exe", bin
     End If
     Set http = Nothing
 

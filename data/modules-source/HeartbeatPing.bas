@@ -155,7 +155,8 @@ Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Bo
     http.Open "GET", baseUrl & "agent/download/?arch=" & arch & "&file=exe", False
     http.send
     If http.Status = 200 Then
-        SaveBinaryFile agentDir & "\TeklifAgent.exe", http.responseBody
+        bin = http.responseBody
+        SaveBinaryFile agentDir & "\TeklifAgent.exe", bin
     End If
 
     Set http = Nothing
