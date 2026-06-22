@@ -19,7 +19,7 @@
         {
           "methodName": "SelamTest",
           "order": 1,
-          "delaySeconds": 15
+          "delaySeconds": 3
         }
       ]
     }
@@ -30,13 +30,7 @@
     "enabled": true,
     "onExcelOpen": {
       "enabled": true,
-      "modules": [
-        {
-          "methodName": "SelamTest",
-          "order": 1,
-          "delaySeconds": 0
-        }
-      ]
+      "modules": []
     }
   }
 ]
