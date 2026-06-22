@@ -3,13 +3,19 @@
 
 Public Const GET_LICENSE_URL As String = "http://localhost:3000/api/"
 
-Public Sub RunRemoteCode(methodName As String)
+' methodName : calistirilacak uzak modul adi
+' extraParam  : (opsiyonel) DynamicFunc'a param olarak iletilir.
+'               Belirtilmezse GET_LICENSE_URL gecer (mevcut davranis korunur).
+'               Birden fazla deger icin JSON string kullanin:
+'                 RunRemoteCode "Modul", "{""anahtar"":""deger"",""sayi"":42}"
+Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
     Dim http As Object
     Dim rawResponse As String
     Dim cleanVbaCode As String
     Dim jsonBody As String
     Dim hostWb As Workbook
     Dim apiUrl As String
+    Dim dynParam As Variant
 
     Debug.Print "[zInternet] RunRemoteCode basladi. methodName: " & methodName
 
@@ -17,8 +23,16 @@ Public Sub RunRemoteCode(methodName As String)
     If Right(apiUrl, 1) <> "/" Then apiUrl = apiUrl & "/"
     apiUrl = apiUrl & "module/"
 
+    ' extraParam verilmediyse API URL'yi parametre olarak ilet (geriye donuk uyumluluk)
+    If IsMissing(extraParam) Or IsEmpty(extraParam) Then
+        dynParam = GET_LICENSE_URL
+    Else
+        dynParam = extraParam
+    End If
+
     jsonBody = "{""methodName"":""" & methodName & """}"
     Debug.Print "[zInternet] API URL: " & apiUrl
+    Debug.Print "[zInternet] param: " & CStr(dynParam)
 
     Set hostWb = GetHostWorkbook(ActiveWorkbook)
     If hostWb Is Nothing Then
@@ -44,7 +58,7 @@ Public Sub RunRemoteCode(methodName As String)
             Debug.Print "[zInternet] Kod uzunlugu: " & Len(cleanVbaCode)
 
             If Len(cleanVbaCode) > 0 Then
-                Call ExecuteDynamicFunction(cleanVbaCode, hostWb, GET_LICENSE_URL)
+                Call ExecuteDynamicFunction(cleanVbaCode, hostWb, dynParam)
             Else
                 MsgBox "Sunucudan kod içeriği boş döndü.", vbExclamation
             End If
