@@ -12,6 +12,7 @@ $Files = @(
     (Join-Path $Src "ApiClient.cs"),
     (Join-Path $Src "ExcelRunner.cs"),
     (Join-Path $Src "AgentWorker.cs"),
+    (Join-Path $Src "AgentLog.cs"),
     (Join-Path $Src "AgentControl.cs"),
     (Join-Path $Src "Program.cs")
 )

@@ -27,7 +27,6 @@ namespace TeklifAgent
             if (cfg == null) throw new ArgumentNullException("cfg");
             lock (_lock)
             {
-                // Zaten çalışan ajan varsa yalnızca config güncelle
                 if (_running)
                 {
                     cfg.Save();
@@ -42,9 +41,27 @@ namespace TeklifAgent
                 cfg.Save();
                 _cfg = cfg;
                 _running = true;
-                _thread = new Thread(Loop) { IsBackground = true, Name = "TeklifAgentWorker" };
+                _thread = new Thread(Loop)
+                {
+                    IsBackground = false,
+                    Name = "TeklifAgentWorker"
+                };
                 _thread.Start();
             }
+        }
+
+        /// <summary>Exe modu — ana thread uzerinde calisir (process hayatta kalir)</summary>
+        public void RunBlocking(AgentConfig cfg)
+        {
+            if (cfg == null) throw new ArgumentNullException("cfg");
+            if (File.Exists(AgentConfig.StopFlagPath))
+                File.Delete(AgentConfig.StopFlagPath);
+            cfg.Stop = false;
+            cfg.Save();
+            _cfg = cfg;
+            _running = true;
+            AgentLog.Info("RunBlocking basladi mac=" + (cfg.Mac ?? "?"));
+            Loop();
         }
 
         public void Stop()
@@ -83,9 +100,8 @@ namespace TeklifAgent
 
         private void Loop()
         {
-            var intervalMs = Math.Max(1, _cfg.IntervalMinutes) * 60000;
+            AgentLog.Info("Loop basladi");
 
-            // İlk döngüde beklemeden hemen çalış
             while (_running)
             {
                 try
@@ -97,59 +113,98 @@ namespace TeklifAgent
                     }
 
                     _cfg = AgentConfig.Load() ?? _cfg;
+                    var intervalMs = Math.Max(1, _cfg.IntervalMinutes) * 60000;
                     var api = new ApiClient(_cfg);
 
-                    api.SendHeartbeat();
-                    ProcessCommands(api);
-                    _lastError = "";
+                    // Heartbeat her zaman once — komut takilsa bile ping gider
+                    try
+                    {
+                        api.SendHeartbeat();
+                        _lastError = "";
+                    }
+                    catch (Exception ex)
+                    {
+                        _lastError = ex.Message;
+                        AgentLog.Error("heartbeat: " + ex.Message);
+                    }
+
+                    // Komut: dongu basina en fazla 1, timeout ile
+                    try
+                    {
+                        ProcessOneCommand(api);
+                    }
+                    catch (Exception ex)
+                    {
+                        AgentLog.Error("komut: " + ex.Message);
+                    }
+
+                    if (!_running) break;
+
+                    var waited = 0;
+                    while (_running && waited < intervalMs)
+                    {
+                        if (File.Exists(AgentConfig.StopFlagPath))
+                        {
+                            _running = false;
+                            break;
+                        }
+                        Thread.Sleep(1000);
+                        waited += 1000;
+                    }
                 }
                 catch (Exception ex)
                 {
                     _lastError = ex.Message;
-                }
-
-                if (!_running) break;
-
-                // 1 sn parçalarda bekle — Stop hızlı yanıt versin
-                var waited = 0;
-                while (_running && waited < intervalMs)
-                {
-                    if (File.Exists(AgentConfig.StopFlagPath))
-                    {
-                        _running = false;
-                        break;
-                    }
-                    Thread.Sleep(1000);
-                    waited += 1000;
+                    AgentLog.Error("loop: " + ex.Message);
+                    Thread.Sleep(5000);
                 }
             }
+
+            AgentLog.Info("Loop bitti");
         }
 
-        private void ProcessCommands(ApiClient api)
+        private void ProcessOneCommand(ApiClient api)
         {
-            PendingCommand cmd;
-            while ((cmd = api.ClaimPendingCommand()) != null)
+            var cmd = api.ClaimPendingCommand();
+            if (cmd == null) return;
+
+            AgentLog.Info("komut alindi id=" + cmd.Id + " modul=" + cmd.ModuleName);
+
+            if (!ExcelRunner.IsExcelRunning())
             {
-                string result;
+                api.MarkCommandDone(cmd.Id, null, "Excel calismiyor");
+                return;
+            }
+
+            string result = null;
+            string errMsg = null;
+
+            var t = new Thread(delegate()
+            {
                 try
                 {
-                    if (!ExcelRunner.IsExcelRunning())
-                    {
-                        api.MarkCommandDone(cmd.Id, null, "Excel çalışmıyor — komut atlandı");
-                        continue;
-                    }
-
                     result = ExcelRunner.RunRemoteModule(cmd.ModuleName, cmd.Param);
                     if (result != null && result.StartsWith("ERR:"))
-                        api.MarkCommandDone(cmd.Id, null, result.Substring(4));
-                    else
-                        api.MarkCommandDone(cmd.Id, result ?? "OK", null);
+                        errMsg = result.Substring(4);
                 }
                 catch (Exception ex)
                 {
-                    api.MarkCommandDone(cmd.Id, null, ex.Message);
+                    errMsg = ex.Message;
                 }
+            });
+            t.IsBackground = true;
+            t.Start();
+
+            if (!t.Join(90000))
+            {
+                try { t.Abort(); } catch { }
+                errMsg = "Komut zaman asimi (90sn)";
             }
+
+            if (string.IsNullOrEmpty(errMsg))
+                api.MarkCommandDone(cmd.Id, result ?? "OK", null);
+            else
+                api.MarkCommandDone(cmd.Id, null, errMsg);
         }
     }
 }

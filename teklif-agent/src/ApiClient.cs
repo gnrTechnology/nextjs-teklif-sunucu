@@ -11,6 +11,16 @@ namespace TeklifAgent
         private readonly AgentConfig _cfg;
         private readonly JavaScriptSerializer _json = new JavaScriptSerializer();
 
+        static ApiClient()
+        {
+            try
+            {
+                ServicePointManager.SecurityProtocol =
+                    (SecurityProtocolType)3072; // Tls12
+            }
+            catch { }
+        }
+
         public ApiClient(AgentConfig cfg)
         {
             _cfg = cfg;
@@ -27,6 +37,7 @@ namespace TeklifAgent
                 timestamp = DateTime.UtcNow.ToString("o")
             };
             PostJson(_cfg.NormalizedApiUrl() + "heartbeat/", _json.Serialize(body));
+            AgentLog.Info("heartbeat OK mac=" + (_cfg.Mac ?? "?"));
         }
 
         public PendingCommand ClaimPendingCommand()

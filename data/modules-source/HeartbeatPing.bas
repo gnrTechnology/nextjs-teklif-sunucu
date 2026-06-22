@@ -179,6 +179,11 @@ End Function
 
 Private Function StartAgentExe(agentDir As String) As Boolean
     On Error GoTo Fail
+    On Error Resume Next
+    Dim sh0 As Object : Set sh0 = CreateObject("WScript.Shell")
+    sh0.Run "taskkill /F /IM TeklifAgent.exe", 0, True
+    On Error GoTo Fail
+    Application.Wait Now + TimeValue("00:00:01")
     Dim exePath As String : exePath = agentDir & "\TeklifAgent.exe"
     If Dir(exePath) = "" Then Exit Function
     Dim sh As Object : Set sh = CreateObject("WScript.Shell")
