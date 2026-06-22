@@ -34,11 +34,10 @@ function normalizeFirmaAdi(firmaAdi: string): string {
   return firmaAdi.trim().toUpperCase();
 }
 
-function filterValidModules(modules: FirmAutoStartModule[]): FirmAutoStartModule[] {
-  const available = new Set(
-    listRemoteModuleNames().map((name) => name.toLowerCase()),
-  );
-
+function filterValidModules(
+  modules: FirmAutoStartModule[],
+  available: Set<string>,
+): FirmAutoStartModule[] {
   return modules
     .filter((item) => available.has(item.methodName.toLowerCase()))
     .sort((a, b) => a.order - b.order);
@@ -61,7 +60,9 @@ function mergeModules(
   return Array.from(merged.values()).sort((a, b) => a.order - b.order);
 }
 
-export function getAutoStartByFirma(firmaAdi: string): FirmAutoStartResponse | null {
+export async function getAutoStartByFirma(
+  firmaAdi: string,
+): Promise<FirmAutoStartResponse | null> {
   const normalizedFirma = normalizeFirmaAdi(firmaAdi);
   const records = readAllFirmAutoModules().filter((item) => item.enabled !== false);
 
@@ -82,16 +83,17 @@ export function getAutoStartByFirma(firmaAdi: string): FirmAutoStartResponse | n
       ? []
       : (firmConfig?.onExcelOpen.modules ?? []);
 
-  const modules = filterValidModules(mergeModules(globalModules, firmOnlyModules));
+  // DB'den geçerli modül adlarını async olarak çek
+  const names = await listRemoteModuleNames();
+  const available = new Set(names.map((n) => n.toLowerCase()));
+
+  const modules = filterValidModules(mergeModules(globalModules, firmOnlyModules), available);
 
   if (modules.length === 0) {
     return null;
   }
 
-  return {
-    firmaAdi,
-    modules,
-  };
+  return { firmaAdi, modules };
 }
 
 export async function getAutoStartByMac(
