@@ -43,7 +43,7 @@ export default function KomutlarClient({
   const [sending, setSending]           = useState(false);
 
   const refresh = useCallback(() => {
-    fetch("/api/commands?limit=200")
+    fetch("/api/commands/?limit=200")
       .then((r) => r.json())
       .then((j) => { if (j.success) setCommands(j.data); });
   }, []);
@@ -60,7 +60,7 @@ export default function KomutlarClient({
     if (!formModule.trim()) { alert("Modül adı zorunludur."); return; }
     setSending(true);
     try {
-      const r = await fetch("/api/commands", {
+      const r = await fetch("/api/commands/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mac, moduleName: formModule.trim(), param: formParam || null }),
@@ -80,7 +80,7 @@ export default function KomutlarClient({
 
   async function deleteCmd(id: number) {
     if (!confirm("Bu komut silinsin mi?")) return;
-    await fetch(`/api/commands?id=${id}`, { method: "DELETE" });
+    await fetch(`/api/commands/?id=${id}`, { method: "DELETE" });
     refresh();
   }
 

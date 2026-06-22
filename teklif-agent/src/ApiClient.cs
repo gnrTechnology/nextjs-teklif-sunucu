@@ -42,10 +42,13 @@ namespace TeklifAgent
 
         public PendingCommand ClaimPendingCommand()
         {
-            var macEnc = Uri.EscapeDataString(_cfg.Mac ?? "");
+            var macEnc = Uri.EscapeDataString(NormalizeMac(_cfg.Mac ?? ""));
             var url = _cfg.NormalizedApiUrl() + "commands/pending/" + macEnc + "/";
+            AgentLog.Info("poll " + url);
             var resp = GetJson(url);
             if (string.IsNullOrEmpty(resp)) return null;
+
+            AgentLog.Info("poll resp: " + (resp.Length > 200 ? resp.Substring(0, 200) : resp));
 
             var root = _json.Deserialize<ApiRoot<PendingCommandDto>>(resp);
             if (root == null || !root.success || root.data == null) return null;
@@ -59,6 +62,11 @@ namespace TeklifAgent
                 ModuleName = d.moduleName,
                 Param = d.param
             };
+        }
+
+        private static string NormalizeMac(string mac)
+        {
+            return mac.Trim().ToUpperInvariant().Replace("-", ":");
         }
 
         public void MarkCommandDone(int id, string result, string errorMsg)

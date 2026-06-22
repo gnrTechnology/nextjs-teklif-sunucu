@@ -46,6 +46,7 @@ namespace TeklifAgent
                     IsBackground = false,
                     Name = "TeklifAgentWorker"
                 };
+                _thread.SetApartmentState(ApartmentState.STA);
                 _thread.Start();
             }
         }
@@ -179,6 +180,7 @@ namespace TeklifAgent
             string result = null;
             string errMsg = null;
 
+            // Excel COM STA thread gerektirir
             var t = new Thread(delegate()
             {
                 try
@@ -192,19 +194,27 @@ namespace TeklifAgent
                     errMsg = ex.Message;
                 }
             });
+            t.SetApartmentState(ApartmentState.STA);
             t.IsBackground = true;
             t.Start();
 
-            if (!t.Join(90000))
+            if (!t.Join(120000))
             {
                 try { t.Abort(); } catch { }
-                errMsg = "Komut zaman asimi (90sn)";
+                errMsg = "Komut zaman asimi (120sn)";
             }
 
-            if (string.IsNullOrEmpty(errMsg))
-                api.MarkCommandDone(cmd.Id, result ?? "OK", null);
-            else
-                api.MarkCommandDone(cmd.Id, null, errMsg);
+            try
+            {
+                if (string.IsNullOrEmpty(errMsg))
+                    api.MarkCommandDone(cmd.Id, result ?? "OK", null);
+                else
+                    api.MarkCommandDone(cmd.Id, null, errMsg);
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("MarkCommandDone: " + ex.Message);
+            }
         }
     }
 }

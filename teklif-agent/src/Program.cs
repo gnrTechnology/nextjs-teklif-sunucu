@@ -7,6 +7,7 @@ namespace TeklifAgent
 {
     internal static class Program
     {
+        [STAThread]
         private static void Main(string[] args)
         {
             try
@@ -45,7 +46,7 @@ namespace TeklifAgent
                 return;
             }
 
-            AgentLog.Info("TeklifAgent.exe --worker basladi");
+            AgentLog.Info("TeklifAgent.exe --worker basladi (STA)");
 
             var worker = new AgentWorker();
             worker.RunBlocking(cfg);

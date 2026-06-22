@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api-response";
-import { claimPendingCommand } from "@/lib/db";
+import { claimPendingCommand, normalizeMac } from "@/lib/db";
 
 /**
  * GET /api/commands/pending/[mac]
@@ -15,6 +15,6 @@ export async function GET(
   const { mac } = await params;
   const decoded = decodeURIComponent(mac);
   if (!decoded || decoded.length < 10) return errorResponse("Geçersiz MAC.", 400);
-  const cmd = await claimPendingCommand(decoded);
+  const cmd = await claimPendingCommand(normalizeMac(decoded));
   return jsonResponse({ success: true, data: cmd });
 }

@@ -452,6 +452,23 @@ export async function ensureClientCommandsTable(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS idx_commands_mac_status ON client_commands (mac, status)`;
 }
 
+/** MAC formatini standartlastir: buyuk harf, tire -> iki nokta */
+export function normalizeMac(mac: string): string {
+  return mac.trim().toUpperCase().replace(/-/g, ":");
+}
+
+/** 10 dk+ running kalan komutlari pending'e geri al */
+async function releaseStaleRunningCommands(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    UPDATE client_commands
+    SET status = 'pending', executed_at = NULL
+    WHERE status = 'running'
+      AND executed_at IS NOT NULL
+      AND executed_at < NOW() - INTERVAL '10 minutes'
+  `;
+}
+
 export async function createClientCommand(params: {
   mac: string;
   moduleName: string;
@@ -461,10 +478,11 @@ export async function createClientCommand(params: {
   await ensureClientCommandsTable();
   const sql = getSql();
   const now = nowTR();
+  const macNorm = normalizeMac(params.mac);
   const rows = await sql`
     INSERT INTO client_commands (mac, module_name, param, status, created_at, created_by)
     VALUES (
-      ${params.mac}, ${params.moduleName}, ${params.param ?? null},
+      ${macNorm}, ${params.moduleName}, ${params.param ?? null},
       'pending', ${now}, ${params.createdBy ?? 'dashboard'}
     )
     RETURNING id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
@@ -513,14 +531,16 @@ export async function listClientCommands(options?: {
 
 export async function claimPendingCommand(mac: string): Promise<ClientCommand | null> {
   await ensureClientCommandsTable();
+  await releaseStaleRunningCommands();
   const sql = getSql();
   const now = nowTR();
+  const macNorm = normalizeMac(mac);
   const rows = await sql`
     UPDATE client_commands
     SET status = 'running'
     WHERE id = (
       SELECT id FROM client_commands
-      WHERE mac = ${mac} AND status = 'pending'
+      WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm} AND status = 'pending'
       ORDER BY created_at ASC
       LIMIT 1
     )

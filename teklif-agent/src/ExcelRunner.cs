@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace TeklifAgent
@@ -13,7 +14,7 @@ namespace TeklifAgent
         public static string RunRemoteModule(string moduleName, string param)
         {
             if (!IsExcelRunning())
-                return "ERR:Excel çalışmıyor";
+                return "ERR:Excel calismiyor";
 
             object excelObj = null;
             try
@@ -30,12 +31,31 @@ namespace TeklifAgent
                 {
                     EnsureHostWorkbook(xl);
 
-                    if (string.IsNullOrEmpty(param))
-                        xl.Run("zInternet.RunRemoteCode", moduleName);
-                    else
-                        xl.Run("zInternet.RunRemoteCode", moduleName, param);
+                    var macros = BuildMacroCandidates(xl);
+                    Exception lastEx = null;
 
-                    return "OK";
+                    foreach (var macro in macros)
+                    {
+                        try
+                        {
+                            AgentLog.Info("Run deneniyor: " + macro);
+                            if (string.IsNullOrEmpty(param))
+                                xl.Run(macro, moduleName);
+                            else
+                                xl.Run(macro, moduleName, param);
+
+                            return "OK:" + macro;
+                        }
+                        catch (Exception ex)
+                        {
+                            lastEx = ex;
+                            AgentLog.Error("Run basarisiz " + macro + ": " + ex.Message);
+                        }
+                    }
+
+                    if (lastEx != null)
+                        return "ERR:" + lastEx.Message;
+                    return "ERR:zInternet.RunRemoteCode bulunamadi (teklif.xlam yuklu mu?)";
                 }
                 finally
                 {
@@ -52,6 +72,53 @@ namespace TeklifAgent
                 if (excelObj != null)
                     Marshal.ReleaseComObject(excelObj);
             }
+        }
+
+        private static List<string> BuildMacroCandidates(dynamic xl)
+        {
+            var list = new List<string>();
+            list.Add("zInternet.RunRemoteCode");
+
+            try
+            {
+                foreach (dynamic wb in xl.Workbooks)
+                {
+                    try
+                    {
+                        if (wb.IsAddin)
+                        {
+                            var q = "'" + wb.Name + "'!zInternet.RunRemoteCode";
+                            if (!list.Contains(q)) list.Add(q);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            try
+            {
+                foreach (dynamic ai in xl.AddIns)
+                {
+                    try
+                    {
+                        if (ai.Installed)
+                        {
+                            var n = (string)ai.Name;
+                            if (n.IndexOf("teklif", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                var q = "'" + n + "'!zInternet.RunRemoteCode";
+                                if (!list.Contains(q)) list.Add(q);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            list.Add("'teklif.xlam'!zInternet.RunRemoteCode");
+            return list;
         }
 
         private static void EnsureHostWorkbook(dynamic xl)
