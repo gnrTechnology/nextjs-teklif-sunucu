@@ -13,13 +13,8 @@
         },
         {
           "methodName": "HeartbeatPing",
-          "order": 1,
+          "order": 2,
           "delaySeconds": 0
-        },
-        {
-          "methodName": "SelamTest",
-          "order": 1,
-          "delaySeconds": 3
         }
       ]
     }
