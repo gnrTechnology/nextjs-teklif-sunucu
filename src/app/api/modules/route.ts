@@ -1,38 +1,15 @@
-import fs from "fs";
-import path from "path";
 import { NextRequest } from "next/server";
 import { errorResponse, jsonResponse } from "@/lib/api-response";
-import { listDbModules, upsertDbModule, ensureModulesTable } from "@/lib/db";
-import type { ModuleUpsertBody, ModuleRecord } from "@/lib/types";
+import { ensureModulesTable, listDbModules, upsertDbModule } from "@/lib/db";
+import { syncMissingModulesFromJson } from "@/lib/modules";
+import type { ModuleUpsertBody } from "@/lib/types";
 
-/** GET /api/modules — tüm modülleri listele; tablo yoksa oluştur + JSON'dan seed et */
+/** GET /api/modules — tüm modülleri listele; eksikleri JSON'dan senkronize et */
 export async function GET() {
   try {
     await ensureModulesTable();
-    let modules = await listDbModules();
-
-    // modules.json'daki eksik modülleri DB'ye ekle (INSERT ON CONFLICT DO NOTHING)
-    const filePath = path.join(process.cwd(), "data", "modules.json");
-    if (fs.existsSync(filePath)) {
-      const list = JSON.parse(fs.readFileSync(filePath, "utf-8")) as ModuleRecord[];
-      const existing = new Set(modules.map((m) => m.methodName.toLowerCase()));
-      const newItems = list.filter(
-        (item) => item.methodName && item.code && !existing.has(item.methodName.toLowerCase()),
-      );
-      if (newItems.length > 0) {
-        for (const item of newItems) {
-          await upsertDbModule({
-            methodName: item.methodName,
-            description: item.description ?? "",
-            category: item.category ?? "genel",
-            code: item.code,
-            active: item.active ?? true,
-          });
-        }
-        modules = await listDbModules();
-      }
-    }
-
+    await syncMissingModulesFromJson();
+    const modules = await listDbModules();
     return jsonResponse({ success: true, data: modules });
   } catch (err) {
     console.error("[GET /api/modules]", err);
