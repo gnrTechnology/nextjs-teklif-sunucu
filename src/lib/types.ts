@@ -66,6 +66,15 @@ export interface FirmAutoStartResponse {
   modules: FirmAutoStartModule[];
 }
 
+export interface HeartbeatRecord {
+  mac: string;
+  hostname: string | null;
+  userName: string | null;
+  excelVersion: string | null;
+  ipAddress: string | null;
+  lastSeen: string;
+}
+
 export interface LicenseLog {
   id: number;
   macAdresi: string | null;

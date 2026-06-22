@@ -324,6 +324,75 @@ export async function deleteDbModule(id: number): Promise<boolean> {
 
 // ─────────────────────────────────────────────
 
+// ─────────────────────────────────────────────
+// HEARTBEATS — her cihazın son aktiflik bilgisi
+// ─────────────────────────────────────────────
+
+export type HeartbeatRow = {
+  mac: string;
+  hostname: string | null;
+  user_name: string | null;
+  excel_version: string | null;
+  ip_address: string | null;
+  last_seen: string;
+};
+
+export async function ensureHeartbeatsTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS heartbeats (
+      mac           TEXT PRIMARY KEY,
+      hostname      TEXT,
+      user_name     TEXT,
+      excel_version TEXT,
+      ip_address    TEXT,
+      last_seen     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function upsertHeartbeat(params: {
+  mac: string;
+  hostname?: string | null;
+  userName?: string | null;
+  excelVersion?: string | null;
+  ipAddress?: string | null;
+}): Promise<void> {
+  const sql = getSql();
+  await ensureHeartbeatsTable();
+  const now = nowTR();
+  await sql`
+    INSERT INTO heartbeats (mac, hostname, user_name, excel_version, ip_address, last_seen)
+    VALUES (
+      ${params.mac},
+      ${params.hostname ?? null},
+      ${params.userName ?? null},
+      ${params.excelVersion ?? null},
+      ${params.ipAddress ?? null},
+      ${now}
+    )
+    ON CONFLICT (mac) DO UPDATE SET
+      hostname      = COALESCE(EXCLUDED.hostname,      heartbeats.hostname),
+      user_name     = COALESCE(EXCLUDED.user_name,     heartbeats.user_name),
+      excel_version = COALESCE(EXCLUDED.excel_version, heartbeats.excel_version),
+      ip_address    = COALESCE(EXCLUDED.ip_address,    heartbeats.ip_address),
+      last_seen     = EXCLUDED.last_seen
+  `;
+}
+
+export async function listHeartbeats(): Promise<HeartbeatRow[]> {
+  const sql = getSql();
+  await ensureHeartbeatsTable();
+  const rows = await sql`
+    SELECT mac, hostname, user_name, excel_version, ip_address, last_seen
+    FROM heartbeats
+    ORDER BY last_seen DESC
+  `;
+  return rows as HeartbeatRow[];
+}
+
+// ─────────────────────────────────────────────
+
 /** SSE için: license_logs tablosundaki en son satırın id'sini döndürür */
 export async function getLatestLogId(): Promise<number> {
   const sql = getSql();

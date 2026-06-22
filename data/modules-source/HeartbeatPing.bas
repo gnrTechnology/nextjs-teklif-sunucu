@@ -1,10 +1,10 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
-    ' param: {"intervalMin":10,"stop":false}  veya sadece "10" (dakika)
+    ' param: {"intervalMin":1,"stop":false}  veya sadece "1" (dakika)
     ' Sunucuya MAC + hostname + versiyon + zaman içeren periyodik sinyal gönderir.
     Dim p As String : p = Trim(CStr(param))
 
     Dim stopFlag As Boolean : stopFlag = False
-    Dim intervalMin As Long : intervalMin = 10
+    Dim intervalMin As Long : intervalMin = 1
 
     If Left(p, 1) = "{" Then
         Dim stopStr As String : stopStr = ExtractJsonValue(p, "stop")
@@ -34,7 +34,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Sonraki pingleri zamanla
     Application.OnTime Now + TimeSerial(0, intervalMin, 0), "HeartbeatPing_Run"
 
-    MsgBox "Heartbeat aktif: her " & intervalMin & " dakikada bir sinyal gönderilecek.", vbInformation
+    MsgBox "Heartbeat aktif: her " & intervalMin & " dakika" & IIf(intervalMin = 1, "", "") & "da bir sinyal gönderilecek.", vbInformation
     Set DynamicFunc = Nothing
 End Function
 
@@ -69,9 +69,29 @@ End Sub
 ' Public Sub HeartbeatPing_Run()
 '     If GetSetting("ilhan","Heartbeat","active","false") <> "true" Then Exit Sub
 '     Dim baseUrl As String : baseUrl = GetSetting("ilhan","Heartbeat","baseUrl","http://localhost:3000/api/")
-'     Dim intMin  As Long   : intMin  = CLng(GetSetting("ilhan","Heartbeat","intervalMin","10"))
-'     ' Modül kodundaki SendHeartbeat mantığını tekrarla veya RunRemoteCode ile tetikle
-'     Application.OnTime Now + TimeSerial(0,intMin,0), "HeartbeatPing_Run"
+'     Dim intMin  As Long   : intMin  = CLng(GetSetting("ilhan","Heartbeat","intervalMin","1"))
+'
+'     ' Bilgileri topla ve gönder
+'     Dim http As Object : Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+'     On Error Resume Next
+'     Dim mac      As String : mac      = GetFirstMACAddress()
+'     Dim hostname As String : hostname = Environ("COMPUTERNAME")
+'     Dim user     As String : user     = Environ("USERNAME")
+'     Dim excelVer As String : excelVer = Application.Version
+'     Dim body As String
+'     body = "{""mac"":""" & mac & """," & _
+'            """hostname"":""" & hostname & """," & _
+'            """user"":""" & user & """," & _
+'            """excelVersion"":""" & excelVer & """," & _
+'            """timestamp"":""" & Format(Now, "yyyy-MM-ddTHH:mm:ss") & """}"
+'     http.Open "POST", baseUrl & "heartbeat", False
+'     http.setTimeouts 3000, 5000, 10000, 10000
+'     http.setRequestHeader "Content-Type", "application/json"
+'     http.send body
+'     Set http = Nothing
+'     On Error GoTo 0
+'
+'     Application.OnTime Now + TimeSerial(0, intMin, 0), "HeartbeatPing_Run"
 ' End Sub
 
 Private Function GetFirstMACAddress() As String
