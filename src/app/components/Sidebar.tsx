@@ -4,16 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/",                 icon: "⬛", label: "Dashboard"         },
-  { href: "/lisanslar",        icon: "🔑", label: "Lisanslar"         },
-  { href: "/loglar",           icon: "📋", label: "Loglar"            },
-  { href: "/moduller",         icon: "📦", label: "Uzak Modüller"     },
-  { href: "/firma-modulleri",  icon: "⚡", label: "Oto. Modüller"    },
-  { href: "/heartbeats",       icon: "📡", label: "Nabız İzleme"      },
-  { href: "/cihazlar",         icon: "🖥", label: "Cihaz Bilgileri"   },
-  { href: "/komutlar",         icon: "🎮", label: "Uzak Komutlar"     },
-  { href: "/analitik",         icon: "📊", label: "Analitik"          },
-  { href: "/api-referans",     icon: "🔌", label: "API Referans"      },
+  { href: "/",                  icon: "⬛", label: "Dashboard"         },
+  { href: "/lisanslar",         icon: "🔑", label: "Lisanslar"         },
+  { href: "/loglar",            icon: "📋", label: "Loglar"            },
+  { href: "/moduller",          icon: "📦", label: "Uzak Modüller"     },
+  { href: "/firma-modulleri",   icon: "⚡", label: "Oto. Modüller"    },
+  { href: "/heartbeats",        icon: "📡", label: "Nabız İzleme"      },
+  { href: "/cihazlar",          icon: "🖥", label: "Cihaz Bilgileri"   },
+  { href: "/komutlar",          icon: "🎮", label: "Uzak Komutlar"     },
+  { href: "/modul-ciktilari",   icon: "📤", label: "Modül Çıktıları"  },
+  { href: "/analitik",          icon: "📊", label: "Analitik"          },
+  { href: "/api-referans",      icon: "🔌", label: "API Referans"      },
 ];
 
 export default function Sidebar() {

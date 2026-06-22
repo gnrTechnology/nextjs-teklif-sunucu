@@ -664,6 +664,50 @@ export async function listModuleOutputs(options?: {
   }));
 }
 
+export type ModuleOutputSummary = {
+  moduleName: string;
+  count: number;
+  lastRunAt: string;
+  lastMac: string | null;
+  lastHostname: string | null;
+};
+
+export async function listModuleOutputsSummary(): Promise<ModuleOutputSummary[]> {
+  await ensureModuleOutputsTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT
+      module_name,
+      COUNT(*)           AS cnt,
+      MAX(created_at)    AS last_run_at,
+      (SELECT mac      FROM module_outputs m2 WHERE m2.module_name = m1.module_name ORDER BY created_at DESC LIMIT 1) AS last_mac,
+      (SELECT hostname FROM module_outputs m2 WHERE m2.module_name = m1.module_name ORDER BY created_at DESC LIMIT 1) AS last_hostname
+    FROM module_outputs m1
+    GROUP BY module_name
+    ORDER BY last_run_at DESC
+  `;
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    moduleName:   r.module_name as string,
+    count:        Number(r.cnt),
+    lastRunAt:    new Date(r.last_run_at as string).toISOString(),
+    lastMac:      r.last_mac as string | null,
+    lastHostname: r.last_hostname as string | null,
+  }));
+}
+
+export async function deleteModuleOutput(id: number): Promise<void> {
+  await ensureModuleOutputsTable();
+  const sql = getSql();
+  await sql`DELETE FROM module_outputs WHERE id = ${id}`;
+}
+
+export async function deleteModuleOutputsByName(moduleName: string): Promise<number> {
+  await ensureModuleOutputsTable();
+  const sql = getSql();
+  const result = await sql`DELETE FROM module_outputs WHERE module_name = ${moduleName} RETURNING id`;
+  return (result as unknown[]).length;
+}
+
 // ─────────────────── DEVICE SNAPSHOTS ─────────────────────────────────────
 
 export type DeviceSnapshot = {
