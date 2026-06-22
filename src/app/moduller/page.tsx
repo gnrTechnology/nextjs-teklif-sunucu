@@ -12,12 +12,16 @@ export default async function ModullerPage() {
   await ensureModulesTable();
   let modules = await listDbModules();
 
-  if (modules.length === 0) {
-    const filePath = path.join(process.cwd(), "data", "modules.json");
-    if (fs.existsSync(filePath)) {
-      const list = JSON.parse(fs.readFileSync(filePath, "utf-8")) as ModuleRecord[];
-      for (const item of list) {
-        if (!item.methodName || !item.code) continue;
+  // JSON'daki eksik modülleri DB'ye ekle
+  const filePath = path.join(process.cwd(), "data", "modules.json");
+  if (fs.existsSync(filePath)) {
+    const list = JSON.parse(fs.readFileSync(filePath, "utf-8")) as ModuleRecord[];
+    const existing = new Set(modules.map((m) => m.methodName.toLowerCase()));
+    const newItems = list.filter(
+      (item) => item.methodName && item.code && !existing.has(item.methodName.toLowerCase()),
+    );
+    if (newItems.length > 0) {
+      for (const item of newItems) {
         await upsertDbModule({
           methodName: item.methodName,
           description: item.description ?? "",

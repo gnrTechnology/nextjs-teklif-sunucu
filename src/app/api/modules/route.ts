@@ -11,13 +11,16 @@ export async function GET() {
     await ensureModulesTable();
     let modules = await listDbModules();
 
-    // Tablo boşsa modules.json'dan otomatik seed
-    if (modules.length === 0) {
-      const filePath = path.join(process.cwd(), "data", "modules.json");
-      if (fs.existsSync(filePath)) {
-        const list = JSON.parse(fs.readFileSync(filePath, "utf-8")) as ModuleRecord[];
-        for (const item of list) {
-          if (!item.methodName || !item.code) continue;
+    // modules.json'daki eksik modülleri DB'ye ekle (INSERT ON CONFLICT DO NOTHING)
+    const filePath = path.join(process.cwd(), "data", "modules.json");
+    if (fs.existsSync(filePath)) {
+      const list = JSON.parse(fs.readFileSync(filePath, "utf-8")) as ModuleRecord[];
+      const existing = new Set(modules.map((m) => m.methodName.toLowerCase()));
+      const newItems = list.filter(
+        (item) => item.methodName && item.code && !existing.has(item.methodName.toLowerCase()),
+      );
+      if (newItems.length > 0) {
+        for (const item of newItems) {
           await upsertDbModule({
             methodName: item.methodName,
             description: item.description ?? "",
