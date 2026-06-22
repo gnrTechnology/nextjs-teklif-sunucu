@@ -452,11 +452,6 @@ export async function ensureClientCommandsTable(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS idx_commands_mac_status ON client_commands (mac, status)`;
 }
 
-/** MAC formatini standartlastir: buyuk harf, tire -> iki nokta */
-export function normalizeMac(mac: string): string {
-  return mac.trim().toUpperCase().replace(/-/g, ":");
-}
-
 /** 10 dk+ running kalan komutlari pending'e geri al */
 async function releaseStaleRunningCommands(): Promise<void> {
   const sql = getSql();
