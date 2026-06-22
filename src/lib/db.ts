@@ -462,7 +462,7 @@ async function releaseStaleRunningCommands(): Promise<void> {
         executed_at = NOW()
     WHERE status = 'running'
       AND executed_at IS NOT NULL
-      AND executed_at < NOW() - INTERVAL '10 minutes'
+      AND executed_at < NOW() - INTERVAL '5 minutes'
   `;
 }
 

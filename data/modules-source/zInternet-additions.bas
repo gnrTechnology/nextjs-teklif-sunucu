@@ -19,7 +19,8 @@ Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
 
     Debug.Print "[zInternet] RunRemoteCode basladi. methodName: " & methodName
 
-    apiUrl = GET_LICENSE_URL
+    apiUrl = GetSetting("ilhan", "Settings", "apiBaseUrl", GET_LICENSE_URL)
+    If Len(Trim(apiUrl)) = 0 Then apiUrl = GET_LICENSE_URL
     If Right(apiUrl, 1) <> "/" Then apiUrl = apiUrl & "/"
     apiUrl = apiUrl & "module/"
 
@@ -130,9 +131,14 @@ Cleanup:
     Application.ScreenUpdating = True
 
     If Err.Number <> 0 Then
-        Debug.Print "[zInternet] ExecuteDynamicFunction hata: " & Err.Description
-        MsgBox "Uzak modul hatasi:" & vbCrLf & Err.Description, vbCritical, "RunRemoteCode"
+        Dim errNum As Long
+        Dim errDesc As String
+        errNum = Err.Number
+        errDesc = Err.Description
+        Debug.Print "[zInternet] ExecuteDynamicFunction hata: " & errDesc
+        MsgBox "Uzak modul hatasi:" & vbCrLf & errDesc, vbCritical, "RunRemoteCode"
         Err.Clear
+        Err.Raise errNum, "zInternet", errDesc
     End If
 End Function
 
@@ -189,15 +195,19 @@ Private Function GetHostWorkbook(Optional preferred As Workbook) As Workbook
 
     If Not preferred Is Nothing Then
         If Not preferred.IsAddin Then
-            Set GetHostWorkbook = preferred
-            Exit Function
+            If InStr(1, preferred.Name, "TeklifPollHost", vbTextCompare) = 0 Then
+                Set GetHostWorkbook = preferred
+                Exit Function
+            End If
         End If
     End If
 
     For Each wb In Application.Workbooks
         If Not wb.IsAddin Then
-            Set GetHostWorkbook = wb
-            Exit Function
+            If InStr(1, wb.Name, "TeklifPollHost", vbTextCompare) = 0 Then
+                Set GetHostWorkbook = wb
+                Exit Function
+            End If
         End If
     Next wb
 End Function

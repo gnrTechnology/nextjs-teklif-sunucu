@@ -101,14 +101,10 @@ Private Function PollCodeMain() As String
     s = s & "        Dim modName As String : modName = JsonStr(resp, ""moduleName"")" & vbCrLf
     s = s & "        Dim cmdParam As String : cmdParam = JsonStr(resp, ""param"")" & vbCrLf
     s = s & "        If Len(cmdId) > 0 And Len(modName) > 0 And cmdId <> ""null"" Then" & vbCrLf
-    s = s & "            Err.Clear" & vbCrLf
-    s = s & "            If Len(cmdParam) > 0 Then" & vbCrLf
-    s = s & "                Application.Run ""zInternet.RunRemoteCode"", modName, cmdParam" & vbCrLf
-    s = s & "            Else" & vbCrLf
-    s = s & "                Application.Run ""zInternet.RunRemoteCode"", modName" & vbCrLf
-    s = s & "            End If" & vbCrLf
-    s = s & "            If Err.Number <> 0 Then" & vbCrLf
-    s = s & "                PatchDone baseUrl, cmdId, ""error"", """", Err.Description" & vbCrLf
+    s = s & "            Dim runErr As String" & vbCrLf
+    s = s & "            runErr = RunRemoteModule(modName, cmdParam)" & vbCrLf
+    s = s & "            If Len(runErr) > 0 Then" & vbCrLf
+    s = s & "                PatchDone baseUrl, cmdId, ""error"", """", runErr" & vbCrLf
     s = s & "            Else" & vbCrLf
     s = s & "                PatchDone baseUrl, cmdId, ""done"", ""OK"", """"" & vbCrLf
     s = s & "            End If" & vbCrLf
@@ -157,6 +153,32 @@ Private Function PollCodeHelpers() As String
     s = s & "    p1 = InStr(p1 + Len(sk), s, """""""") + 1" & vbCrLf
     s = s & "    Dim p2 As Long : p2 = InStr(p1, s, """""""")" & vbCrLf
     s = s & "    If p2 > p1 Then JsonStr = Mid(s, p1, p2 - p1)" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function RunRemoteModule(modName As String, cmdParam As String) As String" & vbCrLf
+    s = s & "    Dim lastErr As String" & vbCrLf
+    s = s & "    lastErr = TryRunMacro(""zInternet.RunRemoteCode"", modName, cmdParam)" & vbCrLf
+    s = s & "    If Len(lastErr) = 0 Then Exit Function" & vbCrLf
+    s = s & "    lastErr = TryRunMacro(""'teklif.xlam'!zInternet.RunRemoteCode"", modName, cmdParam)" & vbCrLf
+    s = s & "    If Len(lastErr) = 0 Then Exit Function" & vbCrLf
+    s = s & "    Dim wb As Workbook" & vbCrLf
+    s = s & "    For Each wb In Application.Workbooks" & vbCrLf
+    s = s & "        If wb.IsAddin Then" & vbCrLf
+    s = s & "            lastErr = TryRunMacro(""'"" & wb.Name & ""'!zInternet.RunRemoteCode"", modName, cmdParam)" & vbCrLf
+    s = s & "            If Len(lastErr) = 0 Then Exit Function" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "    Next wb" & vbCrLf
+    s = s & "    RunRemoteModule = lastErr" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function TryRunMacro(macroRef As String, modName As String, cmdParam As String) As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "    If Len(Trim(cmdParam)) > 0 Then" & vbCrLf
+    s = s & "        Application.Run macroRef, modName, cmdParam" & vbCrLf
+    s = s & "    Else" & vbCrLf
+    s = s & "        Application.Run macroRef, modName" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    If Err.Number <> 0 Then TryRunMacro = Err.Description" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Sub PatchDone(baseUrl As String, cmdId As String, st As String, res As String, errMsg As String)" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
