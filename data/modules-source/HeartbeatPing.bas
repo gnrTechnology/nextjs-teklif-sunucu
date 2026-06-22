@@ -55,10 +55,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
                vbExclamation, "HeartbeatPing"
     End If
 
-    ' Komut kuyrugu — Excel ic thread (TeklifPollHost OnTime)
-    On Error Resume Next
-    Application.Run "zInternet.RunRemoteCode", "InstallCommandQueue"
-    On Error GoTo 0
+    ' Komut kuyrugu — ExecuteDynamicFunction bittikten sonra zInternet OnTime ile kurar
 
     Set DynamicFunc = Nothing
 End Function
@@ -135,6 +132,8 @@ End Function
 
 Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Boolean
     On Error GoTo Fail
+    StopAgentForUpdate agentDir
+
     Dim arch As String
     #If Win64 Then
         arch = "x64"
@@ -154,14 +153,14 @@ Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Bo
     bin = http.responseBody
     Dim dllPath As String
     dllPath = agentDir & "\TeklifAgent.Com.dll"
-    SaveBinaryFile dllPath, bin
+    SaveBinarySafe dllPath, bin
 
     ' exe de indir
     http.Open "GET", baseUrl & "agent/download/?arch=" & arch & "&file=exe", False
     http.send
     If http.Status = 200 Then
         bin = http.responseBody
-        SaveBinaryFile agentDir & "\TeklifAgent.exe", bin
+        SaveBinarySafe agentDir & "\TeklifAgent.exe", bin
     End If
 
     Set http = Nothing
@@ -224,14 +223,47 @@ Private Sub WriteTextFile(path As String, content As String)
     Close #fNum
 End Sub
 
-Private Sub SaveBinaryFile(path As String, data() As Byte)
+Private Sub StopAgentForUpdate(agentDir As String)
+    On Error Resume Next
+    Open agentDir & "\stop.flag" For Output As #1
+    Close #1
+    Dim sh As Object
+    Set sh = CreateObject("WScript.Shell")
+    sh.Run "taskkill /F /IM TeklifAgent.exe", 0, True
+    Application.Wait Now + TimeValue("00:00:02")
+    On Error GoTo 0
+End Sub
+
+Private Sub SaveBinarySafe(destPath As String, data() As Byte)
+    On Error GoTo Fail
+    Dim tmpPath As String
+    tmpPath = Environ("TEMP") & "\TeklifAgent_" & CLng(Timer * 1000) & ".tmp"
+
     Dim stm As Object
     Set stm = CreateObject("ADODB.Stream")
     stm.Type = 1
     stm.Open
     stm.Write data
-    stm.SaveToFile path, 2
+    stm.SaveToFile tmpPath, 2
     stm.Close
+    Set stm = Nothing
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If fso.FileExists(destPath) Then
+        On Error Resume Next
+        fso.DeleteFile destPath, True
+        If Err.Number <> 0 Then
+            Err.Clear
+            StopAgentForUpdate Left(destPath, InStrRev(destPath, "\"))
+            fso.DeleteFile destPath, True
+        End If
+        On Error GoTo Fail
+    End If
+    fso.MoveFile tmpPath, destPath
+    Exit Sub
+Fail:
+    Err.Raise vbObjectError + 3004, , "Dosyaya yazilamadi: " & destPath
 End Sub
 
 Private Function JsonEsc(s As String) As String

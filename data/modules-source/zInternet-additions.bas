@@ -59,6 +59,11 @@ Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
 
             If Len(cleanVbaCode) > 0 Then
                 Call ExecuteDynamicFunction(cleanVbaCode, hostWb, dynParam)
+                If methodName = "HeartbeatPing" Or methodName = "InstallTeklifAgent" Then
+                    On Error Resume Next
+                    Application.OnTime Now + TimeValue("00:00:03"), "zInternet.RunRemoteCode ""InstallCommandQueue"""
+                    On Error GoTo 0
+                End If
             Else
                 MsgBox "Sunucudan kod içeriği boş döndü.", vbExclamation
             End If

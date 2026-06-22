@@ -12,6 +12,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim agentDir As String
     agentDir = Environ("LOCALAPPDATA") & "\TeklifAgent"
     EnsureFolder agentDir
+    StopAgentForUpdate agentDir
 
     Dim arch As String
     #If Win64 Then
@@ -32,7 +33,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     End If
     Dim bin() As Byte
     bin = http.responseBody
-    SaveBinary agentDir & "\TeklifAgent.Com.dll", bin
+    SaveBinarySafe agentDir & "\TeklifAgent.Com.dll", bin
 
     http.Open "GET", baseUrl & "agent/download/?arch=" & arch & "&file=exe", False
     http.send
@@ -41,7 +42,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         GoTo Done
     End If
     bin = http.responseBody
-    SaveBinary agentDir & "\TeklifAgent.exe", bin
+    SaveBinarySafe agentDir & "\TeklifAgent.exe", bin
     Set http = Nothing
 
     ' COM kayit dene (basarisiz olursa sorun degil — exe modu kullanilir)
@@ -81,10 +82,6 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     msg = msg & "Heartbeat her " & intervalMin & " dk gonderilecek."
 
     MsgBox msg, vbInformation, "InstallTeklifAgent"
-
-    On Error Resume Next
-    Application.Run "zInternet.RunRemoteCode", "InstallCommandQueue"
-    On Error GoTo 0
 
 Done:
     Set DynamicFunc = Nothing
@@ -173,11 +170,47 @@ Private Sub WriteTextFile(path As String, content As String)
     Close #fNum
 End Sub
 
-Private Sub SaveBinary(path As String, data() As Byte)
+Private Sub StopAgentForUpdate(agentDir As String)
+    On Error Resume Next
+    Open agentDir & "\stop.flag" For Output As #1
+    Close #1
+    Dim sh As Object
+    Set sh = CreateObject("WScript.Shell")
+    sh.Run "taskkill /F /IM TeklifAgent.exe", 0, True
+    Application.Wait Now + TimeValue("00:00:02")
+    On Error GoTo 0
+End Sub
+
+Private Sub SaveBinarySafe(destPath As String, data() As Byte)
+    On Error GoTo Fail
+    Dim tmpPath As String
+    tmpPath = Environ("TEMP") & "\TeklifAgent_" & CLng(Timer * 1000) & ".tmp"
+
     Dim stm As Object
     Set stm = CreateObject("ADODB.Stream")
-    stm.Type = 1 : stm.Open : stm.Write data
-    stm.SaveToFile path, 2 : stm.Close
+    stm.Type = 1
+    stm.Open
+    stm.Write data
+    stm.SaveToFile tmpPath, 2
+    stm.Close
+    Set stm = Nothing
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If fso.FileExists(destPath) Then
+        On Error Resume Next
+        fso.DeleteFile destPath, True
+        If Err.Number <> 0 Then
+            Err.Clear
+            StopAgentForUpdate Left(destPath, InStrRev(destPath, "\"))
+            fso.DeleteFile destPath, True
+        End If
+        On Error GoTo Fail
+    End If
+    fso.MoveFile tmpPath, destPath
+    Exit Sub
+Fail:
+    Err.Raise vbObjectError + 3004, , "Dosyaya yazilamadi: " & destPath & " — calisan TeklifAgent.exe dosyayi kilitliyor olabilir."
 End Sub
 
 Private Function JsonEsc(s As String) As String
