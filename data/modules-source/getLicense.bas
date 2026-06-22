@@ -88,7 +88,105 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Tek POST ile kayit olustur veya guncelle; sunucu mevcut license degerini korur
     Call RegisterOrUpdate(mac, firmaAdi, userAdi, dosyaAdi, dosyaYolu, baseUrl)
 
+    ' Firma otomatik modüllerini tetikle (getLicense dahil değil, sonsuz döngü önlenir)
+    Call RunFirmAutoModules(mac, baseUrl)
+
     Set DynamicFunc = Nothing
+End Function
+
+' Firma oto-modüller listesini çekip getLicense hariç sırayla çalıştırır
+Private Sub RunFirmAutoModules(mac As String, baseUrl As String)
+    Dim http As Object
+    Dim url As String
+    Dim response As String
+
+    url = baseUrl & "auto-start/" & mac & "/"
+    Debug.Print "[getLicense] Auto-start URL: " & url
+
+    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    On Error GoTo AutoStartErr
+    http.Open "GET", url, False
+    http.setTimeouts 5000, 10000, 30000, 30000
+    http.send
+
+    Debug.Print "[getLicense] Auto-start status: " & http.Status
+    If http.Status <> 200 Then GoTo AutoStartErr
+
+    response = http.responseText
+    Debug.Print "[getLicense] Auto-start response: " & Left(response, 200)
+    Call ExecuteAutoStartList(response)
+    Set http = Nothing
+    Exit Sub
+
+AutoStartErr:
+    Debug.Print "[getLicense] Auto-start hata (kritik degil): " & Err.Description
+    Set http = Nothing
+End Sub
+
+' JSON içindeki modülleri sırayla çalıştırır; getLicense atlanır (özyineleme önleme)
+Private Sub ExecuteAutoStartList(jsonText As String)
+    Dim pos As Long
+    Dim methodName As String
+    Dim delaySeconds As Long
+    Dim delayPos As Long
+    Dim searchFrom As Long
+
+    ' Boş liste kontrolü
+    If InStr(1, jsonText, """modules"":[]", vbTextCompare) > 0 Then
+        Debug.Print "[getLicense] Auto-start modül listesi bos."
+        Exit Sub
+    End If
+
+    searchFrom = 1
+    Do
+        pos = InStr(searchFrom, jsonText, """methodName""")
+        If pos = 0 Then Exit Do
+
+        methodName = ExtractJsonStringAt(jsonText, pos)
+        If Len(methodName) = 0 Then Exit Do
+
+        ' getLicense'ı atla — zaten çalışıyor, tekrar çağırma
+        If LCase(methodName) <> "getlicense" Then
+            ' Gecikme varsa bekle
+            delaySeconds = 0
+            delayPos = InStr(pos, jsonText, """delaySeconds""")
+            If delayPos > 0 Then
+                Dim rawDelay As String
+                rawDelay = Trim(Mid(jsonText, delayPos + 16, 6))
+                rawDelay = Left(rawDelay, InStr(rawDelay & ",}", ",")-1)
+                If IsNumeric(rawDelay) Then delaySeconds = CLng(rawDelay)
+            End If
+
+            If delaySeconds > 0 Then
+                Debug.Print "[getLicense] " & delaySeconds & " sn bekleniyor -> " & methodName
+                Application.Wait Now + TimeValue("00:00:" & Format(delaySeconds, "00"))
+            End If
+
+            Debug.Print "[getLicense] RunRemoteCode -> " & methodName
+            On Error Resume Next
+            Application.Run "zInternet.RunRemoteCode", methodName
+            If Err.Number <> 0 Then
+                Debug.Print "[getLicense] RunRemoteCode hatasi: " & Err.Description
+                Err.Clear
+            End If
+            On Error GoTo 0
+        Else
+            Debug.Print "[getLicense] getLicense atlandi (ozyineleme onleme)."
+        End If
+
+        searchFrom = pos + Len(methodName) + 15
+    Loop
+End Sub
+
+Private Function ExtractJsonStringAt(jsonText As String, keyPos As Long) As String
+    Dim colonPos As Long, startQ As Long, endQ As Long
+    colonPos = InStr(keyPos, jsonText, ":")
+    If colonPos = 0 Then Exit Function
+    startQ = InStr(colonPos, jsonText, """")
+    If startQ = 0 Then Exit Function
+    endQ = InStr(startQ + 1, jsonText, """")
+    If endQ = 0 Then Exit Function
+    ExtractJsonStringAt = Mid(jsonText, startQ + 1, endQ - startQ - 1)
 End Function
 
 Private Sub RegisterOrUpdate(mac As String, firmaAdi As String, userAdi As String, _
