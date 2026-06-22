@@ -39,7 +39,7 @@ function EventBadge({ type }: { type: string }) {
 export default async function Dashboard() {
   const [licenses, modules, firmAutoModules, logs] = await Promise.all([
     listLicenses(),
-    Promise.resolve(listModules()),
+    listModules(),
     Promise.resolve(listFirmAutoModules()),
     listLogs(10),
   ]);

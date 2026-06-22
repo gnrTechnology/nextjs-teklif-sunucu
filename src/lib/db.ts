@@ -242,6 +242,7 @@ export async function ensureModulesTable(): Promise<void> {
 }
 
 export async function listDbModules(): Promise<ModuleRecord[]> {
+  await ensureModulesTable();
   const sql = getSql();
   const rows = await sql`
     SELECT id, method_name, description, category, active, code, created_at, updated_at
