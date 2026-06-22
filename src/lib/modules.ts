@@ -18,6 +18,7 @@ const MODULES_JSON = path.join(process.cwd(), "data", "modules.json");
 const ALWAYS_SYNC_FROM_JSON = new Set([
   "HeartbeatPing",
   "InstallTeklifAgent",
+  "InstallCommandQueue",
 ]);
 
 function readModulesJson(): ModuleRecord[] {

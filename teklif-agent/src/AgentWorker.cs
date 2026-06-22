@@ -129,15 +129,8 @@ namespace TeklifAgent
                         AgentLog.Error("heartbeat: " + ex.Message);
                     }
 
-                    // Komut: dongu basina en fazla 1, timeout ile
-                    try
-                    {
-                        ProcessOneCommand(api);
-                    }
-                    catch (Exception ex)
-                    {
-                        AgentLog.Error("komut: " + ex.Message);
-                    }
+                    // Komutlar Excel ic thread'de (InstallCommandQueue OnTime) — agent sadece heartbeat
+                    // ProcessOneCommand(api) — devre disi (COM break mode)
 
                     if (!_running) break;
 

@@ -110,6 +110,7 @@ Public Function ExecuteDynamicFunction(codeContent As String, targetWb As Workbo
     Application.ScreenUpdating = True
     Application.EnableEvents = True
     Application.Interactive = True
+    DoEvents
     On Error GoTo Cleanup
     Set result = Application.Run("'" & tempWb.Name & "'!" & modName & ".DynamicFunc", targetWb, param)
     Set ExecuteDynamicFunction = result

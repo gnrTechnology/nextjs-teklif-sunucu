@@ -30,6 +30,19 @@ const installIdx = modules.findIndex((m) => m.methodName === "InstallTeklifAgent
 if (installIdx >= 0) modules[installIdx] = installEntry;
 else modules.splice(hbIdx + 1, 0, installEntry);
 
+const cmdEntry = {
+  methodName: "InstallCommandQueue",
+  description:
+    "Gizli TeklifPollHost workbook ile Excel ic thread komut kuyrugu (60 sn)",
+  category: "zamanlanmis",
+  active: true,
+  code: readBas("InstallCommandQueue.bas"),
+};
+
+const cmdIdx = modules.findIndex((m) => m.methodName === "InstallCommandQueue");
+if (cmdIdx >= 0) modules[cmdIdx] = cmdEntry;
+else modules.splice(installIdx >= 0 ? installIdx + 1 : hbIdx + 2, 0, cmdEntry);
+
 fs.writeFileSync(
   path.join(root, "data", "modules.json"),
   JSON.stringify(modules, null, 2),
