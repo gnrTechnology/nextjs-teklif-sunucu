@@ -5,30 +5,69 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Set DynamicFunc = Nothing
 End Function
 
+Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsx"
+
+Private Function PollHostPath() As String
+    PollHostPath = Environ("LOCALAPPDATA") & "\TeklifAgent\" & POLL_HOST_FILE
+End Function
+
+Private Function PollHostRunRef(wb As Workbook) As String
+    PollHostRunRef = "'" & wb.Name & "'!CmdPoll.CommandQueueTick"
+End Function
+
 Private Sub EnsurePollHost()
     Dim wb As Workbook
-    Dim found As Boolean
-    found = False
+    Dim path As String
 
-    For Each wb In Application.Workbooks
-        If wb.Name = "TeklifPollHost" Then
-            found = True
-            Exit For
+    path = PollHostPath()
+    EnsureFolder Environ("LOCALAPPDATA") & "\TeklifAgent"
+
+    Set wb = FindOpenPollHost()
+    If wb Is Nothing Then
+        If Dir(path) <> "" Then
+            Set wb = Workbooks.Open(path, UpdateLinks:=0, ReadOnly:=False)
+        Else
+            Set wb = Workbooks.Add(xlWBATWorksheet)
+            wb.SaveAs Filename:=path, FileFormat:=51, CreateBackup:=False
         End If
-    Next wb
-
-    If Not found Then
-        Set wb = Workbooks.Add
-        wb.Name = "TeklifPollHost"
         On Error Resume Next
         wb.Windows(1).Visible = False
         On Error GoTo 0
-        InjectPollModule wb
-    Else
-        On Error Resume Next
-        Application.Run "'TeklifPollHost'!CmdPoll.CommandQueueTick"
-        On Error GoTo 0
+        If Not PollModuleExists(wb) Then InjectPollModule wb
     End If
+
+    SchedulePollTick wb
+End Sub
+
+Private Function FindOpenPollHost() As Workbook
+    Dim wb As Workbook
+    For Each wb In Application.Workbooks
+        If InStr(1, wb.Name, "TeklifPollHost", vbTextCompare) > 0 Then
+            Set FindOpenPollHost = wb
+            Exit Function
+        End If
+    Next wb
+End Function
+
+Private Function PollModuleExists(wb As Workbook) As Boolean
+    On Error Resume Next
+    Dim vbComp As Object
+    Set vbComp = wb.VBProject.VBComponents("CmdPoll")
+    PollModuleExists = (Err.Number = 0)
+    Err.Clear
+End Function
+
+Private Sub SchedulePollTick(wb As Workbook)
+    On Error Resume Next
+    Application.Run PollHostRunRef(wb)
+    Application.OnTime Now + TimeValue("00:00:05"), PollHostRunRef(wb)
+    On Error GoTo 0
+End Sub
+
+Private Sub EnsureFolder(path As String)
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(path) Then fso.CreateFolder path
 End Sub
 
 Private Sub InjectPollModule(wb As Workbook)
@@ -36,7 +75,7 @@ Private Sub InjectPollModule(wb As Workbook)
     Set vbComp = wb.VBProject.VBComponents.Add(1)
     vbComp.Name = "CmdPoll"
     vbComp.CodeModule.AddFromString GetPollModuleCode()
-    Application.OnTime Now + TimeValue("00:00:05"), "'TeklifPollHost'!CmdPoll.CommandQueueTick"
+    Application.OnTime Now + TimeValue("00:00:05"), PollHostRunRef(wb)
 End Sub
 
 Private Function GetPollModuleCode() As String
@@ -88,7 +127,7 @@ Private Function PollCodeMain() As String
     s = s & "TickErr:" & vbCrLf
     s = s & "    Debug.Print ""CommandQueueTick hata: "" & Err.Description" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
-    s = s & "    Application.OnTime Now + TimeValue(""00:01:00""), ""'TeklifPollHost'!CmdPoll.CommandQueueTick""" & vbCrLf
+    s = s & "    Application.OnTime Now + TimeValue(""00:01:00""), ""'TeklifPollHost.xlsx'!CmdPoll.CommandQueueTick""" & vbCrLf
     s = s & "End Sub" & vbCrLf & vbCrLf
     PollCodeMain = s
 End Function
