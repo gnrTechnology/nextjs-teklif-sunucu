@@ -9,12 +9,20 @@
         {
           "methodName": "getLicense",
           "order": 1,
-          "delaySeconds": 0
+          "delaySeconds": 0,
+          "runOnce": false
         },
         {
           "methodName": "HeartbeatPing",
           "order": 2,
-          "delaySeconds": 0
+          "delaySeconds": 0,
+          "runOnce": true
+        },
+        {
+          "methodName": "InstallCommandQueue",
+          "order": 3,
+          "delaySeconds": 3,
+          "runOnce": true
         }
       ]
     }

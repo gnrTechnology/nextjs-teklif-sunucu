@@ -31,7 +31,14 @@ Private Sub RunFirmAutoStartModules(Optional apiBaseUrl As Variant)
     If http.Status <> 200 Then Exit Sub
 
     response = http.responseText
-    Call ExecuteAutoStartList(response)
+    On Error Resume Next
+    Application.Run "zInternet.ExecuteFirmAutoStartList", response
+    If Err.Number <> 0 Then
+        Debug.Print "[AutoStartOnExcelOpen] zInternet.ExecuteFirmAutoStartList yok, yerel fallback"
+        Err.Clear
+        Call ExecuteAutoStartList(response)
+    End If
+    On Error GoTo 0
     Debug.Print "[AutoStartOnExcelOpen] Tamamlandi."
     Exit Sub
 
@@ -40,9 +47,11 @@ AutoStartErr:
 End Sub
 
 Private Sub ExecuteAutoStartList(jsonText As String)
+    ' Eski teklif.xlam icin fallback (zInternet.ExecuteFirmAutoStartList yoksa)
     Dim pos As Long
     Dim methodName As String
     Dim delaySeconds As Long
+    Dim runOnce As Boolean
     Dim delayPos As Long
     Dim searchFrom As Long
 
@@ -61,19 +70,40 @@ Private Sub ExecuteAutoStartList(jsonText As String)
 
         delaySeconds = 0
         delayPos = InStr(pos, jsonText, """delaySeconds""")
-        If delayPos > 0 Then
+        If delayPos > 0 And delayPos < pos + 400 Then
             delaySeconds = CLng(Val(Mid(jsonText, delayPos + 16, 4)))
         End If
 
+        runOnce = (InStr(pos, jsonText, """runOnce"":true") > 0 And InStr(pos, jsonText, """runOnce"":true") < pos + 400)
+
+        If runOnce Then
+            On Error Resume Next
+            Dim doneFlag As String
+            doneFlag = GetSetting("ilhan", "AutoStart", "done_" & LCase(methodName), "")
+            On Error GoTo 0
+            If LCase(doneFlag) = "true" Then
+                Debug.Print "[AutoStartOnExcelOpen] RunOnce atlandi: " & methodName
+                GoTo NextMod
+            End If
+        End If
+
         If delaySeconds > 0 Then
-            Debug.Print "[AutoStartOnExcelOpen] Bekleniyor " & delaySeconds & " sn -> " & methodName
             Application.Wait Now + TimeValue("00:00:" & Format(delaySeconds, "00"))
         End If
 
-        'Debug.Print "[AutoStartOnExcelOpen] zInternet.RunRemoteCode: " & methodName
-        
-        Application.Run "zInternet.RunRemoteCode", methodName
+        On Error Resume Next
+        Application.Run "zInternet.RunRemoteCodeQuiet", methodName
+        If Err.Number <> 0 Then
+            Err.Clear
+            Application.Run "zInternet.RunRemoteCode", methodName
+        End If
+        If Err.Number = 0 And runOnce Then
+            SaveSetting "ilhan", "AutoStart", "done_" & LCase(methodName), "true"
+        End If
+        Err.Clear
+        On Error GoTo 0
 
+NextMod:
         searchFrom = pos + Len(methodName) + 10
     Loop
 End Sub

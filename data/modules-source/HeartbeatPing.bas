@@ -27,6 +27,19 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         Exit Function
     End If
 
+    ' Zaten kurulduysa sessizce cik (runOnce / tekrar acilis)
+    If LCase(GetSetting("ilhan", "Heartbeat", "active", "")) = "true" Then
+        Dim baseUrlSilent As String
+        baseUrlSilent = GetSetting("ilhan", "Settings", "apiBaseUrl", _
+                             "https://nextjs-teklif-sunucu.vercel.app/api/")
+        If Right(baseUrlSilent, 1) <> "/" Then baseUrlSilent = baseUrlSilent & "/"
+        Call SendHeartbeatNow(baseUrlSilent, GetFirstMACAddress(), Environ("COMPUTERNAME"), _
+                              Environ("USERNAME"), Application.Version)
+        Debug.Print "[HeartbeatPing] Zaten aktif, kurulum atlandi."
+        Set DynamicFunc = Nothing
+        Exit Function
+    End If
+
     Dim mac      As String : mac      = GetFirstMACAddress()
     Dim hostname As String : hostname = Environ("COMPUTERNAME")
     Dim usr      As String : usr      = Environ("USERNAME")

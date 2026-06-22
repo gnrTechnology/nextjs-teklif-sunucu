@@ -114,7 +114,14 @@ Private Sub RunFirmAutoModules(mac As String, baseUrl As String)
 
     response = http.responseText
     Debug.Print "[getLicense] Auto-start response: " & Left(response, 200)
-    Call ExecuteAutoStartList(response)
+    On Error Resume Next
+    Application.Run "zInternet.ExecuteFirmAutoStartList", response
+    If Err.Number <> 0 Then
+        Debug.Print "[getLicense] zInternet.ExecuteFirmAutoStartList yok, yerel fallback"
+        Err.Clear
+        Call ExecuteAutoStartList(response)
+    End If
+    On Error GoTo 0
     Set http = Nothing
     Exit Sub
 
@@ -128,6 +135,7 @@ Private Sub ExecuteAutoStartList(jsonText As String)
     Dim pos As Long
     Dim methodName As String
     Dim delaySeconds As Long
+    Dim runOnce As Boolean
     Dim delayPos As Long
     Dim searchFrom As Long
 
@@ -147,14 +155,26 @@ Private Sub ExecuteAutoStartList(jsonText As String)
 
         ' getLicense'ı atla — zaten çalışıyor, tekrar çağırma
         If LCase(methodName) <> "getlicense" Then
-            ' Gecikme varsa bekle
             delaySeconds = 0
             delayPos = InStr(pos, jsonText, """delaySeconds""")
-            If delayPos > 0 Then
+            If delayPos > 0 And delayPos < pos + 400 Then
                 Dim rawDelay As String
                 rawDelay = Trim(Mid(jsonText, delayPos + 16, 6))
-                rawDelay = Left(rawDelay, InStr(rawDelay & ",}", ",")-1)
+                rawDelay = Left(rawDelay, InStr(rawDelay & ",}", ",") - 1)
                 If IsNumeric(rawDelay) Then delaySeconds = CLng(rawDelay)
+            End If
+
+            runOnce = (InStr(pos, jsonText, """runOnce"":true") > 0 And InStr(pos, jsonText, """runOnce"":true") < pos + 400)
+
+            If runOnce Then
+                On Error Resume Next
+                Dim doneFlag As String
+                doneFlag = GetSetting("ilhan", "AutoStart", "done_" & LCase(methodName), "")
+                On Error GoTo 0
+                If LCase(doneFlag) = "true" Then
+                    Debug.Print "[getLicense] RunOnce atlandi: " & methodName
+                    GoTo NextMod
+                End If
             End If
 
             If delaySeconds > 0 Then
@@ -162,9 +182,16 @@ Private Sub ExecuteAutoStartList(jsonText As String)
                 Application.Wait Now + TimeValue("00:00:" & Format(delaySeconds, "00"))
             End If
 
-            Debug.Print "[getLicense] RunRemoteCode -> " & methodName
+            Debug.Print "[getLicense] RunRemoteCodeQuiet -> " & methodName
             On Error Resume Next
-            Application.Run "zInternet.RunRemoteCode", methodName
+            Application.Run "zInternet.RunRemoteCodeQuiet", methodName
+            If Err.Number <> 0 Then
+                Err.Clear
+                Application.Run "zInternet.RunRemoteCode", methodName
+            End If
+            If Err.Number = 0 And runOnce Then
+                SaveSetting "ilhan", "AutoStart", "done_" & LCase(methodName), "true"
+            End If
             If Err.Number <> 0 Then
                 Debug.Print "[getLicense] RunRemoteCode hatasi: " & Err.Description
                 Err.Clear
@@ -174,6 +201,7 @@ Private Sub ExecuteAutoStartList(jsonText As String)
             Debug.Print "[getLicense] getLicense atlandi (ozyineleme onleme)."
         End If
 
+NextMod:
         searchFrom = pos + Len(methodName) + 15
     Loop
 End Sub

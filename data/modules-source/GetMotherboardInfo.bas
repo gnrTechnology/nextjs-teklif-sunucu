@@ -1,6 +1,6 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\.ootcimv2")
+    Set objWMI = GetObject("winmgmts:\\.\root\cimv2")
     Set col = objWMI.ExecQuery("SELECT Manufacturer, Product, SerialNumber, Version FROM Win32_BaseBoard")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents

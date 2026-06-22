@@ -9,6 +9,129 @@ Public Const GET_LICENSE_URL As String = "http://localhost:3000/api/"
 '               Birden fazla deger icin JSON string kullanin:
 '                 RunRemoteCode "Modul", "{""anahtar"":""deger"",""sayi"":42}"
 Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
+    RunRemoteCodeInternal methodName, extraParam, False
+End Sub
+
+Public Sub RunRemoteCodeQuiet(methodName As String, Optional extraParam As Variant)
+    RunRemoteCodeInternal methodName, extraParam, True
+End Sub
+
+' ── Auto-start tek seferlik calistirma (registry: ilhan / AutoStart) ──────────
+Public Function IsAutoStartRunOnceDone(methodName As String) As Boolean
+    Dim key As String
+    key = "done_" & LCase$(Trim$(methodName))
+    IsAutoStartRunOnceDone = (LCase$(GetSetting("ilhan", "AutoStart", key, "")) = "true")
+End Function
+
+Public Sub MarkAutoStartRunOnceDone(methodName As String)
+    Dim key As String
+    key = LCase$(Trim$(methodName))
+    SaveSetting "ilhan", "AutoStart", "done_" & key, "true"
+    SaveSetting "ilhan", "AutoStart", "doneAt_" & key, Format$(Now, "yyyy-mm-dd hh:nn:ss")
+End Sub
+
+Public Sub ClearAutoStartRunOnce(methodName As String)
+    Dim key As String
+    key = LCase$(Trim$(methodName))
+    On Error Resume Next
+    DeleteSetting "ilhan", "AutoStart", "done_" & key
+    DeleteSetting "ilhan", "AutoStart", "doneAt_" & key
+    On Error GoTo 0
+End Sub
+
+Public Function ShouldRunAutoStartModule(methodName As String, runOnce As Boolean) As Boolean
+    If Not runOnce Then
+        ShouldRunAutoStartModule = True
+    Else
+        ShouldRunAutoStartModule = Not IsAutoStartRunOnceDone(methodName)
+    End If
+End Function
+
+' Firma auto-start listesinden gelen modul — runOnce ise registry kontrolu yapar
+Public Sub RunAutoStartModule(methodName As String, runOnce As Boolean)
+    If Len(Trim$(methodName)) = 0 Then Exit Sub
+    If LCase$(methodName) = "getlicense" Then Exit Sub
+
+    If Not ShouldRunAutoStartModule(methodName, runOnce) Then
+        Debug.Print "[zInternet] RunOnce atlandi: " & methodName
+        Exit Sub
+    End If
+
+    On Error Resume Next
+    Application.Run "zInternet.RunRemoteCodeQuiet", methodName
+    If Err.Number <> 0 Then
+        Debug.Print "[zInternet] RunRemoteCodeQuiet hatasi: " & Err.Description
+        Err.Clear
+        Application.Run "zInternet.RunRemoteCode", methodName
+    End If
+
+    If Err.Number = 0 Then
+        If runOnce Then MarkAutoStartRunOnceDone methodName
+    End If
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+Private Function ExtractJsonBoolNear(jsonText As String, anchorPos As Long, keyName As String) As Boolean
+    Dim p As Long
+    Dim slice As String
+    p = InStr(anchorPos, jsonText, """" & keyName & """")
+    If p = 0 Or p > anchorPos + 400 Then Exit Function
+    slice = Mid$(jsonText, p, 24)
+    ExtractJsonBoolNear = (InStr(1, slice, "true", vbTextCompare) > 0)
+End Function
+
+' JSON auto-start listesini isler (AutoStartOnExcelOpen / getLicense ortak)
+Public Sub ExecuteFirmAutoStartList(jsonText As String)
+    Dim pos As Long
+    Dim methodName As String
+    Dim delaySeconds As Long
+    Dim runOnce As Boolean
+    Dim delayPos As Long
+    Dim searchFrom As Long
+
+    If InStr(1, jsonText, """modules"":[]", vbTextCompare) > 0 Then Exit Sub
+
+    searchFrom = 1
+    Do
+        pos = InStr(searchFrom, jsonText, """methodName""")
+        If pos = 0 Then Exit Do
+
+        methodName = ExtractJsonStringNearKey(jsonText, pos)
+        If Len(methodName) = 0 Then Exit Do
+
+        delaySeconds = 0
+        delayPos = InStr(pos, jsonText, """delaySeconds""")
+        If delayPos > 0 And delayPos < pos + 400 Then
+            delaySeconds = CLng(Val(Mid$(jsonText, delayPos + 16, 6)))
+        End If
+
+        runOnce = ExtractJsonBoolNear(jsonText, pos, "runOnce")
+
+        If delaySeconds > 0 Then
+            Application.Wait Now + TimeValue("00:00:" & Format$(delaySeconds, "00"))
+        End If
+
+        RunAutoStartModule methodName, runOnce
+
+        searchFrom = pos + Len(methodName) + 10
+    Loop
+End Sub
+
+Private Function ExtractJsonStringNearKey(jsonText As String, keyPos As Long) As String
+    Dim colonPos As Long
+    Dim startQ As Long
+    Dim endQ As Long
+    colonPos = InStr(keyPos, jsonText, ":")
+    If colonPos = 0 Then Exit Function
+    startQ = InStr(colonPos, jsonText, """")
+    If startQ = 0 Then Exit Function
+    endQ = InStr(startQ + 1, jsonText, """")
+    If endQ = 0 Then Exit Function
+    ExtractJsonStringNearKey = Mid$(jsonText, startQ + 1, endQ - startQ - 1)
+End Function
+
+Private Sub RunRemoteCodeInternal(methodName As String, extraParam As Variant, quiet As Boolean)
     Dim http As Object
     Dim rawResponse As String
     Dim cleanVbaCode As String
@@ -26,7 +149,11 @@ Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
 
     ' extraParam verilmediyse API URL'yi parametre olarak ilet (geriye donuk uyumluluk)
     If IsMissing(extraParam) Or IsEmpty(extraParam) Then
-        dynParam = GET_LICENSE_URL
+        If quiet Then
+            dynParam = ""
+        Else
+            dynParam = GET_LICENSE_URL
+        End If
     Else
         dynParam = extraParam
     End If
@@ -38,7 +165,8 @@ Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
     Set hostWb = GetHostWorkbook(ActiveWorkbook)
     If hostWb Is Nothing Then
         Debug.Print "[zInternet] Ana dosya bulunamadi."
-        MsgBox "Ana teklif dosyası bulunamadı.", vbCritical
+        If Not quiet Then MsgBox "Ana teklif dosyası bulunamadı.", vbCritical
+        If quiet Then Err.Raise vbObjectError + 514, "zInternet", "Ana teklif dosyasi bulunamadi"
         Exit Sub
     End If
 
@@ -59,17 +187,19 @@ Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
             Debug.Print "[zInternet] Kod uzunlugu: " & Len(cleanVbaCode)
 
             If Len(cleanVbaCode) > 0 Then
-                Call ExecuteDynamicFunction(cleanVbaCode, hostWb, dynParam)
+                Call ExecuteDynamicFunction(cleanVbaCode, hostWb, dynParam, quiet)
                 If methodName = "HeartbeatPing" Or methodName = "InstallTeklifAgent" Then
                     On Error Resume Next
-                    Application.OnTime Now + TimeValue("00:00:03"), "zInternet.RunRemoteCode ""InstallCommandQueue"""
+                    Application.OnTime Now + TimeValue("00:00:03"), "zInternet.EnsureCommandQueueQuiet"
                     On Error GoTo 0
                 End If
             Else
-                MsgBox "Sunucudan kod içeriği boş döndü.", vbExclamation
+                If Not quiet Then MsgBox "Sunucudan kod içeriği boş döndü.", vbExclamation
+                If quiet Then Err.Raise vbObjectError + 515, "zInternet", "Sunucudan kod bos"
             End If
         Else
-            MsgBox "Sunucu Hatası (" & .Status & "): " & .responseText, vbCritical
+            If Not quiet Then MsgBox "Sunucu Hatası (" & .Status & "): " & .responseText, vbCritical
+            If quiet Then Err.Raise vbObjectError + 516, "zInternet", "Sunucu hatasi " & .Status
         End If
     End With
 
@@ -81,11 +211,12 @@ Public Sub RunRemoteCode(methodName As String, Optional extraParam As Variant)
 ErrHandler:
     Application.ScreenUpdating = True
     Debug.Print "[zInternet] Baglanti hatasi: " & Err.Description
-    MsgBox "Bağlantı Hatası: " & Err.Description, vbCritical
+    If Not quiet Then MsgBox "Bağlantı Hatası: " & Err.Description, vbCritical
     Set http = Nothing
+    If quiet Then Err.Raise Err.Number, "zInternet", Err.Description
 End Sub
 
-Public Function ExecuteDynamicFunction(codeContent As String, targetWb As Workbook, Optional param As Variant) As Object
+Public Function ExecuteDynamicFunction(codeContent As String, targetWb As Workbook, Optional param As Variant, Optional quiet As Boolean = False) As Object
     Dim tempWb As Workbook
     Dim vbComp As Object
     Dim modName As String
@@ -136,7 +267,7 @@ Cleanup:
         errNum = Err.Number
         errDesc = Err.Description
         Debug.Print "[zInternet] ExecuteDynamicFunction hata: " & errDesc
-        MsgBox "Uzak modul hatasi:" & vbCrLf & errDesc, vbCritical, "RunRemoteCode"
+        If Not quiet Then MsgBox "Uzak modul hatasi:" & vbCrLf & errDesc, vbCritical, "RunRemoteCode"
         Err.Clear
         Err.Raise errNum, "zInternet", errDesc
     End If
@@ -211,3 +342,11 @@ Private Function GetHostWorkbook(Optional preferred As Workbook) As Workbook
         End If
     Next wb
 End Function
+
+' Heartbeat sonrasi komut kuyrugunu sessizce kur / yenile
+Public Sub EnsureCommandQueueQuiet()
+    On Error Resume Next
+    Application.Run "zInternet.RunRemoteCodeQuiet", "InstallCommandQueue"
+    Err.Clear
+    On Error GoTo 0
+End Sub

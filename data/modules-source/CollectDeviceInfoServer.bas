@@ -1,7 +1,10 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
-    Dim baseUrl As String
-    baseUrl = CStr(param)
-    If Right(baseUrl, 1) = "/" Then baseUrl = Left(baseUrl, Len(baseUrl) - 1)
+    Dim apiBase As String
+    apiBase = GetSetting("ilhan", "Settings", "apiBaseUrl", "https://nextjs-teklif-sunucu.vercel.app/api/")
+    If Len(Trim(CStr(param))) > 0 And InStr(LCase(CStr(param)), "http") > 0 Then
+        apiBase = Trim(CStr(param))
+    End If
+    If Right(apiBase, 1) <> "/" Then apiBase = apiBase & "/"
 
     Dim mac As String
     Dim hostname As String
@@ -159,12 +162,19 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         json = json & """timeZone"":""" & EscJson(obj.Description) & ""","
     Next
 
-    ' Windows Aktivasyon
+    ' Windows Aktivasyon (slmgr — max ~8 sn bekle, takilmasin)
     On Error Resume Next
     Dim wsh2 As Object : Set wsh2 = CreateObject("WScript.Shell")
     Dim tmpFile2 As String : tmpFile2 = Environ("TEMP") & "\lic_check.txt"
-    wsh2.Run "cmd /c cscript //NoLogo %windir%\System32\slmgr.vbs /xpr > """ & tmpFile2 & """", 0, True
+    On Error Resume Next
     Dim fso2 As Object : Set fso2 = CreateObject("Scripting.FileSystemObject")
+    If fso2.FileExists(tmpFile2) Then fso2.DeleteFile tmpFile2
+    wsh2.Run "cmd /c cscript //NoLogo %windir%\System32\slmgr.vbs /xpr > """ & tmpFile2 & """", 0, False
+    Dim tStart As Single : tStart = Timer
+    Do While Not fso2.FileExists(tmpFile2) And (Timer - tStart) < 8
+        DoEvents
+        Application.Wait Now + TimeValue("00:00:01")
+    Loop
     If fso2.FileExists(tmpFile2) Then
         Dim f2 As Object : Set f2 = fso2.OpenTextFile(tmpFile2, 1)
         Dim actTxt As String : actTxt = f2.ReadAll : f2.Close
@@ -211,7 +221,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     On Error Resume Next
     Dim http As Object
     Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-    http.Open "POST", baseUrl & "/api/device-info", False
+    http.Open "POST", apiBase & "device-info/", False
     http.setRequestHeader "Content-Type", "application/json"
     http.setTimeouts 5000, 5000, 20000, 20000
     http.send postBody

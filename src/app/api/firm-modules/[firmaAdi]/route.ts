@@ -8,9 +8,9 @@ type PatchBody = {
   description?: string;
   enabled?: boolean;
   onExcelOpenEnabled?: boolean;
-  addModule?: { methodName: string; order?: number; delaySeconds?: number };
+  addModule?: { methodName: string; order?: number; delaySeconds?: number; runOnce?: boolean };
   removeModule?: string;
-  updateModule?: { methodName: string; order?: number; delaySeconds?: number };
+  updateModule?: { methodName: string; order?: number; delaySeconds?: number; runOnce?: boolean };
   reorderModules?: { methodName: string; order: number }[];
 };
 
@@ -49,6 +49,7 @@ export async function PATCH(
       methodName: body.addModule.methodName,
       order: body.addModule.order ?? (mods.length > 0 ? Math.max(...mods.map((m) => m.order)) + 1 : 1),
       delaySeconds: body.addModule.delaySeconds ?? 0,
+      runOnce: body.addModule.runOnce ?? false,
     };
     if (exists >= 0) mods[exists] = entry; else mods.push(entry);
     mods.sort((a, b) => a.order - b.order);

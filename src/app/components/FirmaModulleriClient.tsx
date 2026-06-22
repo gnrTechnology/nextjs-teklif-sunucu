@@ -218,6 +218,7 @@ function ModuleEditPanel({
   const [customName, setCustomName]  = useState("");
   const [order, setOrder]            = useState(editing?.order ?? maxOrder + 1);
   const [delay, setDelay]            = useState(editing?.delaySeconds ?? 0);
+  const [runOnce, setRunOnce]        = useState(editing?.runOnce ?? false);
   const [saving, setSaving]          = useState(false);
 
   const finalName = methodName === "__custom__" ? customName.trim() : methodName.trim();
@@ -226,8 +227,8 @@ function ModuleEditPanel({
     if (!finalName) { alert("Modül adı zorunludur."); return; }
     setSaving(true);
     const body = editing
-      ? { updateModule: { methodName: finalName, order, delaySeconds: delay } }
-      : { addModule:    { methodName: finalName, order, delaySeconds: delay } };
+      ? { updateModule: { methodName: finalName, order, delaySeconds: delay, runOnce } }
+      : { addModule:    { methodName: finalName, order, delaySeconds: delay, runOnce } };
     const r = await apiFetch(`/api/firm-modules/${encodeURIComponent(firmaAdi)}`, "PATCH", body);
     setSaving(false);
     if (r.success) { onSaved(); onClose(); }
@@ -283,6 +284,20 @@ function ModuleEditPanel({
               onChange={(e) => setDelay(Number(e.target.value))} />
           </label>
         </div>
+        <label style={{ ...LS, flexDirection: "row", alignItems: "center", gap: 10, cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={runOnce}
+            onChange={(e) => setRunOnce(e.target.checked)}
+            style={{ width: 16, height: 16, accentColor: "var(--accent)" }}
+          />
+          <span>
+            Tek seferlik çalıştır (runOnce)
+            <span style={{ display: "block", fontSize: 11, fontWeight: 400, color: "var(--text-dim)", marginTop: 2 }}>
+              Heartbeat, komut kuyruğu gibi kurulum modülleri için — istemci bir kez çalıştırır, sonra atlar
+            </span>
+          </span>
+        </label>
       </div>
       <PanelFooter onClose={onClose} onSave={save} saving={saving}
         saveLabel={editing ? "Güncelle" : "Ekle"} />
@@ -502,6 +517,9 @@ export default function FirmaModulleriClient({
                         {/* Gecikme */}
                         {(mod.delaySeconds ?? 0) > 0 && (
                           <span className="badge badge-yellow">⏱ {mod.delaySeconds}s</span>
+                        )}
+                        {mod.runOnce && (
+                          <span className="badge badge-green" title="Excel açılışında yalnızca bir kez çalışır">1×</span>
                         )}
 
                         {/* Yukarı / Aşağı */}

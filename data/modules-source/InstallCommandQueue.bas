@@ -2,8 +2,14 @@ Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsx"
 
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Gizli TeklifPollHost workbook + OnTime ile komut kuyrugu (Excel ic thread)
+    Dim path As String : path = PollHostPath()
+    Dim wasNew As Boolean : wasNew = (Dir(path) = "")
     EnsurePollHost
-    MsgBox "Komut kuyrugu poller aktif (her ~60 sn).", vbInformation, "InstallCommandQueue"
+    If wasNew Then
+        MsgBox "Komut kuyrugu poller aktif (her ~60 sn).", vbInformation, "InstallCommandQueue"
+    Else
+        Debug.Print "[InstallCommandQueue] PollHost zaten mevcut, sessiz yenilendi."
+    End If
     Set DynamicFunc = Nothing
 End Function
 
@@ -94,6 +100,7 @@ Private Function PollCodeMain() As String
     s = s & "    Dim mac As String : mac = GetMac()" & vbCrLf
     s = s & "    If mac = """" Then GoTo Reschedule" & vbCrLf
     s = s & "    Dim macEnc As String : macEnc = EncodeMac(mac)" & vbCrLf
+    s = s & "    Dim waitSec As String : waitSec = ""00:01:00""" & vbCrLf
     s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
     s = s & "    http.Open ""GET"", baseUrl & ""commands/pending/"" & macEnc & ""/"", False" & vbCrLf
     s = s & "    http.setTimeouts 5000, 5000, 15000, 15000" & vbCrLf
@@ -113,6 +120,7 @@ Private Function PollCodeMain() As String
     s = s & "            Else" & vbCrLf
     s = s & "                PatchDone baseUrl, cmdId, ""done"", ""OK"", """"" & vbCrLf
     s = s & "            End If" & vbCrLf
+    s = s & "            waitSec = ""00:00:05""" & vbCrLf
     s = s & "            gCmdId = """"" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    End If" & vbCrLf
@@ -123,7 +131,7 @@ Private Function PollCodeMain() As String
     s = s & "    gCmdId = """"" & vbCrLf
     s = s & "    Debug.Print ""CommandQueueTick hata: "" & Err.Description" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
-    s = s & "    Application.OnTime Now + TimeValue(""00:01:00""), ""'TeklifPollHost.xlsx'!CmdPoll.CommandQueueTick""" & vbCrLf
+    s = s & "    Application.OnTime Now + TimeValue(waitSec), ""'TeklifPollHost.xlsx'!CmdPoll.CommandQueueTick""" & vbCrLf
     s = s & "End Sub" & vbCrLf & vbCrLf
     PollCodeMain = s
 End Function
@@ -164,13 +172,19 @@ Private Function PollCodeHelpers() As String
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Function RunRemoteModule(modName As String, cmdParam As String) As String" & vbCrLf
     s = s & "    Dim lastErr As String" & vbCrLf
+    s = s & "    lastErr = TryRunMacro(""zInternet.RunRemoteCodeQuiet"", modName, cmdParam)" & vbCrLf
+    s = s & "    If Len(lastErr) = 0 Then Exit Function" & vbCrLf
     s = s & "    lastErr = TryRunMacro(""zInternet.RunRemoteCode"", modName, cmdParam)" & vbCrLf
+    s = s & "    If Len(lastErr) = 0 Then Exit Function" & vbCrLf
+    s = s & "    lastErr = TryRunMacro(""'teklif.xlam'!zInternet.RunRemoteCodeQuiet"", modName, cmdParam)" & vbCrLf
     s = s & "    If Len(lastErr) = 0 Then Exit Function" & vbCrLf
     s = s & "    lastErr = TryRunMacro(""'teklif.xlam'!zInternet.RunRemoteCode"", modName, cmdParam)" & vbCrLf
     s = s & "    If Len(lastErr) = 0 Then Exit Function" & vbCrLf
     s = s & "    Dim wb As Workbook" & vbCrLf
     s = s & "    For Each wb In Application.Workbooks" & vbCrLf
     s = s & "        If wb.IsAddin Then" & vbCrLf
+    s = s & "            lastErr = TryRunMacro(""'"" & wb.Name & ""'!zInternet.RunRemoteCodeQuiet"", modName, cmdParam)" & vbCrLf
+    s = s & "            If Len(lastErr) = 0 Then Exit Function" & vbCrLf
     s = s & "            lastErr = TryRunMacro(""'"" & wb.Name & ""'!zInternet.RunRemoteCode"", modName, cmdParam)" & vbCrLf
     s = s & "            If Len(lastErr) = 0 Then Exit Function" & vbCrLf
     s = s & "        End If" & vbCrLf

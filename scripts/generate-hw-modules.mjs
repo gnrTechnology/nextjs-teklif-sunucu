@@ -14,7 +14,7 @@ const JSON_PATH  = path.join(ROOT, "data", "modules.json");
 function wmiHeader() {
   return `Private Function GetWMI(query As String) As Object
     Dim objWMI As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set GetWMI = objWMI.ExecQuery(query)
 End Function
 
@@ -63,7 +63,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Caption, Version, BuildNumber, OSArchitecture FROM Win32_OperatingSystem")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -87,7 +87,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed FROM Win32_Processor")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -111,7 +111,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT TotalVisibleMemorySize, FreePhysicalMemory FROM Win32_OperatingSystem")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -132,7 +132,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT DeviceID, VolumeName, Size, FreeSpace, FileSystem FROM Win32_LogicalDisk WHERE DriveType=3")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -157,7 +157,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT MACAddress, Description FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -179,7 +179,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT IPAddress, Description FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -249,7 +249,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, Domain, Workgroup, PartOfDomain FROM Win32_ComputerSystem")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -273,7 +273,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Manufacturer, Name, Version, ReleaseDate FROM Win32_BIOS")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -298,7 +298,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Manufacturer, Product, SerialNumber, Version FROM Win32_BaseBoard")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -322,7 +322,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, AdapterRAM, DriverVersion, VideoProcessor FROM Win32_VideoController")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -348,7 +348,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT CurrentHorizontalResolution, CurrentVerticalResolution, Name FROM Win32_VideoController")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -375,7 +375,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Description, MACAddress, IPAddress, IPEnabled, DHCPEnabled FROM Win32_NetworkAdapterConfiguration")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -407,7 +407,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT LastBootUpTime FROM Win32_OperatingSystem")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -440,7 +440,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Caption, Bias, StandardName FROM Win32_TimeZone")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -464,7 +464,7 @@ End Function` },
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim wsh As Object : Set wsh = CreateObject("WScript.Shell")
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, Version, Vendor, InstallDate FROM Win32_Product")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -491,7 +491,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, ProcessId, WorkingSetSize, KernelModeTime FROM Win32_Process ORDER BY WorkingSetSize DESC")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -544,7 +544,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, BatteryStatus, EstimatedChargeRemaining, EstimatedRunTime FROM Win32_Battery")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -583,7 +583,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, Default, PrinterStatus, DriverName FROM Win32_Printer")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -607,7 +607,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, Description, Manufacturer, DeviceID FROM Win32_PnPEntity WHERE PNPClass='USB'")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents
@@ -631,7 +631,7 @@ End Function` },
   category: "donanim",
   code: `Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\\\.\root\cimv2")
+    Set objWMI = GetObject("winmgmts:\\\\." + "\\root\\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, Manufacturer, Status, DeviceID FROM Win32_SoundDevice")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents

@@ -50,6 +50,8 @@ export interface FirmAutoStartModule {
   methodName: string;
   order: number;
   delaySeconds?: number;
+  /** true ise istemci registry'de bir kez calistirildi olarak isaretler */
+  runOnce?: boolean;
 }
 
 export interface FirmAutoModuleRecord {

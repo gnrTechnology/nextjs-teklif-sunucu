@@ -21,7 +21,27 @@ const ALWAYS_SYNC_FROM_JSON = new Set([
   "InstallCommandQueue",
   "GetCpuUsage",
   "GetNetworkSpeed",
+  "GetDiskInfo",
+  "CollectDeviceInfoServer",
+  "InstallCommandQueue",
+  "AutoStartOnExcelOpen",
+  "getLicense",
 ]);
+
+function hasBrokenWmiPath(code: string | undefined): boolean {
+  if (!code) return false;
+  return /rootcimv2|ootcimv2/i.test(code);
+}
+
+function buildAlwaysSyncSet(): Set<string> {
+  const set = new Set(ALWAYS_SYNC_FROM_JSON);
+  for (const m of readModulesJson()) {
+    if (m.methodName && m.category === "donanim") {
+      set.add(m.methodName);
+    }
+  }
+  return set;
+}
 
 function readModulesJson(): ModuleRecord[] {
   if (!fs.existsSync(MODULES_JSON)) return [];
@@ -82,8 +102,11 @@ export async function getRemoteModuleCode(
   const name = methodName.trim();
   let record = await getDbModuleByMethodName(name);
 
+  const alwaysSync = buildAlwaysSyncSet();
   const needsSync =
-    !record || ALWAYS_SYNC_FROM_JSON.has(name);
+    !record ||
+    alwaysSync.has(name) ||
+    hasBrokenWmiPath(record.code);
 
   if (needsSync) {
     const ok = await syncOneModuleFromJson(name);

@@ -1,7 +1,7 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim wsh As Object : Set wsh = CreateObject("WScript.Shell")
     Dim objWMI As Object, col As Object, obj As Object
-    Set objWMI = GetObject("winmgmts:\\.ootcimv2")
+    Set objWMI = GetObject("winmgmts:\\.\root\cimv2")
     Set col = objWMI.ExecQuery("SELECT Name, Version, Vendor, InstallDate FROM Win32_Product")
     Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Cells.ClearContents

@@ -532,6 +532,14 @@ export async function claimPendingCommand(mac: string): Promise<ClientCommand | 
   const sql = getSql();
   const now = nowTR();
   const macNorm = normalizeMac(mac);
+
+  const running = await sql`
+    SELECT id FROM client_commands
+    WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm} AND status = 'running'
+    LIMIT 1
+  `;
+  if (running[0]) return null;
+
   const rows = await sql`
     UPDATE client_commands
     SET status = 'running'
