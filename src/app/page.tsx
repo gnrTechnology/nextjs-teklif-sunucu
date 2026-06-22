@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { listLicenses, listLogs, listHeartbeats, listDeviceSnapshots } from "@/lib/db";
+import { getHeartbeatStatus } from "@/lib/date-utils";
 import { listFirmAutoModules } from "@/lib/firm-auto-modules";
 import { listModules } from "@/lib/modules";
 import Refresher from "./components/Refresher";
@@ -50,14 +51,12 @@ export default async function Dashboard() {
     ["true", "1", "active", "evet"].includes(l.license.toLowerCase()),
   );
 
-  const now = Date.now();
   const onlineDevices = heartbeats.filter(
-    (h) => now - new Date(h.last_seen).getTime() < 5 * 60 * 1000
+    (h) => getHeartbeatStatus(h.last_seen) === "online",
   );
-  const idleDevices = heartbeats.filter((h) => {
-    const ms = now - new Date(h.last_seen).getTime();
-    return ms >= 5 * 60 * 1000 && ms < 60 * 60 * 1000;
-  });
+  const idleDevices = heartbeats.filter(
+    (h) => getHeartbeatStatus(h.last_seen) === "idle",
+  );
 
   const totalModuleRuns = modules.reduce((sum, m) => sum + ((m as {runCount?: number}).runCount ?? 0), 0);
 

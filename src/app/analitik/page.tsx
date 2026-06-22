@@ -1,5 +1,5 @@
 import { listDbModules, listHeartbeats, listClientCommands, listModuleOutputs, listLicenses } from "@/lib/db";
-import { formatTR } from "@/lib/date-utils";
+import { formatTR, getHeartbeatStatus } from "@/lib/date-utils";
 
 export default async function AnalitikPage() {
   const [modules, heartbeats, commands, outputs, licenses] = await Promise.all([
@@ -20,10 +20,9 @@ export default async function AnalitikPage() {
   const activeModules = modules.filter((m) => m.active !== false).length;
 
   /* ── Cihaz istatistikleri ── */
-  const now = Date.now();
-  const onlineCount  = heartbeats.filter((h) => now - new Date(h.last_seen).getTime() < 5 * 60 * 1000).length;
-  const idleCount    = heartbeats.filter((h) => { const ms = now - new Date(h.last_seen).getTime(); return ms >= 5*60000 && ms < 60*60000; }).length;
-  const offlineCount = heartbeats.length - onlineCount - idleCount;
+  const onlineCount  = heartbeats.filter((h) => getHeartbeatStatus(h.last_seen) === "online").length;
+  const idleCount    = heartbeats.filter((h) => getHeartbeatStatus(h.last_seen) === "idle").length;
+  const offlineCount = heartbeats.filter((h) => getHeartbeatStatus(h.last_seen) === "offline").length;
 
   /* ── Komut istatistikleri ── */
   const cmdDone    = commands.filter((c) => c.status === "done").length;

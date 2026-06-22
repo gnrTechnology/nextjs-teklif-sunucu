@@ -387,7 +387,7 @@ export async function upsertHeartbeat(params: {
 }): Promise<void> {
   const sql = getSql();
   await ensureHeartbeatsTable();
-  const now = nowTR();
+  const now = new Date().toISOString();
   await sql`
     INSERT INTO heartbeats (mac, hostname, user_name, excel_version, ip_address, last_seen)
     VALUES (
