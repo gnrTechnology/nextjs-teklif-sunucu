@@ -317,7 +317,7 @@ export default function KomutlarClient({
       </div>
 
       <div style={{ marginTop: 16, padding: "12px 16px", background: "var(--bg-card)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", fontSize: 12, color: "var(--text-muted)" }}>
-        <strong>VBA Entegrasyonu:</strong> HeartbeatPing her çalıştığında{" "}
+        <strong>TeklifAgent:</strong> Arka plan DLL/exe her döngüde{" "}
         <code style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11 }}>
           GET /api/commands/pending/&#123;mac&#125;
         </code>{" "}

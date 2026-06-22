@@ -1,4 +1,5 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
+    ' param: {"intervalMin":1,"stop":false}  veya "1" (dakika)
     Dim p As String : p = Trim(CStr(param))
 
     Dim stopFlag    As Boolean : stopFlag    = False
@@ -12,220 +13,218 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         intervalMin = CLng(p)
     End If
 
-    Dim stopFlagPath As String
-    stopFlagPath = Environ("TEMP") & "\hb_stop.flag"
-
-    ' ----- DURDUR -----
-    If stopFlag Then
-        Open stopFlagPath For Output As #1 : Close #1
-        SaveSetting "ilhan", "Heartbeat", "active", "false"
-        MsgBox "Heartbeat durduruldu.", vbInformation, "HeartbeatPing"
-        Set DynamicFunc = Nothing
-        Exit Function
-    End If
-
-    If Dir(stopFlagPath) <> "" Then Kill stopFlagPath
-
-    ' ----- Bilgileri Topla -----
-    Dim mac      As String : mac      = GetFirstMACAddress()
-    Dim hostname As String : hostname = Environ("COMPUTERNAME")
-    Dim usr      As String : usr      = Environ("USERNAME")
-    Dim excelVer As String : excelVer = Application.Version
-    Dim baseUrl  As String
+    Dim baseUrl As String
     baseUrl = GetSetting("ilhan", "Settings", "apiBaseUrl", _
                          "https://nextjs-teklif-sunucu.vercel.app/api/")
     If Right(baseUrl, 1) <> "/" Then baseUrl = baseUrl & "/"
 
-    Dim intervalMs As Long : intervalMs = intervalMin * 60000
+    ' ----- DURDUR -----
+    If stopFlag Then
+        Call StopTeklifAgent
+        SaveSetting "ilhan", "Heartbeat", "active", "false"
+        MsgBox "TeklifAgent durduruldu.", vbInformation, "HeartbeatPing"
+        Set DynamicFunc = Nothing
+        Exit Function
+    End If
 
-    ' ----- VBScript Oluştur -----
-    Dim vbsPath As String : vbsPath = Environ("TEMP") & "\hb_ping.vbs"
-    Dim fNum As Integer   : fNum = FreeFile
-    Open vbsPath For Output As #fNum
-        Call WriteHbVbs(fNum, mac, hostname, usr, excelVer, baseUrl, intervalMs, stopFlagPath)
-    Close #fNum
+    Dim mac      As String : mac      = GetFirstMACAddress()
+    Dim hostname As String : hostname = Environ("COMPUTERNAME")
+    Dim usr      As String : usr      = Environ("USERNAME")
+    Dim excelVer As String : excelVer = Application.Version
 
-    ' ----- Arka Planda Başlat -----
-    Dim sh As Object : Set sh = CreateObject("WScript.Shell")
-    sh.Run "wscript.exe //B """ & vbsPath & """", 0, False
+    ' ----- 1) İLK AÇILIŞTA HEMEN PING (VBA — anında) -----
+    Dim pingOk As Boolean
+    pingOk = SendHeartbeatNow(baseUrl, mac, hostname, usr, excelVer)
+    Debug.Print "[HeartbeatPing] Anlik ping: " & IIf(pingOk, "OK", "HATA")
+
+    ' ----- 2) TeklifAgent DLL/exe kur ve başlat -----
+    Dim agentOk As Boolean
+    agentOk = EnsureAndStartAgent(baseUrl, mac, hostname, usr, excelVer, intervalMin)
 
     SaveSetting "ilhan", "Heartbeat", "active",      "true"
     SaveSetting "ilhan", "Heartbeat", "intervalMin",  CStr(intervalMin)
 
-    MsgBox "Heartbeat aktif! Her " & intervalMin & " dk'da bir sinyal gönderilecek." & vbCrLf & _
-           "Excel kapandığında otomatik durur.", vbInformation, "HeartbeatPing"
+    If agentOk Then
+        MsgBox "Heartbeat aktif!" & vbCrLf & _
+               "Anlik ping: " & IIf(pingOk, "gonderildi", "basarisiz") & vbCrLf & _
+               "TeklifAgent arka planda calisiyor (her " & intervalMin & " dk).", _
+               vbInformation, "HeartbeatPing"
+    Else
+        MsgBox "Anlik ping: " & IIf(pingOk, "OK", "HATA") & vbCrLf & _
+               "TeklifAgent baslatilamadi — InstallTeklifAgent modulunu calistirin.", _
+               vbExclamation, "HeartbeatPing"
+    End If
+
     Set DynamicFunc = Nothing
 End Function
 
-' ─────────────────────────────────────────────────────────────────────────────
-' VBScript dosyasını yazar.
-' Kural: Print içinde tırnak için SADECE Q (tek " karakteri) kullan.
-'        VBScript string'i içinde gerçek " karakteri = Q & Q (iki tırnak).
-' ─────────────────────────────────────────────────────────────────────────────
-Private Sub WriteHbVbs(fNum As Integer, _
-                        mac As String, hostname As String, usr As String, _
-                        excelVer As String, baseUrl As String, _
-                        intervalMs As Long, stopFlagPath As String)
+' ─── Anında heartbeat (Excel içinden, MSXML) ───────────────────────────────
+Private Function SendHeartbeatNow(baseUrl As String, mac As String, _
+                                   hostname As String, usr As String, _
+                                   excelVer As String) As Boolean
+    On Error GoTo Fail
+    Dim http As Object
+    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    Dim ts As String
+    ts = Format(Now, "yyyy-mm-ddTHH:nn:ss")
+    Dim body As String
+    body = "{""mac"":""" & JsonEsc(mac) & """,""hostname"":""" & JsonEsc(hostname) & _
+           """,""user"":""" & JsonEsc(usr) & """,""excelVersion"":""" & JsonEsc(excelVer) & _
+           """,""timestamp"":""" & ts & """}"
+    http.Open "POST", baseUrl & "heartbeat", False
+    http.setTimeouts 5000, 5000, 15000, 15000
+    http.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
+    http.send body
+    SendHeartbeatNow = (http.Status = 200)
+    Set http = Nothing
+    Exit Function
+Fail:
+    SendHeartbeatNow = False
+End Function
 
-    Dim Q   As String : Q   = Chr(34)    ' tek tırnak karakteri  "
-    Dim QQ  As String : QQ  = Q & Q     ' iki tırnak            ""  (VBScript içi " kaçış)
+' ─── Agent kurulum + başlatma ───────────────────────────────────────────────
+Private Function EnsureAndStartAgent(baseUrl As String, mac As String, _
+                                    hostname As String, usr As String, _
+                                    excelVer As String, intervalMin As Long) As Boolean
+    On Error GoTo Fail
 
-    Dim mac_e   As String : mac_e   = JsonEsc(mac)
-    Dim host_e  As String : host_e  = JsonEsc(hostname)
-    Dim usr_e   As String : usr_e   = JsonEsc(usr)
-    Dim ver_e   As String : ver_e   = JsonEsc(excelVer)
+    Dim agentDir As String
+    agentDir = Environ("LOCALAPPDATA") & "\TeklifAgent"
+    EnsureFolder agentDir
 
-    ' ─── Script-level error handler — döngü asla ölmez ───────────────
-    Print #fNum, "On Error Resume Next"
-    Print #fNum, ""
-    Print #fNum, "Dim url    : url    = " & Q & baseUrl      & Q
-    Print #fNum, "Dim intMs  : intMs  = " & intervalMs
-    Print #fNum, "Dim sflag  : sflag  = " & Q & stopFlagPath & Q
-    Print #fNum, "Dim macStr : macStr = " & Q & mac_e        & Q
-    Print #fNum, ""
-    Print #fNum, "Dim wsh : Set wsh = CreateObject(" & Q & "WScript.Shell" & Q & ")"
-    Print #fNum, "Dim fso : Set fso = CreateObject(" & Q & "Scripting.FileSystemObject" & Q & ")"
-    Print #fNum, ""
-    Print #fNum, "'────────── Ana Döngü ──────────────────────────────────────────"
-    Print #fNum, "Do While True"
-    Print #fNum, ""
+    ' Agent dosyaları yoksa sunucudan indir
+    If Not AgentFilesReady(agentDir) Then
+        If Not DownloadAgentFiles(baseUrl, agentDir) Then GoTo Fail
+    End If
 
-    ' ── Excel var mı? tasklist ile SENKRON kontrol ────────────────────
-    ' VBScript içinde: wsh.Exec("cmd /c tasklist /FI ""IMAGENAME eq EXCEL.EXE"" /NH")
-    ' VBA Print:  Q = "   QQ = ""
-    Print #fNum, "  Dim chk : Set chk = wsh.Exec(" & Q & _
-                    "cmd /c tasklist /FI " & QQ & "IMAGENAME eq EXCEL.EXE" & QQ & " /NH" & Q & ")"
-    Print #fNum, "  If Not IsNull(chk) Then"
-    Print #fNum, "    Do While chk.Status = 0 : WScript.Sleep 100 : Loop"
-    Print #fNum, "    Dim xlOut : xlOut = " & Q & Q
-    Print #fNum, "    If Not chk.StdOut Is Nothing Then xlOut = chk.StdOut.ReadAll"
-    Print #fNum, "    If InStr(LCase(xlOut), " & Q & "excel.exe" & Q & ") = 0 Then WScript.Quit"
-    Print #fNum, "  Else"
-    Print #fNum, "    WScript.Quit"
-    Print #fNum, "  End If"
-    Print #fNum, "  Set chk = Nothing"
-    Print #fNum, ""
+    ' config.json yaz
+    Dim cfgPath As String : cfgPath = agentDir & "\config.json"
+    Dim cfgJson As String
+    cfgJson = "{""ApiBaseUrl"":""" & JsonEsc(baseUrl) & """,""Mac"":""" & JsonEsc(mac) & _
+              """,""Hostname"":""" & JsonEsc(hostname) & """,""User"":""" & JsonEsc(usr) & _
+              """,""ExcelVersion"":""" & JsonEsc(excelVer) & _
+              """,""IntervalMinutes"":" & intervalMin & ",""Stop"":false}"
+    WriteTextFile cfgPath, cfgJson
 
-    ' ── Stop flag ──────────────────────────────────────────────────────
-    Print #fNum, "  If fso.FileExists(sflag) Then WScript.Quit"
-    Print #fNum, ""
+    ' Stop flag temizle
+    Dim stopPath As String : stopPath = agentDir & "\stop.flag"
+    If Dir(stopPath) <> "" Then Kill stopPath
 
-    ' ── Timestamp ──────────────────────────────────────────────────────
-    Print #fNum, "  Dim ts"
-    Print #fNum, "  ts = Year(Now) & " & Q & "-" & Q & _
-                    " & Right(" & Q & "0" & Q & " & Month(Now),2)" & _
-                    " & " & Q & "-" & Q & _
-                    " & Right(" & Q & "0" & Q & " & Day(Now),2)"
-    Print #fNum, "  ts = ts & " & Q & "T" & Q & _
-                    " & Right(" & Q & "0" & Q & " & Hour(Now),2)" & _
-                    " & " & Q & ":" & Q & _
-                    " & Right(" & Q & "0" & Q & " & Minute(Now),2)" & _
-                    " & " & Q & ":" & Q & _
-                    " & Right(" & Q & "0" & Q & " & Second(Now),2)"
-    Print #fNum, ""
+    ' Önce COM dene
+    If TryStartViaCom(cfgJson) Then
+        EnsureAndStartAgent = True
+        Exit Function
+    End If
 
-    ' ── JSON body ──────────────────────────────────────────────────────
-    ' Üretilen VBScript satırı:
-    '   bd = "{""mac"":""<mac>"",""hostname"":""<host>"",""user"":""<usr>"",""excelVersion"":""<ver>"",""timestamp"":""" & ts & """}"
-    Print #fNum, "  Dim bd"
-    Print #fNum, "  bd = " & Q & "{" & QQ & "mac" & QQ & ":" & QQ & mac_e & QQ & _
-                                  "," & QQ & "hostname" & QQ & ":" & QQ & host_e & QQ & _
-                                  "," & QQ & "user" & QQ & ":" & QQ & usr_e & QQ & _
-                                  "," & QQ & "excelVersion" & QQ & ":" & QQ & ver_e & QQ & _
-                                  "," & QQ & "timestamp" & QQ & ":" & QQ & Q & _
-                                  " & ts & " & Q & QQ & "}" & Q
-    Print #fNum, ""
+    ' COM yoksa exe --worker
+    EnsureAndStartAgent = StartAgentExe(agentDir)
+    Exit Function
+Fail:
+    EnsureAndStartAgent = False
+End Function
 
-    ' ── Heartbeat POST ─────────────────────────────────────────────────
-    Print #fNum, "  Dim http : Set http = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
-    Print #fNum, "  http.Open " & Q & "POST" & Q & ", url & " & Q & "heartbeat" & Q & ", False"
-    Print #fNum, "  http.setTimeouts 5000, 5000, 15000, 15000"
-    Print #fNum, "  http.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
-    Print #fNum, "  http.send bd"
-    Print #fNum, "  Set http = Nothing"
-    Print #fNum, ""
+Private Function AgentFilesReady(agentDir As String) As Boolean
+    AgentFilesReady = (Dir(agentDir & "\TeklifAgent.exe") <> "") _
+                   Or (Dir(agentDir & "\TeklifAgent.Com.dll") <> "")
+End Function
 
-    ' ── Komut Kuyruğu ──────────────────────────────────────────────────
-    Print #fNum, "  Dim http2 : Set http2 = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
-    Print #fNum, "  http2.Open " & Q & "GET" & Q & ", url & " & Q & "commands/pending/" & Q & " & macStr, False"
-    Print #fNum, "  http2.setTimeouts 5000, 5000, 10000, 10000"
-    Print #fNum, "  http2.send"
-    Print #fNum, ""
-    Print #fNum, "  If http2.Status = 200 Then"
-    Print #fNum, "    Dim resp : resp = http2.responseText"
-    ' VBScript içi: InStr(resp, """data"":null") ve InStr(resp, """data"":{")
-    Print #fNum, "    If InStr(resp, " & Q & QQ & "data" & QQ & ":null" & Q & ") = 0 _"
-    Print #fNum, "       And InStr(resp, " & Q & QQ & "data" & QQ & ":{" & Q & ") > 0 Then"
-    Print #fNum, "      Dim cmdId   : cmdId   = ExtractVal(resp, " & Q & QQ & "id" & QQ & ":" & Q & ")"
-    Print #fNum, "      Dim cmdName : cmdName = ExtractStr(resp, " & Q & QQ & "module_name" & QQ & ":" & Q & ")"
-    Print #fNum, "      If cmdId <> " & Q & Q & " And cmdName <> " & Q & Q & " Then"
-    Print #fNum, ""
+Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Boolean
+    On Error GoTo Fail
+    Dim arch As String
+    #If Win64 Then
+        arch = "x64"
+    #Else
+        arch = "x86"
+    #End If
 
-    ' ── GetObject → DisplayAlerts=False → çalıştır ─────────────────────
-    Print #fNum, "        Dim xl : Set xl = GetObject(, " & Q & "Excel.Application" & Q & ")"
-    Print #fNum, "        If Not xl Is Nothing Then"
-    Print #fNum, "          xl.DisplayAlerts = False"
-    Print #fNum, "          xl.ScreenUpdating = False"
-    ' Açık non-addin wb yoksa yeni ekle
-    Print #fNum, "          Dim hasWb : hasWb = False"
-    Print #fNum, "          Dim wb"
-    Print #fNum, "          For Each wb In xl.Workbooks"
-    Print #fNum, "            If Not wb.IsAddin Then hasWb = True : Exit For"
-    Print #fNum, "          Next"
-    Print #fNum, "          If Not hasWb Then xl.Workbooks.Add"
-    ' xl.Run "zInternet.RunRemoteCode", cmdName
-    Print #fNum, "          xl.Run " & Q & "zInternet.RunRemoteCode" & Q & ", cmdName"
-    Print #fNum, "          xl.DisplayAlerts = True"
-    Print #fNum, "          xl.ScreenUpdating = True"
-    Print #fNum, "          Set xl = Nothing"
-    Print #fNum, "        End If"
-    Print #fNum, ""
+    Dim http As Object
+    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    http.Open "GET", baseUrl & "agent/download?arch=" & arch, False
+    http.setTimeouts 10000, 10000, 60000, 60000
+    http.send
+    If http.Status <> 200 Then GoTo Fail
 
-    ' ── PATCH done ─────────────────────────────────────────────────────
-    Print #fNum, "        Dim http3 : Set http3 = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
-    Print #fNum, "        http3.Open " & Q & "PATCH" & Q & ", url & " & Q & "commands/" & Q & " & cmdId, False"
-    Print #fNum, "        http3.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
-    Print #fNum, "        http3.setTimeouts 5000, 5000, 10000, 10000"
-    Print #fNum, "        http3.send " & Q & "{" & QQ & "status" & QQ & ":" & QQ & "done" & QQ & "}" & Q
-    Print #fNum, "        Set http3 = Nothing"
-    Print #fNum, "      End If"
-    Print #fNum, "    End If"
-    Print #fNum, "  End If"
-    Print #fNum, "  Set http2 = Nothing"
-    Print #fNum, ""
-    Print #fNum, "  WScript.Sleep intMs"
-    Print #fNum, "Loop"
-    Print #fNum, ""
+    ' Yanıt: zip veya tek dll — sunucu dll döndürür
+    Dim bin() As Byte
+    bin = http.responseBody
+    Dim dllPath As String
+    dllPath = agentDir & "\TeklifAgent.Com.dll"
+    SaveBinaryFile dllPath, bin
 
-    ' ── Yardımcı fonksiyonlar ──────────────────────────────────────────
-    Print #fNum, "Function ExtractVal(s, key)"
-    Print #fNum, "  Dim p1 : p1 = InStr(s, key)"
-    Print #fNum, "  If p1 = 0 Then Exit Function"
-    Print #fNum, "  p1 = p1 + Len(key)"
-    Print #fNum, "  Do While Mid(s, p1, 1) = " & Q & " " & Q & " : p1 = p1 + 1 : Loop"
-    Print #fNum, "  Dim p2 : p2 = p1"
-    Print #fNum, "  Do While p2 <= Len(s)"
-    Print #fNum, "    If InStr(" & Q & ",}] " & Q & ", Mid(s, p2, 1)) > 0 Then Exit Do"
-    Print #fNum, "    p2 = p2 + 1"
-    Print #fNum, "  Loop"
-    Print #fNum, "  ExtractVal = Trim(Mid(s, p1, p2 - p1))"
-    Print #fNum, "End Function"
-    Print #fNum, ""
-    Print #fNum, "Function ExtractStr(s, key)"
-    Print #fNum, "  Dim p1 : p1 = InStr(s, key)"
-    Print #fNum, "  If p1 = 0 Then Exit Function"
-    Print #fNum, "  p1 = p1 + Len(key)"
-    Print #fNum, "  Do While Mid(s, p1, 1) = " & Q & " " & Q & " : p1 = p1 + 1 : Loop"
-    Print #fNum, "  If Mid(s, p1, 1) = Chr(34) Then"
-    Print #fNum, "    p1 = p1 + 1"
-    Print #fNum, "    Dim p2 : p2 = InStr(p1, s, Chr(34))"
-    Print #fNum, "    If p2 > p1 Then ExtractStr = Mid(s, p1, p2 - p1)"
-    Print #fNum, "  End If"
-    Print #fNum, "End Function"
+    ' exe de indir
+    http.Open "GET", baseUrl & "agent/download?arch=" & arch & "&file=exe", False
+    http.send
+    If http.Status = 200 Then
+        SaveBinaryFile agentDir & "\TeklifAgent.exe", http.responseBody
+    End If
+
+    Set http = Nothing
+    DownloadAgentFiles = True
+    Exit Function
+Fail:
+    DownloadAgentFiles = False
+End Function
+
+Private Function TryStartViaCom(cfgJson As String) As Boolean
+    On Error GoTo Fail
+    Dim agent As Object
+    Set agent = CreateObject("TeklifAgent.Agent")
+    agent.Start cfgJson
+    TryStartViaCom = (LCase(agent.GetStatus()) = "running")
+    Exit Function
+Fail:
+    TryStartViaCom = False
+End Function
+
+Private Function StartAgentExe(agentDir As String) As Boolean
+    On Error GoTo Fail
+    Dim exePath As String : exePath = agentDir & "\TeklifAgent.exe"
+    If Dir(exePath) = "" Then Exit Function
+    Dim sh As Object : Set sh = CreateObject("WScript.Shell")
+    sh.Run """" & exePath & """ --worker", 0, False
+    StartAgentExe = True
+    Exit Function
+Fail:
+    StartAgentExe = False
+End Function
+
+Private Sub StopTeklifAgent()
+    On Error Resume Next
+    Dim agentDir As String : agentDir = Environ("LOCALAPPDATA") & "\TeklifAgent"
+    Open agentDir & "\stop.flag" For Output As #1 : Close #1
+    Dim agent As Object
+    Set agent = CreateObject("TeklifAgent.Agent")
+    agent.Stop
+    ' exe process sonlandir
+    Dim sh As Object : Set sh = CreateObject("WScript.Shell")
+    sh.Run "taskkill /F /IM TeklifAgent.exe", 0, True
+End Sub
+
+' ─── Yardımcılar ────────────────────────────────────────────────────────────
+Private Sub EnsureFolder(path As String)
+    Dim fso As Object : Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(path) Then fso.CreateFolder path
+End Sub
+
+Private Sub WriteTextFile(path As String, content As String)
+    Dim fNum As Integer : fNum = FreeFile
+    Open path For Output As #fNum
+    Print #fNum, content;
+    Close #fNum
+End Sub
+
+Private Sub SaveBinaryFile(path As String, data() As Byte)
+    Dim stm As Object
+    Set stm = CreateObject("ADODB.Stream")
+    stm.Type = 1
+    stm.Open
+    stm.Write data
+    stm.SaveToFile path, 2
+    stm.Close
 End Sub
 
 Private Function JsonEsc(s As String) As String
-    JsonEsc = Replace(s, """", "\""")
+    JsonEsc = Replace(Replace(s, "\", "\\"), """", "\""")
 End Function
 
 Private Function GetFirstMACAddress() As String
