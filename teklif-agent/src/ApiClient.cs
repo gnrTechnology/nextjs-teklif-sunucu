@@ -26,13 +26,13 @@ namespace TeklifAgent
                 excelVersion = _cfg.ExcelVersion,
                 timestamp = DateTime.UtcNow.ToString("o")
             };
-            PostJson(_cfg.NormalizedApiUrl() + "heartbeat", _json.Serialize(body));
+            PostJson(_cfg.NormalizedApiUrl() + "heartbeat/", _json.Serialize(body));
         }
 
         public PendingCommand ClaimPendingCommand()
         {
             var macEnc = Uri.EscapeDataString(_cfg.Mac ?? "");
-            var url = _cfg.NormalizedApiUrl() + "commands/pending/" + macEnc;
+            var url = _cfg.NormalizedApiUrl() + "commands/pending/" + macEnc + "/";
             var resp = GetJson(url);
             if (string.IsNullOrEmpty(resp)) return null;
 
@@ -59,7 +59,7 @@ namespace TeklifAgent
                 result = result ?? "",
                 errorMsg = errorMsg ?? ""
             };
-            PatchJson(_cfg.NormalizedApiUrl() + "commands/" + id, _json.Serialize(body));
+            PatchJson(_cfg.NormalizedApiUrl() + "commands/" + id + "/", _json.Serialize(body));
         }
 
         private string GetJson(string url)

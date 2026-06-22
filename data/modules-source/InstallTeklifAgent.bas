@@ -25,7 +25,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
 
     ' DLL indir
-    http.Open "GET", baseUrl & "agent/download?arch=" & arch, False
+    http.Open "GET", baseUrl & "agent/download/?arch=" & arch, False
     http.setTimeouts 10000, 10000, 120000, 120000
     http.send
     If http.Status <> 200 Then
@@ -35,7 +35,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     SaveBinary agentDir & "\TeklifAgent.Com.dll", http.responseBody
 
     ' EXE indir
-    http.Open "GET", baseUrl & "agent/download?arch=" & arch & "&file=exe", False
+    http.Open "GET", baseUrl & "agent/download/?arch=" & arch & "&file=exe", False
     http.send
     If http.Status = 200 Then
         SaveBinary agentDir & "\TeklifAgent.exe", http.responseBody

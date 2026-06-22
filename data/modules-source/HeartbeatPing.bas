@@ -71,7 +71,7 @@ Private Function SendHeartbeatNow(baseUrl As String, mac As String, _
     body = "{""mac"":""" & JsonEsc(mac) & """,""hostname"":""" & JsonEsc(hostname) & _
            """,""user"":""" & JsonEsc(usr) & """,""excelVersion"":""" & JsonEsc(excelVer) & _
            """,""timestamp"":""" & ts & """}"
-    http.Open "POST", baseUrl & "heartbeat", False
+    http.Open "POST", baseUrl & "heartbeat/", False
     http.setTimeouts 5000, 5000, 15000, 15000
     http.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
     http.send body
@@ -139,7 +139,7 @@ Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Bo
 
     Dim http As Object
     Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-    http.Open "GET", baseUrl & "agent/download?arch=" & arch, False
+    http.Open "GET", baseUrl & "agent/download/?arch=" & arch, False
     http.setTimeouts 10000, 10000, 60000, 60000
     http.send
     If http.Status <> 200 Then GoTo Fail
@@ -152,7 +152,7 @@ Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Bo
     SaveBinaryFile dllPath, bin
 
     ' exe de indir
-    http.Open "GET", baseUrl & "agent/download?arch=" & arch & "&file=exe", False
+    http.Open "GET", baseUrl & "agent/download/?arch=" & arch & "&file=exe", False
     http.send
     If http.Status = 200 Then
         SaveBinaryFile agentDir & "\TeklifAgent.exe", http.responseBody
