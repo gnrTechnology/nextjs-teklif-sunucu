@@ -1,13 +1,35 @@
+import fs from "fs";
+import path from "path";
 import { NextRequest } from "next/server";
 import { errorResponse, jsonResponse } from "@/lib/api-response";
 import { listDbModules, upsertDbModule, ensureModulesTable } from "@/lib/db";
-import type { ModuleUpsertBody } from "@/lib/types";
+import type { ModuleUpsertBody, ModuleRecord } from "@/lib/types";
 
-/** GET /api/modules — tüm modülleri listele */
+/** GET /api/modules — tüm modülleri listele; tablo yoksa oluştur + JSON'dan seed et */
 export async function GET() {
   try {
     await ensureModulesTable();
-    const modules = await listDbModules();
+    let modules = await listDbModules();
+
+    // Tablo boşsa modules.json'dan otomatik seed
+    if (modules.length === 0) {
+      const filePath = path.join(process.cwd(), "data", "modules.json");
+      if (fs.existsSync(filePath)) {
+        const list = JSON.parse(fs.readFileSync(filePath, "utf-8")) as ModuleRecord[];
+        for (const item of list) {
+          if (!item.methodName || !item.code) continue;
+          await upsertDbModule({
+            methodName: item.methodName,
+            description: item.description ?? "",
+            category: item.category ?? "genel",
+            code: item.code,
+            active: item.active ?? true,
+          });
+        }
+        modules = await listDbModules();
+      }
+    }
+
     return jsonResponse({ success: true, data: modules });
   } catch (err) {
     console.error("[GET /api/modules]", err);

@@ -26,6 +26,13 @@ function getSql() {
   return neon(databaseUrl);
 }
 
+/** Türkiye saati (UTC+3) olarak ISO string döndürür — DB timestamp alanları için */
+function nowTR(): string {
+  // TIMESTAMPTZ sütunlarına UTC+3 yazılır; PostgreSQL bunu UTC'ye dönüştürür.
+  // Okunurken rowToXxx içinde formatTR() ile tekrar +3'e çevrilir.
+  return new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+}
+
 function rowToRecord(row: LicenseRow): LicenseRecord {
   return {
     macAdresi: row.mac_adresi,
@@ -78,7 +85,7 @@ export async function upsertLicense(
 ): Promise<{ record: LicenseRecord; existed: boolean }> {
   const sql = getSql();
   const normalizedMac = normalizeMac(body.macAdresi);
-  const now = new Date().toISOString();
+  const now = nowTR();
 
   const rows = await sql`
     INSERT INTO licenses (
@@ -133,7 +140,7 @@ export async function toggleLicense(
 ): Promise<LicenseRecord | null> {
   const sql = getSql();
   const normalized = normalizeMac(mac);
-  const now = new Date().toISOString();
+  const now = nowTR();
   const rows = await sql`
     UPDATE licenses
     SET license = ${newValue}, updated_at = ${now}
@@ -181,7 +188,7 @@ export async function bulkToggleLicenses(
   if (macs.length === 0) return 0;
   const sql = getSql();
   const normalized = macs.map(normalizeMac);
-  const now = new Date().toISOString();
+  const now = nowTR();
   const result = await sql`
     UPDATE licenses
     SET license = ${newValue}, updated_at = ${now}
@@ -263,7 +270,7 @@ export async function upsertDbModule(
   body: ModuleUpsertBody,
 ): Promise<ModuleRecord> {
   const sql = getSql();
-  const now = new Date().toISOString();
+  const now = nowTR();
   const rows = await sql`
     INSERT INTO modules (method_name, description, category, active, code, created_at, updated_at)
     VALUES (
@@ -291,7 +298,7 @@ export async function updateDbModule(
   fields: Partial<ModuleUpsertBody>,
 ): Promise<ModuleRecord | null> {
   const sql = getSql();
-  const now = new Date().toISOString();
+  const now = nowTR();
   const rows = await sql`
     UPDATE modules SET
       description = COALESCE(${fields.description ?? null}, description),
