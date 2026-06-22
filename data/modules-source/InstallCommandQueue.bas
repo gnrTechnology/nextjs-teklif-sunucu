@@ -1,6 +1,5 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Gizli TeklifPollHost workbook + OnTime ile komut kuyrugu (Excel ic thread)
-    ' Agent disaridan Application.Run yapamaz ("break mode" hatasi)
     EnsurePollHost
     MsgBox "Komut kuyrugu poller aktif (her ~60 sn).", vbInformation, "InstallCommandQueue"
     Set DynamicFunc = Nothing
@@ -8,7 +7,8 @@ End Function
 
 Private Sub EnsurePollHost()
     Dim wb As Workbook
-    Dim found As Boolean : found = False
+    Dim found As Boolean
+    found = False
 
     For Each wb In Application.Workbooks
         If wb.Name = "TeklifPollHost" Then
@@ -33,102 +33,111 @@ End Sub
 
 Private Sub InjectPollModule(wb As Workbook)
     Dim vbComp As Object
-    Dim code As String
-
     Set vbComp = wb.VBProject.VBComponents.Add(1)
     vbComp.Name = "CmdPoll"
-
-    code = GetPollModuleCode()
-    vbComp.CodeModule.AddFromString code
-
+    vbComp.CodeModule.AddFromString GetPollModuleCode()
     Application.OnTime Now + TimeValue("00:00:05"), "'TeklifPollHost'!CmdPoll.CommandQueueTick"
 End Sub
 
 Private Function GetPollModuleCode() As String
-    GetPollModuleCode = _
-        "Option Explicit" & vbCrLf & vbCrLf & _
-        "Public Sub CommandQueueTick()" & vbCrLf & _
-        "    On Error GoTo TickErr" & vbCrLf & _
-        "    Dim baseUrl As String" & vbCrLf & _
-        "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf & _
-        "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf & _
-        "    Dim mac As String : mac = GetMac()" & vbCrLf & _
-        "    If mac = """" Then GoTo Reschedule" & vbCrLf & _
-        "    Dim macEnc As String : macEnc = EncodeMac(mac)" & vbCrLf & _
-        "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf & _
-        "    http.Open ""GET"", baseUrl & ""commands/pending/"" & macEnc & ""/"", False" & vbCrLf & _
-        "    http.setTimeouts 5000, 5000, 15000, 15000" & vbCrLf & _
-        "    http.send" & vbCrLf & _
-        "    If http.Status = 200 Then" & vbCrLf & _
-        "        Dim resp As String : resp = http.responseText" & vbCrLf & _
-        "        If InStr(resp, ""data"":null"") = 0 And InStr(resp, ""moduleName"") > 0 Then" & vbCrLf & _
-        "            Dim cmdId As String : cmdId = JsonVal(resp, ""id"")" & vbCrLf & _
-        "            Dim modName As String : modName = JsonStr(resp, ""moduleName"")" & vbCrLf & _
-        "            Dim cmdParam As String : cmdParam = JsonStr(resp, ""param"")" & vbCrLf & _
-        "            If Len(cmdId) > 0 And Len(modName) > 0 Then" & vbCrLf & _
-        "                Err.Clear" & vbCrLf & _
-        "                If Len(cmdParam) > 0 Then" & vbCrLf & _
-        "                    Application.Run ""zInternet.RunRemoteCode"", modName, cmdParam" & vbCrLf & _
-        "                Else" & vbCrLf & _
-        "                    Application.Run ""zInternet.RunRemoteCode"", modName" & vbCrLf & _
-        "                End If" & vbCrLf & _
-        "                If Err.Number <> 0 Then" & vbCrLf & _
-        "                    PatchDone baseUrl, cmdId, ""error"", """", Err.Description" & vbCrLf & _
-        "                Else" & vbCrLf & _
-        "                    PatchDone baseUrl, cmdId, ""done"", ""OK"", """"" & vbCrLf & _
-        "                End If" & vbCrLf & _
-        "            End If" & vbCrLf & _
-        "        End If" & vbCrLf & _
-        "    End If" & vbCrLf & _
-        "    Set http = Nothing" & vbCrLf & _
-        "    GoTo Reschedule" & vbCrLf & _
-        "TickErr:" & vbCrLf & _
-        "    Debug.Print ""CommandQueueTick hata: "" & Err.Description" & vbCrLf & _
-        "Reschedule:" & vbCrLf & _
-        "    Application.OnTime Now + TimeValue(""00:01:00""), ""'TeklifPollHost'!CmdPoll.CommandQueueTick""" & vbCrLf & _
-        "End Sub" & vbCrLf & vbCrLf & _
-        "Private Function GetMac() As String" & vbCrLf & _
-        "    On Error Resume Next" & vbCrLf & _
-        "    Dim wmi As Object, col As Object, o As Object" & vbCrLf & _
-        "    Set wmi = GetObject(""winmgmts:\\.\root\cimv2"")" & vbCrLf & _
-        "    Set col = wmi.ExecQuery(""SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True"")" & vbCrLf & _
-        "    For Each o In col" & vbCrLf & _
-        "        If Not IsNull(o.MACAddress) And o.MACAddress <> """" Then GetMac = o.MACAddress : Exit Function" & vbCrLf & _
-        "    Next" & vbCrLf & _
-        "End Function" & vbCrLf & vbCrLf & _
-        "Private Function EncodeMac(m As String) As String" & vbCrLf & _
-        "    EncodeMac = Replace(UCase(Trim(m)), "":"", ""%3A"")" & vbCrLf & _
-        "End Function" & vbCrLf & vbCrLf & _
-        "Private Function JsonVal(s As String, key As String) As String" & vbCrLf & _
-        "    Dim sk As String : sk = """""" & key & """":""" & vbCrLf & _
-        "    Dim p1 As Long : p1 = InStr(s, sk)" & vbCrLf & _
-        "    If p1 = 0 Then Exit Function" & vbCrLf & _
-        "    p1 = p1 + Len(sk)" & vbCrLf & _
-        "    Dim p2 As Long : p2 = p1" & vbCrLf & _
-        "    Do While p2 <= Len(s)" & vbCrLf & _
-        "        If InStr("",}]"", Mid(s, p2, 1)) > 0 Then Exit Do" & vbCrLf & _
-        "        p2 = p2 + 1" & vbCrLf & _
-        "    Loop" & vbCrLf & _
-        "    JsonVal = Trim(Mid(s, p1, p2 - p1))" & vbCrLf & _
-        "End Function" & vbCrLf & vbCrLf & _
-        "Private Function JsonStr(s As String, key As String) As String" & vbCrLf & _
-        "    Dim sk As String : sk = """""" & key & """":""" & vbCrLf & _
-        "    Dim p1 As Long : p1 = InStr(s, sk)" & vbCrLf & _
-        "    If p1 = 0 Then Exit Function" & vbCrLf & _
-        "    p1 = InStr(p1 + Len(sk), s, """""""") + 1" & vbCrLf & _
-        "    Dim p2 As Long : p2 = InStr(p1, s, """""""")" & vbCrLf & _
-        "    If p2 > p1 Then JsonStr = Mid(s, p1, p2 - p1)" & vbCrLf & _
-        "End Function" & vbCrLf & vbCrLf & _
-        "Private Sub PatchDone(baseUrl As String, cmdId As String, st As String, res As String, errMsg As String)" & vbCrLf & _
-        "    On Error Resume Next" & vbCrLf & _
-        "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf & _
-        "    Dim body As String" & vbCrLf & _
-        "    body = ""{""""status"""":"""""" & st & """""",""""result"""":"""""" & JsonEsc(res) & """""",""""errorMsg"""":"""""" & JsonEsc(errMsg) & """"""}""" & vbCrLf & _
-        "    http.Open ""PATCH"", baseUrl & ""commands/"" & cmdId & ""/"", False" & vbCrLf & _
-        "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf & _
-        "    http.send body" & vbCrLf & _
-        "End Sub" & vbCrLf & vbCrLf & _
-        "Private Function JsonEsc(s As String) As String" & vbCrLf & _
-        "    JsonEsc = Replace(Replace(s, ""\"", ""\\""), """""""", ""\"""")" & vbCrLf & _
-        "End Function" & vbCrLf
+    Dim s As String
+    s = ""
+    s = s & PollCodeMain()
+    s = s & PollCodeHelpers()
+    GetPollModuleCode = s
+End Function
+
+Private Function PollCodeMain() As String
+    Dim s As String
+    s = "Option Explicit" & vbCrLf & vbCrLf
+    s = s & "Public Sub CommandQueueTick()" & vbCrLf
+    s = s & "    On Error GoTo TickErr" & vbCrLf
+    s = s & "    Dim baseUrl As String" & vbCrLf
+    s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
+    s = s & "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf
+    s = s & "    Dim mac As String : mac = GetMac()" & vbCrLf
+    s = s & "    If mac = """" Then GoTo Reschedule" & vbCrLf
+    s = s & "    Dim macEnc As String : macEnc = EncodeMac(mac)" & vbCrLf
+    s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
+    s = s & "    http.Open ""GET"", baseUrl & ""commands/pending/"" & macEnc & ""/"", False" & vbCrLf
+    s = s & "    http.setTimeouts 5000, 5000, 15000, 15000" & vbCrLf
+    s = s & "    http.send" & vbCrLf
+    s = s & "    If http.Status = 200 Then" & vbCrLf
+    s = s & "        Dim resp As String : resp = http.responseText" & vbCrLf
+    s = s & "        If InStr(resp, ""data"":null"") = 0 And InStr(resp, ""moduleName"") > 0 Then" & vbCrLf
+    s = s & "            Dim cmdId As String : cmdId = JsonVal(resp, ""id"")" & vbCrLf
+    s = s & "            Dim modName As String : modName = JsonStr(resp, ""moduleName"")" & vbCrLf
+    s = s & "            Dim cmdParam As String : cmdParam = JsonStr(resp, ""param"")" & vbCrLf
+    s = s & "            If Len(cmdId) > 0 And Len(modName) > 0 Then" & vbCrLf
+    s = s & "                Err.Clear" & vbCrLf
+    s = s & "                If Len(cmdParam) > 0 Then" & vbCrLf
+    s = s & "                    Application.Run ""zInternet.RunRemoteCode"", modName, cmdParam" & vbCrLf
+    s = s & "                Else" & vbCrLf
+    s = s & "                    Application.Run ""zInternet.RunRemoteCode"", modName" & vbCrLf
+    s = s & "                End If" & vbCrLf
+    s = s & "                If Err.Number <> 0 Then" & vbCrLf
+    s = s & "                    PatchDone baseUrl, cmdId, ""error"", """", Err.Description" & vbCrLf
+    s = s & "                Else" & vbCrLf
+    s = s & "                    PatchDone baseUrl, cmdId, ""done"", ""OK"", """"" & vbCrLf
+    s = s & "                End If" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    Set http = Nothing" & vbCrLf
+    s = s & "    GoTo Reschedule" & vbCrLf
+    s = s & "TickErr:" & vbCrLf
+    s = s & "    Debug.Print ""CommandQueueTick hata: "" & Err.Description" & vbCrLf
+    s = s & "Reschedule:" & vbCrLf
+    s = s & "    Application.OnTime Now + TimeValue(""00:01:00""), ""'TeklifPollHost'!CmdPoll.CommandQueueTick""" & vbCrLf
+    s = s & "End Sub" & vbCrLf & vbCrLf
+    PollCodeMain = s
+End Function
+
+Private Function PollCodeHelpers() As String
+    Dim s As String
+    s = "Private Function GetMac() As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim wmi As Object, col As Object, o As Object" & vbCrLf
+    s = s & "    Set wmi = GetObject(""winmgmts:\\.\root\cimv2"")" & vbCrLf
+    s = s & "    Set col = wmi.ExecQuery(""SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True"")" & vbCrLf
+    s = s & "    For Each o In col" & vbCrLf
+    s = s & "        If Not IsNull(o.MACAddress) And o.MACAddress <> """" Then GetMac = o.MACAddress : Exit Function" & vbCrLf
+    s = s & "    Next" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function EncodeMac(m As String) As String" & vbCrLf
+    s = s & "    EncodeMac = Replace(UCase(Trim(m)), "":"", ""%3A"")" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function JsonVal(s As String, key As String) As String" & vbCrLf
+    s = s & "    Dim sk As String : sk = """""" & key & """":""" & vbCrLf
+    s = s & "    Dim p1 As Long : p1 = InStr(s, sk)" & vbCrLf
+    s = s & "    If p1 = 0 Then Exit Function" & vbCrLf
+    s = s & "    p1 = p1 + Len(sk)" & vbCrLf
+    s = s & "    Dim p2 As Long : p2 = p1" & vbCrLf
+    s = s & "    Do While p2 <= Len(s)" & vbCrLf
+    s = s & "        If InStr("",}]"", Mid(s, p2, 1)) > 0 Then Exit Do" & vbCrLf
+    s = s & "        p2 = p2 + 1" & vbCrLf
+    s = s & "    Loop" & vbCrLf
+    s = s & "    JsonVal = Trim(Mid(s, p1, p2 - p1))" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function JsonStr(s As String, key As String) As String" & vbCrLf
+    s = s & "    Dim sk As String : sk = """""" & key & """":""" & vbCrLf
+    s = s & "    Dim p1 As Long : p1 = InStr(s, sk)" & vbCrLf
+    s = s & "    If p1 = 0 Then Exit Function" & vbCrLf
+    s = s & "    p1 = InStr(p1 + Len(sk), s, """""""") + 1" & vbCrLf
+    s = s & "    Dim p2 As Long : p2 = InStr(p1, s, """""""")" & vbCrLf
+    s = s & "    If p2 > p1 Then JsonStr = Mid(s, p1, p2 - p1)" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Sub PatchDone(baseUrl As String, cmdId As String, st As String, res As String, errMsg As String)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
+    s = s & "    Dim body As String" & vbCrLf
+    s = s & "    body = ""{""""status"""":"""""" & st & """""",""""result"""":"""""" & JsonEsc(res) & """""",""""errorMsg"""":"""""" & JsonEsc(errMsg) & """"""}""" & vbCrLf
+    s = s & "    http.Open ""PATCH"", baseUrl & ""commands/"" & cmdId & ""/"", False" & vbCrLf
+    s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
+    s = s & "    http.send body" & vbCrLf
+    s = s & "End Sub" & vbCrLf & vbCrLf
+    s = s & "Private Function JsonEsc(s As String) As String" & vbCrLf
+    s = s & "    JsonEsc = Replace(Replace(s, ""\"", ""\\""), """""""", ""\"""")" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    PollCodeHelpers = s
 End Function
