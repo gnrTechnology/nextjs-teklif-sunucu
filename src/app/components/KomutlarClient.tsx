@@ -317,15 +317,15 @@ export default function KomutlarClient({
       </div>
 
       <div style={{ marginTop: 16, padding: "12px 16px", background: "var(--bg-card)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", fontSize: 12, color: "var(--text-muted)" }}>
-        <strong>TeklifAgent:</strong> Arka plan DLL/exe her döngüde{" "}
+        <strong>Komut kuyruğu:</strong> Excel açıkken{" "}
+        <code style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11 }}>
+          InstallCommandQueue
+        </code>{" "}
+        modülü gizli <code>TeklifPollHost</code> workbook ile ~60 sn&apos;de bir{" "}
         <code style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11 }}>
           GET /api/commands/pending/&#123;mac&#125;
         </code>{" "}
-        sorgular. Komut varsa çalıştırır, sonucu{" "}
-        <code style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11 }}>
-          PATCH /api/commands/&#123;id&#125;
-        </code>{" "}
-        ile raporlar.
+        sorgular. TeklifAgent.exe yalnızca heartbeat gönderir.
       </div>
     </div>
   );

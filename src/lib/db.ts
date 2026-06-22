@@ -452,12 +452,14 @@ export async function ensureClientCommandsTable(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS idx_commands_mac_status ON client_commands (mac, status)`;
 }
 
-/** 10 dk+ running kalan komutlari pending'e geri al */
+/** 10 dk+ running kalan komutlari hata olarak kapat (sonsuz pending dongusu olmasin) */
 async function releaseStaleRunningCommands(): Promise<void> {
   const sql = getSql();
   await sql`
     UPDATE client_commands
-    SET status = 'pending', executed_at = NULL
+    SET status = 'error',
+        error_msg = COALESCE(error_msg, 'Komut zaman asimi (10 dk) — istemci yanit vermedi'),
+        executed_at = NOW()
     WHERE status = 'running'
       AND executed_at IS NOT NULL
       AND executed_at < NOW() - INTERVAL '10 minutes'
