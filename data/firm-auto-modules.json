@@ -15,6 +15,11 @@
           "methodName": "HeartbeatPing",
           "order": 2,
           "delaySeconds": 0
+        },
+        {
+          "methodName": "SelamTest",
+          "order": 3,
+          "delaySeconds": 0
         }
       ]
     }

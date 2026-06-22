@@ -1,14 +1,46 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { formatTR } from "@/lib/date-utils";
 import type { ModuleRecord } from "@/lib/types";
 
 const CATEGORIES = [
-  "genel", "lisans", "sistem", "dosya",
-  "internet", "excel", "powershell", "registry", "guvenlik", "bildirim",
+  "genel", "lisans", "sistem", "dosya", "zamanlanmis", "uzman",
+  "internet", "excel", "powershell", "registry", "guvenlik", "bildirim", "donanim",
 ];
+
+/* ── Feasibility: hangi modüller tam çalışmaz ─────────── */
+type FeasLevel = "ok" | "partial" | "infra";
+const FEASIBILITY: Record<string, { level: FeasLevel; note: string }> = {
+  CaptureScreenshot:        { level:"infra",   note:"PNG %TEMP%'de kalır — cloud storage olmadan sunucuya gönderilemez" },
+  UploadFileToBlobStorage:  { level:"infra",   note:"Azure/S3 credentials + bucket yapılandırması gerekli" },
+  EmbedImageInCell:         { level:"partial", note:"Sadece public URL'ler çalışır, local dosyalar için storage gerekli" },
+  ConnectToSqlServer:       { level:"partial", note:"VBA istemcisinden DB sunucusuna ağ erişimi olmalı" },
+  ConnectToMySql:           { level:"partial", note:"MySQL ODBC sürücüsü istemcide kurulu olmalı" },
+  ConnectToPostgres:        { level:"partial", note:"PostgreSQL ODBC sürücüsü kurulu olmalı" },
+  GetInstalledSoftwareList: { level:"partial", note:"Win32_Product sorgusu 5-10 dakika sürebilir — oto-modül olarak kullanmayın" },
+  SendDailyEmailReport:     { level:"partial", note:"Outlook kurulu ve yapılandırılmış olmalı" },
+  SendEmailWithOutlook:     { level:"partial", note:"Outlook kurulu ve açık olmalı" },
+  SignPdfWithCertificate:   { level:"infra",   note:"iTextSharp COM kaydı gerekli — varsayılan kurulumda çalışmaz" },
+  ReadQrCode:               { level:"infra",   note:"ZXing COM kütüphanesi istemcide kayıtlı olmalı" },
+  GenerateBarcode:          { level:"partial", note:"Code128 barkod fontu istemcide kurulu olmalı" },
+  ReadFromExcelOneDrive:    { level:"infra",   note:"SharePoint OAuth2 kimlik doğrulaması gerekli" },
+  RecordMacroToGif:         { level:"infra",   note:"VBA ile pratik olarak imkânsız — harici screen recorder gerekli" },
+  SendSmsViaTwilio:         { level:"infra",   note:"Twilio hesabı + API key gerekli" },
+  SendWhatsAppMessage:      { level:"infra",   note:"WhatsApp Business API kaydı gerekli" },
+  LoadPluginFromServer:     { level:"infra",   note:"DLL bitness uyumu (x86/x64) + UAC/güvenlik sorunları" },
+  GetDiskHealthStatus:      { level:"partial", note:"SMART verisi için admin hakları gerekebilir" },
+  RunAsAdmin:               { level:"partial", note:"UAC prompt açılır — tam gizli çalışmaz" },
+  InstallWindowsUpdates:    { level:"partial", note:"PSWindowsUpdate PowerShell modülü önceden kurulu olmalı" },
+  ConvertPdfToText:         { level:"infra",   note:"Adobe Acrobat veya uyumlu PDF COM kütüphanesi gerekli" },
+  SyncFolderToServer:       { level:"infra",   note:"Sunucuda dosya upload endpoint + storage gerekli" },
+  WatchClipboard:           { level:"partial", note:"VBScript döngüsü ile çalışır ama CPU kullanımı yüksek olabilir" },
+  SqliteQueryToSheet:       { level:"partial", note:"SQLite ODBC sürücüsü kurulu olmalı" },
+  GeneratePdfReport:        { level:"infra",   note:"iTextSharp COM kaydı gerekli" },
+  PlayAudioFile:            { level:"partial", note:"Windows Media Player COM kurulu olmalı" },
+  TextToSpeech:             { level:"partial", note:"SAPI.SpVoice dil paketi yüklü olmalı" },
+};
 
 const EMPTY_FORM = {
   methodName: "",
@@ -21,18 +53,59 @@ const EMPTY_FORM = {
 type FormState = typeof EMPTY_FORM;
 
 function CategoryBadge({ cat }: { cat?: string }) {
-  const colors: Record<string, string> = {
-    lisans: "badge-green", sistem: "badge-yellow",
-    dosya: "#8b5cf6", internet: "badge-accent",
-    excel: "badge-green", powershell: "badge-yellow",
-    registry: "#f97316", guvenlik: "badge-red",
-    bildirim: "badge-accent", genel: "",
+  const COLOR: Record<string, string> = {
+    lisans: "badge-green", sistem: "badge-yellow", dosya: "",
+    internet: "badge-accent", excel: "badge-green", powershell: "badge-yellow",
+    registry: "", guvenlik: "badge-red", bildirim: "badge-accent",
+    genel: "", zamanlanmis: "", uzman: "", donanim: "",
   };
-  const cls = colors[cat ?? ""] ?? "";
+  const ICO: Record<string, string> = {
+    lisans:"🔑", sistem:"🖥", dosya:"📁", internet:"🌐", excel:"📊",
+    powershell:"⚡", registry:"🗂", guvenlik:"🛡", bildirim:"🔔",
+    genel:"📦", zamanlanmis:"⏰", uzman:"🧪", donanim:"🔧",
+  };
+  const cls = COLOR[cat ?? ""] ?? "";
   return (
-    <span className={`badge ${cls}`} style={{ fontSize: 10 }}>
-      {cat ?? "genel"}
+    <span className={`badge ${cls}`} style={{ fontSize: 10, gap: 3 }}>
+      {ICO[cat ?? ""] ?? "📦"} {cat ?? "genel"}
     </span>
+  );
+}
+
+function FeasBadge({ name }: { name: string }) {
+  const f = FEASIBILITY[name];
+  if (!f) return null;
+  const cfg = {
+    ok:      { color: "#10b981", bg: "#10b98120", icon: "✅", label: "Tam" },
+    partial: { color: "#f59e0b", bg: "#f59e0b20", icon: "⚠️", label: "Kısmi" },
+    infra:   { color: "#ef4444", bg: "#ef444420", icon: "🔴", label: "Altyapı Gerekli" },
+  }[f.level];
+  return (
+    <span title={f.note} style={{
+      fontSize: 10, padding: "1px 7px", borderRadius: 10,
+      background: cfg.bg, color: cfg.color, fontWeight: 600, cursor: "help",
+    }}>
+      {cfg.icon} {cfg.label}
+    </span>
+  );
+}
+
+function CopySnippet({ name }: { name: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(`Call zInternet.RunRemoteCode("${name}")`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <button onClick={copy} title="VBA çağrı kodunu kopyala" style={{
+      background: "none", border: "none", cursor: "pointer",
+      fontSize: 13, padding: "2px 6px", borderRadius: 6,
+      color: copied ? "var(--green)" : "var(--text-dim)",
+      transition: "color 0.2s",
+    }}>
+      {copied ? "✅" : "📋"}
+    </button>
   );
 }
 
@@ -48,6 +121,8 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
   const [deleting, setDeleting] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [filterCat, setFilterCat] = useState<string>("tümü");
+  const [search, setSearch] = useState("");
+  const [showInfraOnly, setShowInfraOnly] = useState(false);
 
   function refresh() {
     startTransition(() => router.refresh());
@@ -135,8 +210,22 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
     });
   }
 
-  const cats = ["tümü", ...Array.from(new Set(modules.map((m) => m.category ?? "genel")))];
-  const filtered = filterCat === "tümü" ? modules : modules.filter((m) => (m.category ?? "genel") === filterCat);
+  const cats = ["tümü", ...Array.from(new Set(modules.map((m) => m.category ?? "genel"))).sort()];
+
+  const filtered = useMemo(() => {
+    let list = filterCat === "tümü" ? modules : modules.filter((m) => (m.category ?? "genel") === filterCat);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((m) =>
+        m.methodName.toLowerCase().includes(q) ||
+        (m.description ?? "").toLowerCase().includes(q)
+      );
+    }
+    if (showInfraOnly) {
+      list = list.filter((m) => FEASIBILITY[m.methodName]?.level === "infra" || FEASIBILITY[m.methodName]?.level === "partial");
+    }
+    return list;
+  }, [modules, filterCat, search, showInfraOnly]);
 
   return (
     <>
@@ -266,9 +355,35 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
         <div className="page-header">
           <div>
             <div className="page-title">Modüller</div>
-            <div className="page-sub">RunRemoteCode ile VBA'ya gönderilen modüller — Neon DB</div>
+            <div className="page-sub">RunRemoteCode ile VBA'ya gönderilen modüller — Neon DB ({modules.length} modül)</div>
           </div>
           <button className="btn btn-primary" onClick={openNew}>+ Yeni Modül</button>
+        </div>
+
+        {/* Arama + filtreler */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            className="form-input"
+            placeholder="🔍  Modül ara…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: 1, minWidth: 200, maxWidth: 320 }}
+          />
+          <button
+            onClick={() => setShowInfraOnly(!showInfraOnly)}
+            style={{
+              padding: "6px 14px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+              border: "1px solid var(--border)",
+              background: showInfraOnly ? "#f59e0b20" : "var(--bg-card)",
+              color: showInfraOnly ? "#f59e0b" : "var(--text-muted)",
+              transition: "all 0.15s",
+            }}
+          >
+            ⚠️ Kısıtlı
+          </button>
+          <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
+            {filtered.length} / {modules.length} gösteriliyor
+          </span>
         </div>
 
         {/* Kategori filtresi */}
@@ -330,13 +445,24 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{m.methodName}</span>
                           <CategoryBadge cat={m.category} />
+                          <FeasBadge name={m.methodName} />
                         </div>
                         {m.description && (
                           <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
                             {m.description}
                           </div>
                         )}
+                        {/* Run stats */}
+                        {(m.runCount ?? 0) > 0 && (
+                          <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 3 }}>
+                            ▶ {m.runCount}× çalıştırıldı
+                            {m.lastRunAt && ` · Son: ${formatTR(m.lastRunAt)}`}
+                          </div>
+                        )}
                       </div>
+
+                      {/* Copy snippet */}
+                      <CopySnippet name={m.methodName} />
 
                       {/* Updated */}
                       <div style={{ fontSize: 11, color: "var(--text-dim)", whiteSpace: "nowrap", display: "none" }}
@@ -384,6 +510,29 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
                         background: "var(--bg)", borderTop: "1px solid var(--border)",
                         padding: "16px 18px",
                       }}>
+                        {/* VBA çağrı snippet */}
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 10, marginBottom: 12,
+                          background: "var(--code-bg)", borderRadius: "var(--radius-sm)",
+                          padding: "8px 14px", border: "1px solid var(--border)",
+                        }}>
+                          <code style={{ flex: 1, fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--accent)" }}>
+                            Call zInternet.RunRemoteCode(&quot;{m.methodName}&quot;)
+                          </code>
+                          <CopySnippet name={m.methodName} />
+                        </div>
+                        {/* Feasibility uyarısı */}
+                        {FEASIBILITY[m.methodName] && (
+                          <div style={{
+                            marginBottom: 12, padding: "8px 12px", borderRadius: "var(--radius-sm)",
+                            background: FEASIBILITY[m.methodName].level === "infra" ? "#ef444415" : "#f59e0b15",
+                            border: `1px solid ${FEASIBILITY[m.methodName].level === "infra" ? "#ef444430" : "#f59e0b30"}`,
+                            fontSize: 12, color: FEASIBILITY[m.methodName].level === "infra" ? "#ef4444" : "#f59e0b",
+                          }}>
+                            {FEASIBILITY[m.methodName].level === "infra" ? "🔴 Altyapı Gerekli: " : "⚠️ Kısmi: "}
+                            {FEASIBILITY[m.methodName].note}
+                          </div>
+                        )}
                         <div style={{
                           fontSize: 11, fontWeight: 600, textTransform: "uppercase",
                           letterSpacing: "0.06em", color: "var(--text-muted)", marginBottom: 8,
@@ -402,6 +551,7 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
                         </pre>
                         <div style={{ marginTop: 8, fontSize: 11, color: "var(--text-dim)" }}>
                           Oluşturuldu: {formatTR(m.createdAt)} · Güncellendi: {formatTR(m.updatedAt)}
+                          {(m.runCount ?? 0) > 0 && ` · ${m.runCount}× çalıştırıldı`}
                         </div>
                       </div>
                     )}

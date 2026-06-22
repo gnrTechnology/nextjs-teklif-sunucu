@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { errorResponse, jsonResponse } from "@/lib/api-response";
 import { getRemoteModuleCode } from "@/lib/modules";
+import { incrementModuleRunCount } from "@/lib/db";
 import type { ModulePostBody } from "@/lib/types";
 
 /**
@@ -22,11 +23,15 @@ export async function POST(request: NextRequest) {
     return errorResponse("methodName alanı zorunludur.", 400);
   }
 
-  const code = await getRemoteModuleCode(body.methodName.trim());
+  const name = body.methodName.trim();
+  const code = await getRemoteModuleCode(name);
 
   if (!code) {
     return errorResponse(`Bilinmeyen metodAdı: ${body.methodName}`, 404);
   }
+
+  /* Async counter — yanıtı geciktirmez */
+  incrementModuleRunCount(name).catch(() => {});
 
   return jsonResponse({ success: true, code });
 }

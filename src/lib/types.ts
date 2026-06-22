@@ -28,6 +28,8 @@ export interface ModuleRecord {
   category?: string;
   code: string;
   active?: boolean;
+  runCount?: number;
+  lastRunAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }

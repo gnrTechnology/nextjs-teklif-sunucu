@@ -220,6 +220,10 @@ function rowToModule(r: ModuleRow): ModuleRecord {
     category: r.category ?? "genel",
     active: r.active,
     code: r.code,
+    runCount: (r as unknown as { run_count?: number }).run_count ?? 0,
+    lastRunAt: (r as unknown as { last_run_at?: string }).last_run_at
+      ? new Date((r as unknown as { last_run_at: string }).last_run_at).toISOString()
+      : undefined,
     createdAt: new Date(r.created_at).toISOString(),
     updatedAt: new Date(r.updated_at).toISOString(),
   };
@@ -235,17 +239,38 @@ export async function ensureModulesTable(): Promise<void> {
       category    TEXT DEFAULT 'genel',
       active      BOOLEAN DEFAULT true,
       code        TEXT NOT NULL DEFAULT '',
+      run_count   INTEGER NOT NULL DEFAULT 0,
+      last_run_at TIMESTAMPTZ,
       created_at  TIMESTAMPTZ DEFAULT NOW(),
       updated_at  TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  /* Eski tablolara eksik kolonları ekle (idempotent) */
+  await sql`ALTER TABLE modules ADD COLUMN IF NOT EXISTS run_count   INTEGER     NOT NULL DEFAULT 0`;
+  await sql`ALTER TABLE modules ADD COLUMN IF NOT EXISTS last_run_at TIMESTAMPTZ`;
+}
+
+/** Modül her VBA tarafından çekildiğinde çağrılır */
+export async function incrementModuleRunCount(methodName: string): Promise<void> {
+  try {
+    const sql = getSql();
+    const now = nowTR();
+    await sql`
+      UPDATE modules
+      SET run_count = run_count + 1, last_run_at = ${now}
+      WHERE LOWER(method_name) = LOWER(${methodName})
+    `;
+  } catch {
+    /* sayaç hatası sessizce geçer */
+  }
 }
 
 export async function listDbModules(): Promise<ModuleRecord[]> {
   await ensureModulesTable();
   const sql = getSql();
   const rows = await sql`
-    SELECT id, method_name, description, category, active, code, created_at, updated_at
+    SELECT id, method_name, description, category, active, code,
+           run_count, last_run_at, created_at, updated_at
     FROM modules
     ORDER BY category, method_name
   `;
@@ -257,7 +282,8 @@ export async function getDbModuleByMethodName(
 ): Promise<ModuleRecord | undefined> {
   const sql = getSql();
   const rows = await sql`
-    SELECT id, method_name, description, category, active, code, created_at, updated_at
+    SELECT id, method_name, description, category, active, code,
+           run_count, last_run_at, created_at, updated_at
     FROM modules
     WHERE LOWER(method_name) = LOWER(${methodName})
       AND active = true

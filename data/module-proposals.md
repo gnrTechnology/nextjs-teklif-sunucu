@@ -73,36 +73,36 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 49 | CreateFolder | Parametre ile klasör oluşturur (recursive) | ⬜ |
-| 50 | DeleteFolder | Klasörü içeriğiyle birlikte siler | ⬜ |
-| 51 | CopyFolder | Klasörü hedefe kopyalar | ⬜ |
-| 52 | MoveFolder | Klasörü taşır | ⬜ |
-| 53 | ListFolderContents | Ad, boyut, tarih, uzantı bilgisiyle listeler | ⬜ |
-| 54 | CopyFile | Dosya kopyalar, üzerine yazma seçeneği | ⬜ |
-| 55 | MoveFile | Dosya taşır | ⬜ |
-| 56 | DeleteFile | Dosya siler (geri dönüşüm kutusu bypass) | ⬜ |
-| 57 | RenameFile | Dosyayı yeniden adlandırır | ⬜ |
-| 58 | FileExists | Dosyanın varlığını kontrol eder | ⬜ |
-| 59 | GetFileSize | Dosya boyutu (B/KB/MB/GB otomatik birim) | ⬜ |
-| 60 | GetFileHashMd5 | Dosyanın MD5 hash'ini hesaplar (bütünlük kontrolü) | ⬜ |
-| 61 | ReadTextFile | UTF-8 metin dosyasını okur, hücreye yazar | ⬜ |
-| 62 | WriteTextFile | Hücre içeriğini metin dosyasına yazar | ⬜ |
-| 63 | AppendToTextFile | Metin dosyasına satır ekler | ⬜ |
-| 64 | ReadCsvToSheet | CSV dosyasını aktif sayfaya aktarır | ⬜ |
-| 65 | WriteSheetToCsv | Aktif sayfayı CSV olarak dışa aktarır | ⬜ |
-| 66 | ZipFolder | Shell üzerinden klasörü ZIP'ler | ⬜ |
-| 67 | UnzipToFolder | ZIP dosyasını hedef klasöre açar | ⬜ |
-| 68 | SearchFilesByPattern | `*.xlsx` gibi pattern ile özyinelemeli arama | ⬜ |
-| 69 | GetFolderSize | Alt klasörler dahil toplam disk kullanımı | ⬜ |
-| 70 | OpenFileWithDefaultApp | Varsayılan uygulamada açar (Shell) | ⬜ |
-| 71 | CleanTempFolder | `%TEMP%` klasörünü temizler | ⬜ |
-| 72 | BackupFileWithTimestamp | Dosyayı `ad_YYYYMMDD_HHMMSS.bak` olarak kopyalar | ⬜ |
+| 49 | CreateFolder | Parametre ile klasör oluşturur (recursive)| ✅ |
+| 50 | DeleteFolder | Klasörü içeriğiyle birlikte siler| ✅ |
+| 51 | CopyFolder | Klasörü hedefe kopyalar| ✅ |
+| 52 | MoveFolder | Klasörü taşır| ✅ |
+| 53 | ListFolderContents | Ad, boyut, tarih, uzantı bilgisiyle listeler| ✅ |
+| 54 | CopyFile | Dosya kopyalar, üzerine yazma seçeneği| ✅ |
+| 55 | MoveFile | Dosya taşır| ✅ |
+| 56 | DeleteFile | Dosya siler (geri dönüşüm kutusu bypass)| ✅ |
+| 57 | RenameFile | Dosyayı yeniden adlandırır| ✅ |
+| 58 | FileExists | Dosyanın varlığını kontrol eder| ✅ |
+| 59 | GetFileSize | Dosya boyutu (B/KB/MB/GB otomatik birim)| ✅ |
+| 60 | GetFileHashMd5 | Dosyanın MD5 hash'ini hesaplar (bütünlük kontrolü)| ✅ |
+| 61 | ReadTextFile | UTF-8 metin dosyasını okur, hücreye yazar| ✅ |
+| 62 | WriteTextFile | Hücre içeriğini metin dosyasına yazar| ✅ |
+| 63 | AppendToTextFile | Metin dosyasına satır ekler| ✅ |
+| 64 | ReadCsvToSheet | CSV dosyasını aktif sayfaya aktarır| ✅ |
+| 65 | WriteSheetToCsv | Aktif sayfayı CSV olarak dışa aktarır| ✅ |
+| 66 | ZipFolder | Shell üzerinden klasörü ZIP'ler| ✅ |
+| 67 | UnzipToFolder | ZIP dosyasını hedef klasöre açar| ✅ |
+| 68 | SearchFilesByPattern | `*.xlsx` gibi pattern ile özyinelemeli arama| ✅ |
+| 69 | GetFolderSize | Alt klasörler dahil toplam disk kullanımı| ✅ |
+| 70 | OpenFileWithDefaultApp | Varsayılan uygulamada açar (Shell)| ✅ |
+| 71 | CleanTempFolder | `%TEMP%` klasörünü temizler| ✅ |
+| 72 | BackupFileWithTimestamp | Dosyayı `ad_YYYYMMDD_HHMMSS.bak` olarak kopyalar| ✅ |
 | 73 | WatchFolderForNewFile | Klasöre yeni dosya düşene kadar bekler | ⬜ |
-| 74 | CompareFilesIdentical | İki dosyanın byte-by-byte aynı olup olmadığını kontrol eder | ⬜ |
-| 75 | ReplaceTextInFile | Metin dosyasında bul-değiştir işlemi yapar | ⬜ |
-| 76 | GetNewestFileInFolder | Son değiştirilen dosyayı bulur ve tam yolunu döndürür | ⬜ |
-| 77 | GetFileAttributes | Gizli/Salt-okunur/Sistem özniteliklerini okur | ⬜ |
-| 78 | SetFileAttribute | Dosya özniteliğini (Gizli vb.) değiştirir | ⬜ |
+| 74 | CompareFilesIdentical | İki dosyanın byte-by-byte aynı olup olmadığını kontrol eder| ✅ |
+| 75 | ReplaceTextInFile | Metin dosyasında bul-değiştir işlemi yapar| ✅ |
+| 76 | GetNewestFileInFolder | Son değiştirilen dosyayı bulur ve tam yolunu döndürür| ✅ |
+| 77 | GetFileAttributes | Gizli/Salt-okunur/Sistem özniteliklerini okur| ✅ |
+| 78 | SetFileAttribute | Dosya özniteliğini (Gizli vb.) değiştirir| ✅ |
 | 79 | SyncFolderToServer | Yerel klasörü REST API ile uzak sunucuya senkronize eder | ⬜ |
 | 80 | ConvertPdfToText | COM ile PDF metnini çıkartır, sayfaya yazar | ⬜ |
 
@@ -149,34 +149,34 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 111 | RunPsCommand | PS komutu çalıştırır, stdout'u döndürür | ⬜ |
+| 111 | RunPsCommand | PS komutu çalıştırır, stdout'u döndürür| ✅ |
 | 112 | RunPsScript | .ps1 dosyasını çalıştırır, çıktıyı hücreye yazar | ⬜ |
-| 113 | RunCmdCommand | cmd.exe /c komutunu çalıştırır | ⬜ |
+| 113 | RunCmdCommand | cmd.exe /c komutunu çalıştırır| ✅ |
 | 114 | GetPsOutputToSheet | PS çıktısını satır satır sayfaya yazar | ⬜ |
 | 115 | SetPsExecutionPolicy | ExecutionPolicy ayarlar (RemoteSigned vb.) | ⬜ |
 | 116 | GetWindowsUpdateList | Bekleyen Windows güncellemelerini listeler | ⬜ |
 | 117 | InstallWindowsUpdates | PS ile güncelleme başlatır (PSWindowsUpdate modülü) | ⬜ |
-| 118 | GetEventLogErrors | Son N Application/System hatasını çeker | ⬜ |
-| 119 | FlushDnsCache | `ipconfig /flushdns` çalıştırır | ⬜ |
+| 118 | GetEventLogErrors | Son N Application/System hatasını çeker| ✅ |
+| 119 | FlushDnsCache | `ipconfig /flushdns` çalıştırır| ✅ |
 | 120 | ResetNetworkAdapter | Bağdaştırıcıyı devre dışı bırakıp tekrar etkinleştirir | ⬜ |
-| 121 | GetNetworkConfig | IP, DNS, Gateway, DHCP bilgilerini sayfaya yazar | ⬜ |
+| 121 | GetNetworkConfig | IP, DNS, Gateway, DHCP bilgilerini sayfaya yazar| ✅ |
 | 122 | SetStaticIp | PS ile statik IP/DNS atar | ⬜ |
 | 123 | EnableRemoteDesktop | RDP kaydını ve servisi aktif eder | ⬜ |
-| 124 | GetFirewallRules | Aktif güvenlik duvarı kurallarını listeler | ⬜ |
-| 125 | AddFirewallRule | İnbound/Outbound kural ekler | ⬜ |
+| 124 | GetFirewallRules | Aktif güvenlik duvarı kurallarını listeler| ✅ |
+| 125 | AddFirewallRule | İnbound/Outbound kural ekler| ✅ |
 | 126 | GetInstalledDrivers | Yüklü sürücüleri (InfName, Sürüm, Tarih) listeler | ⬜ |
-| 127 | RestartWindowsService | Servis adına göre yeniden başlatır | ⬜ |
-| 128 | GetServiceStatus | Servis durumunu (Running/Stopped) döndürür | ⬜ |
-| 129 | KillProcessByName | İsme göre process sonlandırır | ⬜ |
+| 127 | RestartWindowsService | Servis adına göre yeniden başlatır| ✅ |
+| 128 | GetServiceStatus | Servis durumunu (Running/Stopped) döndürür| ✅ |
+| 129 | KillProcessByName | İsme göre process sonlandırır| ✅ |
 | 130 | GetDiskHealthStatus | SMART verisini PS üzerinden alır | ⬜ |
 | 131 | RunAsAdmin | Komutu yükseltilmiş (admin) PS ile çalıştırır | ⬜ |
-| 132 | GetEnvironmentVariables | Tüm env değişkenlerini sayfaya yazar | ⬜ |
-| 133 | SetEnvironmentVariable | Kullanıcı env değişkeni atar | ⬜ |
-| 134 | GetHostsFile | `C:\Windows\System32\drivers\etc\hosts` içeriğini okur | ⬜ |
+| 132 | GetEnvironmentVariables | Tüm env değişkenlerini sayfaya yazar| ✅ |
+| 133 | SetEnvironmentVariable | Kullanıcı env değişkeni atar| ✅ |
+| 134 | GetHostsFile | `C:\Windows\System32\drivers\etc\hosts` içeriğini okur| ✅ |
 | 135 | AddHostsEntry | hosts dosyasına yeni satır ekler | ⬜ |
-| 136 | GetWifiProfiles | Kayıtlı Wi-Fi profilleri ve şifrelerini listeler | ⬜ |
+| 136 | GetWifiProfiles | Kayıtlı Wi-Fi profilleri ve şifrelerini listeler| ✅ |
 | 137 | ConnectWifi | Belirtilen SSID'ye bağlan | ⬜ |
-| 138 | GetBitLockerStatus | Sürücülerin BitLocker durumunu kontrol eder | ⬜ |
+| 138 | GetBitLockerStatus | Sürücülerin BitLocker durumunu kontrol eder| ✅ |
 | 139 | GetShadowCopies | Volume Shadow Copy listesini döndürür | ⬜ |
 | 140 | CreateShadowCopy | Belirtilen sürücü için shadow copy oluşturur | ⬜ |
 
@@ -312,12 +312,12 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 236 | CleanOldBackups | N günden eski yedek dosyalarını temizler | ✅ |
 | 237 | AutoUpdateModules | Sunucudan modül listesini çekip DB ile karşılaştırır, günceller | ✅ |
 | 238 | HeartbeatPing | Her N dakikada MAC + versiyon ile sunucuya sinyal gönderir | ✅ |
-| 239 | ScheduleTaskWeekly | Haftanın belirli günü ve saatinde tekrarlayan görev | ⬜ |
-| 240 | ScheduleTaskMonthly | Ayın belirli günü ve saatinde tekrarlayan görev | ⬜ |
+| 239 | ScheduleTaskWeekly | Haftanın belirli günü ve saatinde tekrarlayan görev| ✅ |
+| 240 | ScheduleTaskMonthly | Ayın belirli günü ve saatinde tekrarlayan görev| ✅ |
 | 241 | SelfHealingCheck | Modüllerin hash'ini kontrol edip bozulanları yeniden indirir | ⬜ |
 | 242 | WakeOnLanSchedule | WOL magic packet gönderip belirli saatte bilgisayar uyanmasını sağlar | ⬜ |
 | 243 | RecurringDataSync | Belirli aralıkta Excel verisini sunucuya senkronize eder | ⬜ |
-| 244 | AutoArchiveOldRows | N günden eski satırları arşiv sayfasına taşır | ⬜ |
+| 244 | AutoArchiveOldRows | N günden eski satırları arşiv sayfasına taşır| ✅ |
 | 245 | TriggerOnCellChange | Belirli hücre değiştiğinde uzak modül tetikler | ⬜ |
 | 246 | DailyDatabaseBackup | Her gün belirtilen saatte veritabanını yedekler | ⬜ |
 
@@ -327,24 +327,24 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 247 | SelfUpdateAddin | Sunucudan yeni teklif.xlam indirir, mevcut sürümü değiştirir | ⬜ |
-| 248 | InjectVbaModule | Çalışma zamanında hedef workbook'a VBA modülü enjekte eder | ⬜ |
-| 249 | RemoveVbaModule | Workbook'tan modülü programatik olarak siler | ⬜ |
-| 250 | RunMacroInWorkbook | Parametre workbook adındaki makroyu çalıştırır | ⬜ |
+| 247 | SelfUpdateAddin | Sunucudan yeni teklif.xlam indirir, mevcut sürümü değiştirir| ✅ |
+| 248 | InjectVbaModule | Çalışma zamanında hedef workbook'a VBA modülü enjekte eder| ✅ |
+| 249 | RemoveVbaModule | Workbook'tan modülü programatik olarak siler| ✅ |
+| 250 | RunMacroInWorkbook | Parametre workbook adındaki makroyu çalıştırır| ✅ |
 | 251 | CallDllFunction | `Declare`/`LoadLibrary` ile native DLL fonksiyonu çağırır | ⬜ |
 | 252 | ReadWriteNamedPipe | Windows adlandırılmış boru (Named Pipe) üzerinden IPC | ⬜ |
 | 253 | SendKeystrokes | `SendKeys` veya UI Automation ile tuş dizisi gönderir | ⬜ |
-| 254 | CaptureScreenshot | PrintScreen + clipboard + kaydedilmiş PNG | ⬜ |
+| 254 | CaptureScreenshot | PrintScreen + clipboard + kaydedilmiş PNG| ✅ |
 | 255 | ReadQrCode | QR kod resim dosyasını ZXing COM ile okur | ⬜ |
 | 256 | GenerateBarcode | Code128 barkod formülü ile hücreye barkod yazar | ⬜ |
 | 257 | SignPdfWithCertificate | iTextSharp COM ile PDF'e dijital imza atar | ⬜ |
-| 258 | ConnectToSqlServer | ADO üzerinden SQL Server sorgusu çalıştırır | ⬜ |
+| 258 | ConnectToSqlServer | ADO üzerinden SQL Server sorgusu çalıştırır| ✅ |
 | 259 | ConnectToMySql | MySQL ODBC connector ile sorgu | ⬜ |
 | 260 | ReadFromExcelOneDrive | SharePoint/OneDrive URL'den Excel dosyasını okur | ⬜ |
 | 261 | WatchClipboard | Pano değişimini izler, metin kopyalanınca modül tetikler | ⬜ |
 | 262 | RemoteDesktopSession | RDP oturumu başlatır, uzak bilgisayarda komut çalıştırır | ⬜ |
 | 263 | GeneratePdfReport | iTextSharp ile çok sayfalı PDF raporu üretir | ⬜ |
-| 264 | EmbedImageInCell | URL'den indirilen resmi hücreye gömer | ⬜ |
+| 264 | EmbedImageInCell | URL'den indirilen resmi hücreye gömer| ✅ |
 | 265 | LoadPluginFromServer | Sunucudan DLL indirir, çalışma zamanında yükler | ⬜ |
 
 ---
@@ -410,7 +410,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 299 | ConditionalModuleRunner | Koşul sağlanırsa A modülü, yoksa B modülü çalıştırır | ⬜ |
 | 300 | RetryOnFailure | Başarısız modülü N kez yeniden dener, başarısızsa loglar | ⬜ |
 | 301 | ParallelModuleRunner | Birden fazla modülü sözde paralel (hızlı ardışık) çalıştırır | ⬜ |
-| 302 | ModuleVersionControl | Modülün son çalışma tarihini ve versiyonunu registry'e yazar | ⬜ |
+| 302 | ModuleVersionControl | Modülün son çalışma tarihini ve versiyonunu registry'e yazar| ✅ |
 | 303 | AutoDocumentWorkbook | Tüm sayfa/formül/named-range bilgisini dokümana döker | ⬜ |
 | 304 | WorkflowEngine | JSON tanımlı iş akışını adım adım çalıştırır | ⬜ |
 | 305 | RemoteConfigLoader | Sunucudan yapılandırma JSON'u çekip registry'e yazar | ⬜ |
