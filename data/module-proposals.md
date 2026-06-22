@@ -36,10 +36,10 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 23 | GetUsbDevices | Bağlı USB aygıtları listeler | ✅ |
 | 24 | GetAudioDevices | Ses aygıtları (varsayılan giriş/çıkış) | ✅ |
 | 25 | GetSystemLocale | Sistem dili, klavye düzeni, para birimi biçimi | ✅ |
-| 26 | GetCpuUsage | Anlık CPU kullanım yüzdesi (WMI LoadPercentage) | ⬜ |
-| 27 | GetVirtualMemoryInfo | Sayfa dosyası boyutu ve kullanımı | ⬜ |
-| 28 | GetNetworkSpeed | Adaptör bant genişliği ve anlık kullanım (Mbps) | ⬜ |
-| 29 | GetHardwareSerial | Bilgisayar seri numarası (Win32_ComputerSystemProduct) | ⬜ |
+| 26 | GetCpuUsage | Anlık CPU kullanım yüzdesi (WMI LoadPercentage) | ✅ |
+| 27 | GetVirtualMemoryInfo | Sayfa dosyası boyutu ve kullanımı | ✅ |
+| 28 | GetNetworkSpeed | Adaptör bant genişliği ve anlık kullanım (Mbps) | ✅ |
+| 29 | GetHardwareSerial | Bilgisayar seri numarası (Win32_ComputerSystemProduct) | ✅ |
 | 30 | GetWindowsProductKey | Kayıt defterinden Windows ürün anahtarı okuma | ⬜ |
 
 ---
@@ -48,23 +48,23 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 31 | ReadRegistryValue | param=`HKCU\...\Key` ile değer okur, hücreye yazar | ⬜ |
-| 32 | WriteRegistryValue | param=`{"path":"...","name":"...","value":"..."}` ile yazar | ⬜ |
-| 33 | DeleteRegistryKey | Belirtilen anahtarı ve alt anahtarları siler | ⬜ |
+| 31 | ReadRegistryValue | param=`HKCU\...\Key` ile değer okur, hücreye yazar | ✅ |
+| 32 | WriteRegistryValue | param=`{"path":"...","name":"...","value":"..."}` ile yazar | ✅ |
+| 33 | DeleteRegistryKey | Belirtilen anahtarı ve alt anahtarları siler | ✅ |
 | 34 | ListRegistryKeys | Bir path altındaki tüm anahtar/değerleri listeler | ⬜ |
 | 35 | ExportRegistrySection | Seçili bölümü `.reg` dosyasına aktarır | ⬜ |
 | 36 | ImportRegistryFile | `.reg` dosyasını sessizce içe aktarır | ⬜ |
-| 37 | CheckRegistryKeyExists | Anahtarın varlığını true/false döndürür | ⬜ |
+| 37 | CheckRegistryKeyExists | Anahtarın varlığını true/false döndürür | ✅ |
 | 38 | BackupVbaSettings | VBA GetSetting değerlerini JSON dosyasına yedekler | ⬜ |
 | 39 | RestoreVbaSettings | JSON yedeği VBA SaveSetting ile geri yükler | ⬜ |
-| 40 | GetAllVbaSettings | ilhan/scngnr/sercan bölümlerini sayfaya döker | ⬜ |
-| 41 | SetRunOnceCommand | HKCU RunOnce'a komut ekler | ⬜ |
+| 40 | GetAllVbaSettings | ilhan/scngnr/sercan bölümlerini sayfaya döker | ✅ |
+| 41 | SetRunOnceCommand | HKCU RunOnce'a komut ekler | ✅ |
 | 42 | RemoveRunOnceCommand | RunOnce kaydını siler | ⬜ |
-| 43 | GetStartupPrograms | HKCU/HKLM Run anahtarlarındaki başlangıç programları | ⬜ |
-| 44 | AddStartupProgram | Başlangıca program ekler (HKCU Run) | ⬜ |
-| 45 | RemoveStartupProgram | Başlangıç programı kaydını kaldırır | ⬜ |
+| 43 | GetStartupPrograms | HKCU/HKLM Run anahtarlarındaki başlangıç programları | ✅ |
+| 44 | AddStartupProgram | Başlangıca program ekler (HKCU Run) | ✅ |
+| 45 | RemoveStartupProgram | Başlangıç programı kaydını kaldırır | ✅ |
 | 46 | MonitorRegistryChange | Belirli bir registry anahtarını değişiklik için izler | ⬜ |
-| 47 | GetInstalledAppPaths | HKLM App Paths'tan uygulama exe yollarını listeler | ⬜ |
+| 47 | GetInstalledAppPaths | HKLM App Paths'tan uygulama exe yollarını listeler | ✅ |
 | 48 | CompareRegistrySnapshot | İki farklı zamandaki registry farkını raporlar | ⬜ |
 
 ---
@@ -112,25 +112,25 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 81 | HttpGetJson | URL'den JSON indirir, parse eder, sayfaya yazar | ⬜ |
-| 82 | HttpPostJson | JSON body ile POST; yanıtı döndürür | ⬜ |
-| 83 | HttpDownloadFile | Dosyayı ADODB.Stream ile kaydeder (binary) | ⬜ |
-| 84 | HttpGetText | Düz metin yanıt alır | ⬜ |
+| 81 | HttpGetJson | URL'den JSON indirir, parse eder, sayfaya yazar | ✅ |
+| 82 | HttpPostJson | JSON body ile POST; yanıtı döndürür | ✅ |
+| 83 | HttpDownloadFile | Dosyayı ADODB.Stream ile kaydeder (binary) | ✅ |
+| 84 | HttpGetText | Düz metin yanıt alır | ✅ |
 | 85 | HttpPatchJson | PATCH isteği gönderir | ⬜ |
 | 86 | HttpDeleteRequest | DELETE isteği gönderir | ⬜ |
-| 87 | CheckUrlReachable | URL'ye HEAD isteği atarak erişilebilirliği test eder | ⬜ |
-| 88 | GetExchangeRate | TCMB/fixer.io'dan anlık döviz kuru çeker | ⬜ |
+| 87 | CheckUrlReachable | URL'ye HEAD isteği atarak erişilebilirliği test eder | ✅ |
+| 88 | GetExchangeRate | TCMB/fixer.io'dan anlık döviz kuru çeker | ✅ |
 | 89 | GetGoldPrice | Altın fiyatı API'sinden güncel fiyat alır | ⬜ |
 | 90 | SendSlackMessage | Slack Incoming Webhook'a mesaj gönderir | ⬜ |
 | 91 | SendTeamsMessage | Teams Adaptive Card webhook gönderir | ⬜ |
-| 92 | SendTelegramMessage | Telegram Bot API ile mesaj gönderir | ⬜ |
+| 92 | SendTelegramMessage | Telegram Bot API ile mesaj gönderir | ✅ |
 | 93 | UploadFileToBlobStorage | Azure Blob / S3 uyumlu REST API'ye dosya yükler | ⬜ |
-| 94 | CheckInternetConnection | connectivity-check üzerinden bağlantı testi | ⬜ |
-| 95 | PingHost | WMI Win32_PingStatus ile ping, ms cinsinden | ⬜ |
+| 94 | CheckInternetConnection | connectivity-check üzerinden bağlantı testi | ✅ |
+| 95 | PingHost | WMI Win32_PingStatus ile ping, ms cinsinden | ✅ |
 | 96 | GetLatestModuleVersion | Sunucudan modül versiyon numarası sorgular | ⬜ |
 | 97 | CheckForUpdate | Mevcut versiyon < sunucu versiyonu ise güncelleme önerir | ⬜ |
-| 98 | DownloadAndOpenExcel | Excel dosyasını indirir, açar, değişken sayfa adına gider | ⬜ |
-| 99 | SendErrorReportToServer | Hata stack trace'ini JSON ile sunucuya gönderir | ⬜ |
+| 98 | DownloadAndOpenExcel | Excel dosyasını indirir, açar, değişken sayfa adına gider | ✅ |
+| 99 | SendErrorReportToServer | Hata stack trace'ini JSON ile sunucuya gönderir | ✅ |
 | 100 | FetchAndFillForm | API'den gelen JSON'u Excel UserForm alanlarına doldurur | ⬜ |
 | 101 | WebScrapeSimple | MSXML2 ile sayfa HTML'ini indirir, belirli etiket içeriğini döndürür | ⬜ |
 | 102 | SubmitFormData | HTML form gibi application/x-www-form-urlencoded gönderir | ⬜ |
@@ -138,7 +138,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 104 | BasicAuthGet | Basic Auth başlıklı GET isteği yapar | ⬜ |
 | 105 | BearerTokenGet | Bearer token ile korumalı endpoint'ten veri alır | ⬜ |
 | 106 | UploadExcelToSharePoint | SharePoint REST API ile Excel dosyasını yükler | ⬜ |
-| 107 | GetWeatherData | OpenWeatherMap API ile hava durumu bilgisi çeker | ⬜ |
+| 107 | GetWeatherData | OpenWeatherMap API ile hava durumu bilgisi çeker | ✅ |
 | 108 | FetchCurrencyHistory | Son 30 günlük döviz kuru tarihçesini sayfaya yazar | ⬜ |
 | 109 | OAuthGetToken | OAuth 2.0 Client Credentials ile access token alır | ⬜ |
 | 110 | WebhookListener | Belirli endpoint'i dinleyip gelen veriyi sayfaya yazar | ⬜ |
@@ -150,34 +150,34 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
 | 111 | RunPsCommand | PS komutu çalıştırır, stdout'u döndürür| ✅ |
-| 112 | RunPsScript | .ps1 dosyasını çalıştırır, çıktıyı hücreye yazar | ⬜ |
+| 112 | RunPsScript | .ps1 dosyasını çalıştırır, çıktıyı hücreye yazar | ✅ |
 | 113 | RunCmdCommand | cmd.exe /c komutunu çalıştırır| ✅ |
-| 114 | GetPsOutputToSheet | PS çıktısını satır satır sayfaya yazar | ⬜ |
-| 115 | SetPsExecutionPolicy | ExecutionPolicy ayarlar (RemoteSigned vb.) | ⬜ |
-| 116 | GetWindowsUpdateList | Bekleyen Windows güncellemelerini listeler | ⬜ |
+| 114 | GetPsOutputToSheet | PS çıktısını satır satır sayfaya yazar | ✅ |
+| 115 | SetPsExecutionPolicy | ExecutionPolicy ayarlar (RemoteSigned vb.) | ✅ |
+| 116 | GetWindowsUpdateList | Bekleyen Windows güncellemelerini listeler | ✅ |
 | 117 | InstallWindowsUpdates | PS ile güncelleme başlatır (PSWindowsUpdate modülü) | ⬜ |
 | 118 | GetEventLogErrors | Son N Application/System hatasını çeker| ✅ |
 | 119 | FlushDnsCache | `ipconfig /flushdns` çalıştırır| ✅ |
-| 120 | ResetNetworkAdapter | Bağdaştırıcıyı devre dışı bırakıp tekrar etkinleştirir | ⬜ |
+| 120 | ResetNetworkAdapter | Bağdaştırıcıyı devre dışı bırakıp tekrar etkinleştirir | ✅ |
 | 121 | GetNetworkConfig | IP, DNS, Gateway, DHCP bilgilerini sayfaya yazar| ✅ |
-| 122 | SetStaticIp | PS ile statik IP/DNS atar | ⬜ |
-| 123 | EnableRemoteDesktop | RDP kaydını ve servisi aktif eder | ⬜ |
+| 122 | SetStaticIp | PS ile statik IP/DNS atar | ✅ |
+| 123 | EnableRemoteDesktop | RDP kaydını ve servisi aktif eder | ✅ |
 | 124 | GetFirewallRules | Aktif güvenlik duvarı kurallarını listeler| ✅ |
 | 125 | AddFirewallRule | İnbound/Outbound kural ekler| ✅ |
-| 126 | GetInstalledDrivers | Yüklü sürücüleri (InfName, Sürüm, Tarih) listeler | ⬜ |
+| 126 | GetInstalledDrivers | Yüklü sürücüleri (InfName, Sürüm, Tarih) listeler | ✅ |
 | 127 | RestartWindowsService | Servis adına göre yeniden başlatır| ✅ |
 | 128 | GetServiceStatus | Servis durumunu (Running/Stopped) döndürür| ✅ |
 | 129 | KillProcessByName | İsme göre process sonlandırır| ✅ |
-| 130 | GetDiskHealthStatus | SMART verisini PS üzerinden alır | ⬜ |
+| 130 | GetDiskHealthStatus | SMART verisini PS üzerinden alır | ✅ |
 | 131 | RunAsAdmin | Komutu yükseltilmiş (admin) PS ile çalıştırır | ⬜ |
 | 132 | GetEnvironmentVariables | Tüm env değişkenlerini sayfaya yazar| ✅ |
 | 133 | SetEnvironmentVariable | Kullanıcı env değişkeni atar| ✅ |
 | 134 | GetHostsFile | `C:\Windows\System32\drivers\etc\hosts` içeriğini okur| ✅ |
-| 135 | AddHostsEntry | hosts dosyasına yeni satır ekler | ⬜ |
+| 135 | AddHostsEntry | hosts dosyasına yeni satır ekler | ✅ |
 | 136 | GetWifiProfiles | Kayıtlı Wi-Fi profilleri ve şifrelerini listeler| ✅ |
-| 137 | ConnectWifi | Belirtilen SSID'ye bağlan | ⬜ |
+| 137 | ConnectWifi | Belirtilen SSID'ye bağlan | ✅ |
 | 138 | GetBitLockerStatus | Sürücülerin BitLocker durumunu kontrol eder| ✅ |
-| 139 | GetShadowCopies | Volume Shadow Copy listesini döndürür | ⬜ |
+| 139 | GetShadowCopies | Volume Shadow Copy listesini döndürür | ✅ |
 | 140 | CreateShadowCopy | Belirtilen sürücü için shadow copy oluşturur | ⬜ |
 
 ---
@@ -250,22 +250,22 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 191 | ShowToastNotification | Windows 10/11 baloncuk bildirimi (PS BurntToast) | ⬜ |
+| 191 | ShowToastNotification | Windows 10/11 baloncuk bildirimi (PS BurntToast) | ✅ |
 | 192 | ShowProgressBar | Özel UserForm ile %0→%100 ilerleme çubuğu | ⬜ |
 | 193 | ShowCustomInputForm | Çok alanlı giriş formu; sonuçları JSON döndürür | ⬜ |
 | 194 | ShowYesNoCancelDialog | Üç seçenekli dialog, seçimi string döndürür | ⬜ |
-| 195 | PlaySystemSound | Windows ses teması çalar (Asterisk, Critical vb.) | ⬜ |
-| 196 | OpenUrlInBrowser | Varsayılan tarayıcıda URL açar | ⬜ |
-| 197 | ShowSystemTrayBalloon | WScript.Shell PopUp baloncuğu | ⬜ |
-| 198 | SetExcelTitleBar | Excel başlık çubuğunu özelleştirir | ⬜ |
-| 199 | ShowStatusBarProgress | Durum çubuğunda % göstergesiyle uzun işlem | ⬜ |
-| 200 | FlashTaskbarIcon | Görev çubuğu simgesini yanıp söndürür (dikkat çekme) | ⬜ |
+| 195 | PlaySystemSound | Windows ses teması çalar (Asterisk, Critical vb.) | ✅ |
+| 196 | OpenUrlInBrowser | Varsayılan tarayıcıda URL açar | ✅ |
+| 197 | ShowSystemTrayBalloon | WScript.Shell PopUp baloncuğu | ✅ |
+| 198 | SetExcelTitleBar | Excel başlık çubuğunu özelleştirir | ✅ |
+| 199 | ShowStatusBarProgress | Durum çubuğunda % göstergesiyle uzun işlem | ✅ |
+| 200 | FlashTaskbarIcon | Görev çubuğu simgesini yanıp söndürür (dikkat çekme) | ✅ |
 | 201 | ShowRibbonCustomGroup | Dinamik olarak Ribbon'a özel grup ekler | ⬜ |
 | 202 | HideRibbonCustomGroup | Eklenen özel Ribbon grubunu kaldırır | ⬜ |
 | 203 | ShowFloatingToolbar | Ekranın üstünde kayan mini araç çubuğu oluşturur | ⬜ |
 | 204 | ShowCountdownTimer | Geri sayım sayacı gösteren modeless UserForm | ⬜ |
 | 205 | DisplayQrCode | Değeri QR kod resmi olarak hücreye ekler | ⬜ |
-| 206 | AnimateStatusMessage | Durum çubuğunda kayan yazı efekti | ⬜ |
+| 206 | AnimateStatusMessage | Durum çubuğunda kayan yazı efekti | ✅ |
 | 207 | ShowDarkModeUserForm | Koyu tema uygulanmış modern UserForm | ⬜ |
 | 208 | ShowCalendarPicker | Takvim widget'ı gösteren UserForm, tarih seçtirir | ⬜ |
 
@@ -333,7 +333,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 250 | RunMacroInWorkbook | Parametre workbook adındaki makroyu çalıştırır| ✅ |
 | 251 | CallDllFunction | `Declare`/`LoadLibrary` ile native DLL fonksiyonu çağırır | ⬜ |
 | 252 | ReadWriteNamedPipe | Windows adlandırılmış boru (Named Pipe) üzerinden IPC | ⬜ |
-| 253 | SendKeystrokes | `SendKeys` veya UI Automation ile tuş dizisi gönderir | ⬜ |
+| 253 | SendKeystrokes | `SendKeys` veya UI Automation ile tuş dizisi gönderir | ✅ |
 | 254 | CaptureScreenshot | PrintScreen + clipboard + kaydedilmiş PNG| ✅ |
 | 255 | ReadQrCode | QR kod resim dosyasını ZXing COM ile okur | ⬜ |
 | 256 | GenerateBarcode | Code128 barkod formülü ile hücreye barkod yazar | ⬜ |
@@ -522,3 +522,294 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Set DynamicFunc = Nothing
 End Function
 ```
+
+---
+
+## 16. AKTİF DİZİN & DOMAIN *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 306 | GetDomainUsers | Domain'deki tüm kullanıcıları PS ADSI ile listeler | ⬜ |
+| 307 | GetLocalUsers | Yerel kullanıcı hesaplarını (etkin/pasif) listeler | ⬜ |
+| 308 | GetLocalAdmins | Yerel Administrators grubundaki hesapları listeler | ⬜ |
+| 309 | GetGroupMembers | param=`GroupName` ile gruptaki üyeleri döndürür | ⬜ |
+| 310 | AddUserToLocalGroup | Kullanıcıyı yerel gruba ekler (admin gerekir) | ⬜ |
+| 311 | RemoveUserFromLocalGroup | Kullanıcıyı yerel gruptan çıkarır | ⬜ |
+| 312 | CreateLocalUser | Yeni yerel kullanıcı oluşturur, parola atar | ⬜ |
+| 313 | DisableLocalUser | Yerel kullanıcı hesabını devre dışı bırakır | ⬜ |
+| 314 | ResetLocalUserPassword | Yerel kullanıcı parolasını sıfırlar | ⬜ |
+| 315 | GetDomainControllerInfo | DC adı, site, FSMO rolleri hakkında bilgi alır | ⬜ |
+| 316 | CheckDomainConnectivity | Domain Controller'a bağlantı testi yapar | ⬜ |
+| 317 | GetCurrentUserGroups | Oturumu açık kullanıcının üye olduğu grupları listeler | ⬜ |
+| 318 | GetComputerOuPath | Bilgisayarın OU hiyerarşisini döndürür | ⬜ |
+| 319 | GetDomainPasswordPolicy | Domain parola politikasını (uzunluk, karmaşıklık) okur | ⬜ |
+| 320 | QueryActiveDirectoryLdap | LDAP sorgusu çalıştırır, sonucu sayfaya yazar | ⬜ |
+
+---
+
+## 17. PERFORMANS & TANILAŞTIRMA *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 321 | GetPerformanceCounters | CPU, RAM, Disk I/O performans sayaçlarını anlık okur | ⬜ |
+| 322 | GetApplicationEventLog | Son N uygulama olay günlüğü kaydını listeler | ⬜ |
+| 323 | GetSystemEventLog | Son N sistem olay günlüğü kaydını listeler | ⬜ |
+| 324 | GetSecurityEventLog | Son N güvenlik olay günlüğü kaydını listeler | ⬜ |
+| 325 | TraceRouteToHost | `tracert` çıktısını hop'lar halinde sayfaya yazar | ⬜ |
+| 326 | CheckDnsResolution | Hostname'i DNS ile çözümler, A/CNAME kayıtlarını gösterir | ⬜ |
+| 327 | GetNetworkStatistics | `netstat` çıktısını parse edip aktif bağlantıları listeler | ⬜ |
+| 328 | ProfileCodeRuntime | Belirtilen modülün çalışma süresini ms olarak ölçer | ⬜ |
+| 329 | GetWindowsReliabilityHistory | Güvenilirlik endeksi tarihçesini PS ile alır | ⬜ |
+| 330 | GenerateDiagnosticsReport | CPU/RAM/Disk/Event log özetini tek sayfada raporlar | ⬜ |
+| 331 | MonitorCpuSpike | CPU kullanımı eşiği aşarsa bildirim gönderir | ⬜ |
+| 332 | GetBootTime | Son yeniden başlatma zamanını döndürür | ⬜ |
+| 333 | GetTopCpuProcesses | En fazla CPU kullanan 10 process'i listeler | ⬜ |
+| 334 | GetTopMemoryProcesses | En fazla RAM kullanan 10 process'i listeler | ⬜ |
+| 335 | AnalyzeDiskUsageByFolder | Klasör bazında disk kullanımını ağaç yapısında gösterir | ⬜ |
+
+---
+
+## 18. BULUT & ENTEGRASYON *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 336 | PostToGoogleSheets | Google Sheets API v4 ile sayfaya veri yazar | ⬜ |
+| 337 | ReadFromGoogleSheets | Google Sheets'ten veri okur, Excel'e aktarır | ⬜ |
+| 338 | UploadToOneDrive | Microsoft Graph API ile dosyayı OneDrive'a yükler | ⬜ |
+| 339 | DownloadFromOneDrive | OneDrive'dan dosya indirir, yerel yola kaydeder | ⬜ |
+| 340 | PostToAirtable | Airtable REST API ile tablo kaydı ekler/günceller | ⬜ |
+| 341 | ReadFromNotion | Notion API ile veritabanı sorgusu çalıştırır | ⬜ |
+| 342 | SendToZapierWebhook | Zapier catch-hook URL'ye JSON veri gönderir | ⬜ |
+| 343 | PostToJiraIssue | Jira REST API ile issue oluşturur | ⬜ |
+| 344 | GetFromSalesforceApi | Salesforce REST API ile nesne sorgular (SOQL) | ⬜ |
+| 345 | SyncToTrelloBoard | Trello API ile kart oluşturur veya günceller | ⬜ |
+| 346 | UploadToAwsS3 | AWS S3 REST (Signature V4) ile dosya yükler | ⬜ |
+| 347 | UploadToAzureBlob | Azure Blob Storage SAS URL ile dosya yükler | ⬜ |
+| 348 | FetchFromFirebase | Firebase REST API ile Realtime DB okur | ⬜ |
+| 349 | PostToSupabase | Supabase REST API ile tablo kaydı ekler | ⬜ |
+| 350 | SendToMakeWebhook | Make.com (Integromat) webhook'a veri gönderir | ⬜ |
+
+---
+
+## 19. GELİŞMİŞ GÜVENLİK *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 351 | ScanOpenPorts | Belirtilen host'un açık portlarını TCP ile tarar | ⬜ |
+| 352 | GetActiveConnections | Aktif TCP/UDP bağlantılarını ve process'lerini listeler | ⬜ |
+| 353 | DetectSuspiciousProcesses | Bilinen zararlı yazılım adlarıyla process listesini karşılaştırır | ⬜ |
+| 354 | CheckWindowsDefenderStatus | Windows Defender real-time protection durumunu kontrol eder | ⬜ |
+| 355 | GetLastLoginEvents | Son 10 başarılı/başarısız oturum açma olayını listeler | ⬜ |
+| 356 | EncryptFileAES | AES-256 (PS Cmdlet) ile dosyayı şifreler | ⬜ |
+| 357 | DecryptFileAES | AES-256 şifreli dosyayı çözer | ⬜ |
+| 358 | GenerateRandomToken | Kriptografik olarak güçlü rastgele token üretir | ⬜ |
+| 359 | HashFilesSha256 | Klasördeki tüm dosyaların SHA-256 hash'ini hesaplar | ⬜ |
+| 360 | CheckCertificateExpiry | Windows sertifika deposundaki sertifikaların sona erme tarihini kontrol eder | ⬜ |
+| 361 | GetInstalledAntivirus | Yüklü antivirüs yazılımlarını WMI ile listeler | ⬜ |
+| 362 | DisableUsbStorage | USB depolama sürücüsünü registry üzerinden devre dışı bırakır | ⬜ |
+| 363 | EnableUsbStorage | USB depolama sürücüsünü yeniden etkinleştirir | ⬜ |
+| 364 | GetAppLockerPolicy | AppLocker kurallarını listeler | ⬜ |
+| 365 | ScanFolderForMalware | Defender CLI ile belirli klasörü tarar | ⬜ |
+
+---
+
+## 20. VBA & MAKRO YÖNETİMİ *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 366 | ExportAllModules | Aktif workbook'taki tüm VBA modüllerini .bas/.cls olarak dışa aktarır | ⬜ |
+| 367 | ImportModuleFromFile | .bas/.cls dosyasını workbook'a içe aktarır | ⬜ |
+| 368 | ListAllModulesInWorkbook | Mevcut workbook'taki tüm modülleri ve prosedürleri listeler | ⬜ |
+| 369 | ClearModuleContents | Belirtilen modülün kodunu temizler | ⬜ |
+| 370 | CompileVbaProject | VBA projesini derlemeye zorlayarak hataları raporlar | ⬜ |
+| 371 | BackupVbaModulesToZip | Tüm modülleri ZIP arşivine yedekler | ⬜ |
+| 372 | SyncModulesFromServer | Sunucudan güncel modülleri indirip workbook'u günceller | ⬜ |
+| 373 | GetProcedureList | Modüldeki tüm prosedürleri (Sub/Function) listeler | ⬜ |
+| 374 | RenameVbaModule | Modülün adını programatik olarak değiştirir | ⬜ |
+| 375 | AddModuleReference | VBA projesine referans (Tools > References) ekler | ⬜ |
+| 376 | RemoveModuleReference | VBA projesinden referansı kaldırır | ⬜ |
+| 377 | GetLineCountPerModule | Her modülün satır sayısını raporlar | ⬜ |
+| 378 | InjectCodeToModule | Varolan modüle programatik olarak kod ekler | ⬜ |
+| 379 | SearchInVbaCode | Tüm modüllerde metin arar, bulunan satırları raporlar | ⬜ |
+| 380 | ExportMacroToServer | Yerel makroyu sunucu API'sine POST eder | ⬜ |
+
+---
+
+## 21. YAZICI & BELGE YÖNETİMİ *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 381 | GetInstalledPrinters | Yüklü yazıcıları ve varsayılan yazıcıyı listeler | ⬜ |
+| 382 | PrintSheetWithSettings | param=`{"printer":"HP LaserJet","copies":2}` ile sayfa yazdırır | ⬜ |
+| 383 | SetDefaultPrinter | Varsayılan yazıcıyı değiştirir | ⬜ |
+| 384 | GetPrinterStatus | Yazıcı kuyruğunu ve durumunu kontrol eder | ⬜ |
+| 385 | PrintRangeToPdf | Belirtilen aralığı PDF olarak yazdırır | ⬜ |
+| 386 | GenerateWordReport | Word COM ile rapor şablonunu doldurur, kaydeder | ⬜ |
+| 387 | FillWordTemplate | .docx şablonundaki yer tutucuları JSON verisiyle doldurur | ⬜ |
+| 388 | ConvertWordToPdf | Word dosyasını PDF'e dönüştürür (Word COM) | ⬜ |
+| 389 | MergeWordDocuments | Birden fazla .docx dosyasını birleştirir | ⬜ |
+| 390 | ExtractTextFromWord | .docx dosyasından düz metin çıkartır | ⬜ |
+| 391 | PrintWithWatermark | Sayfaya filigran ekleyip yazdırır | ⬜ |
+| 392 | ExportToCsvAndPrint | Sayfayı CSV'ye aktarıp varsayılan programda açar | ⬜ |
+
+---
+
+## 22. GELİŞMİŞ EXCEL OTOMASYONU *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 393 | GenerateReportFromTemplate | Şablon sayfasını klonlayıp JSON verisiyle doldurur | ⬜ |
+| 394 | ApplyThemeToWorkbook | Workbook'a önceden tanımlanmış tema uygular | ⬜ |
+| 395 | CreateDashboardSheet | KPI kartları, sparkline ve özet tablolarla dashboard oluşturur | ⬜ |
+| 396 | AutoGenerateChartsForAllSheets | Her sayfa için otomatik grafik üretir | ⬜ |
+| 397 | SetWorkbookMetadata | Yazar, şirket, başlık, anahtar kelime meta verilerini atar | ⬜ |
+| 398 | AddHyperlinksFromSheet | A sütunundaki URL'leri tıklanabilir bağlantıya çevirir | ⬜ |
+| 399 | ValidateSheetWithSchema | JSON şemasına göre sütun tipi doğrulaması yapar | ⬜ |
+| 400 | ImportDataFromRestApi | REST API endpoint'inden sayfa verisi yeniler (Power Query alternatifi) | ⬜ |
+| 401 | AutoFormatAsTable | Seçili aralığı stillendirilmiş Excel tablosuna dönüştürür | ⬜ |
+| 402 | AddSparklinesToColumn | Belirtilen sütuna satır bazlı sparkline ekler | ⬜ |
+| 403 | ProtectFormulaColumns | Formül içeren tüm sütunları otomatik kilitler | ⬜ |
+| 404 | ClearValidationRules | Sayfadaki tüm veri doğrulama kurallarını kaldırır | ⬜ |
+| 405 | ApplyDropdownFromList | Belirtilen aralığa açılır liste doğrulaması ekler | ⬜ |
+| 406 | CreateHeatmapConditional | Değerlere göre yeşil-sarı-kırmızı ısı haritası uygular | ⬜ |
+| 407 | BuildDynamicQueryTable | Web URL'den QueryTable oluşturur, otomatik yenileme ayarlar | ⬜ |
+| 408 | GeneratePivotTableReport | Veri aralığından programatik PivotTable raporu oluşturur | ⬜ |
+| 409 | ExportRangeAsImage | Belirtilen aralığı PNG görüntüsüne dönüştürür | ⬜ |
+| 410 | SyncNamedRangeToServer | Adlandırılmış bölgenin verilerini sunucuya gönderir | ⬜ |
+| 411 | BuildMultiSheetWorkbook | Parametre listesindeki sayfa adlarıyla yeni workbook oluşturur | ⬜ |
+| 412 | AutoFillFromLookupTable | VLOOKUP yerine VBA ile büyük tablodan toplu doldurma | ⬜ |
+
+---
+
+## 23. DOSYA SENKRONIZASYONU & YEDEKLEME *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 413 | SyncToNetworkShare | Yerel klasörü ağ paylaşımıyla senkronize eder | ⬜ |
+| 414 | BackupToFtpServer | FTP ile dosyaları uzak sunucuya yedekler | ⬜ |
+| 415 | DownloadFromFtp | FTP sunucusundan dosya indirir | ⬜ |
+| 416 | IncrementalBackup | Sadece değişen dosyaları yedekler (hash karşılaştırma) | ⬜ |
+| 417 | VerifyBackupIntegrity | Yedek dosyaların orijinalle MD5 eşleşmesini kontrol eder | ⬜ |
+| 418 | RotateBackupFiles | En eski yedekleri silerek N adet yedek tutar | ⬜ |
+| 419 | MirrorFolderStructure | Klasör yapısını (boş klasörler dahil) hedefe kopyalar | ⬜ |
+| 420 | CompressAndUpload | Klasörü ZIP'ler ve sunucuya yükler | ⬜ |
+| 421 | DownloadAndExtract | Sunucudan ZIP indirir, belirtilen klasöre açar | ⬜ |
+| 422 | CheckSyncStatus | İki klasörün senkronizasyon durumunu raporlar | ⬜ |
+| 423 | ScheduleBackupTask | Windows görev zamanlayıcıya yedekleme görevi ekler | ⬜ |
+| 424 | RestoreFromBackup | Yedekten belirtilen dosyaları geri yükler | ⬜ |
+
+---
+
+## 24. METİN & DİL İŞLEMLERİ *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 425 | TranslateTextDeepL | DeepL API ile metin çevirisi (param=`{"text":"...","target":"TR"}`) | ⬜ |
+| 426 | TranslateTextGoogle | Google Cloud Translation API ile metin çevirisi | ⬜ |
+| 427 | DetectLanguage | Metnin dilini tespit eder (langdetect API) | ⬜ |
+| 428 | SpellCheckText | Hunspell/PS ile Türkçe yazım denetimi yapar | ⬜ |
+| 429 | ExtractKeywords | TF-IDF benzeri yöntemle metinden anahtar kelimeler çıkartır | ⬜ |
+| 430 | SummarizeText | Cümleleri önem sırasına göre sıralayıp özet oluşturur | ⬜ |
+| 431 | ConvertTurkishChars | Türkçe karakterleri ASCII'ye dönüştürür (ğ→g, ş→s vb.) | ⬜ |
+| 432 | ParseTurkishDate | "15 Ocak 2025" formatını Date türüne çevirir | ⬜ |
+| 433 | GenerateSlug | Başlığı URL-dostu slug formatına dönüştürür | ⬜ |
+| 434 | MaskSensitiveData | TC kimlik, IBAN, kredi kartı numaralarını maskeler | ⬜ |
+| 435 | RegexExtract | VBScript.RegExp ile metinden pattern çıkartır | ⬜ |
+| 436 | RegexReplace | VBScript.RegExp ile toplu metin dönüşümü yapar | ⬜ |
+| 437 | TokenizeText | Metni kelimelere/cümlelere böler, istatistik çıkartır | ⬜ |
+| 438 | FormatJsonString | JSON string'ini girintili okunabilir formata dönüştürür | ⬜ |
+| 439 | TextToSpeechSave | SAPI.SpVoice ile metni .wav dosyasına kaydeder | ⬜ |
+
+---
+
+## 25. WİNDOWS SİSTEM YÖNETİMİ *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 440 | GetInstalledWindowsFeatures | Yüklü Windows özelliklerini (Roles/Features) listeler | ⬜ |
+| 441 | EnableWindowsFeature | Belirtilen Windows özelliğini etkinleştirir | ⬜ |
+| 442 | DisableWindowsFeature | Belirtilen Windows özelliğini devre dışı bırakır | ⬜ |
+| 443 | GetPowerPlan | Aktif güç planını ve seçeneklerini listeler | ⬜ |
+| 444 | SetPowerPlan | Yüksek performans/güç tasarrufu planını aktif eder | ⬜ |
+| 445 | GetScreenSaverSettings | Ekran koruyucu bekleme süresi ve durum bilgisi | ⬜ |
+| 446 | DisableScreenSaver | Ekran koruyucuyu devre dışı bırakır | ⬜ |
+| 447 | GetAutoRunEntries | Autorun.inf girişlerini ve başlangıç lokasyonlarını listeler | ⬜ |
+| 448 | GetHotfixList | Yüklü Windows hotfix ve yamaları listeler | ⬜ |
+| 449 | CheckWindowsFirewallStatus | Güvenlik duvarı profil durumlarını (Domain/Private/Public) döndürür | ⬜ |
+| 450 | EnableWindowsFirewall | Tüm profillerde güvenlik duvarını etkinleştirir | ⬜ |
+| 451 | DisableWindowsFirewall | Güvenlik duvarını devre dışı bırakır (dikkat: güvenlik riski) | ⬜ |
+| 452 | GetSharedFolders | Paylaşılan klasörleri (net share) listeler | ⬜ |
+| 453 | CreateSharedFolder | Klasörü ağda paylaştırır, izin atar | ⬜ |
+| 454 | RemoveSharedFolder | Ağ paylaşımını kaldırır | ⬜ |
+| 455 | GetSystemRestorePoints | Sistem geri yükleme noktalarını listeler | ⬜ |
+| 456 | CreateSystemRestorePoint | Yeni sistem geri yükleme noktası oluşturur | ⬜ |
+| 457 | GetWindowsLicenseInfo | Windows lisans anahtarı ve aktivasyon durumu (WMI) | ⬜ |
+| 458 | GetComputerDescription | Bilgisayar açıklama metnini okur/yazar | ⬜ |
+| 459 | SetSystemTime | Sistem saatini ayarlar (admin gerekir) | ⬜ |
+| 460 | SyncSystemTimeNtp | NTP sunucusuyla saat senkronizasyonu yapar | ⬜ |
+
+---
+
+## 26. VERİ DOĞRULAMA & ANALİZ *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 461 | ValidateEmailAddress | RFC-5321 uyumlu e-posta adres doğrulaması (regex + MX kontrol) | ⬜ |
+| 462 | ValidateIpAddress | IPv4/IPv6 adres formatını doğrular | ⬜ |
+| 463 | ValidateUrl | URL formatını ve erişilebilirliğini kontrol eder | ⬜ |
+| 464 | ValidateCreditCard | Luhn algoritmasıyla kredi kartı numarası doğrular | ⬜ |
+| 465 | ValidateIbanNumber | IBAN kontrol basamağını doğrular | ⬜ |
+| 466 | ValidateTurkishPhone | Türkiye telefon formatı doğrulaması (+90 5xx xxx xx xx) | ⬜ |
+| 467 | CalculateDescriptiveStats | Min, Max, Ortalama, Medyan, Std sapma hesaplar | ⬜ |
+| 468 | DetectOutliersIqr | IQR yöntemiyle aykırı değerleri tespit eder | ⬜ |
+| 469 | CalculateCorrelation | İki sütun arasındaki Pearson korelasyonunu hesaplar | ⬜ |
+| 470 | FitLinearRegression | En küçük kareler yöntemiyle doğrusal regresyon | ⬜ |
+| 471 | MovingAverageSmoothing | Hareketli ortalama ile veri düzleştirme | ⬜ |
+| 472 | NormalizeDataMinMax | Veriyi 0-1 aralığına normalleştirir | ⬜ |
+| 473 | FrequencyDistribution | Belirtilen sütun için frekans dağılımı tablosu oluşturur | ⬜ |
+| 474 | CheckDataCompleteness | Eksik/boş hücre yüzdesini sütun bazında raporlar | ⬜ |
+| 475 | CompareColumnDifferences | İki sütun arasındaki farkları vurgular | ⬜ |
+
+---
+
+## 27. SÜREÇ & İŞ AKIŞI OTOMASYONU *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 476 | ChainModulesSequentially | JSON listesiyle modülleri sıralı zincirleme çalıştırır | ⬜ |
+| 477 | RetryOnFailure | Başarısız modülü N kez yeniden dener, loglar | ⬜ |
+| 478 | ConditionalModuleRunner | Koşul sağlanırsa A modülü, yoksa B modülü çalıştırır | ⬜ |
+| 479 | RunModuleOnAllWorkbooks | Açık tüm workbook'lara belirtilen modülü uygular | ⬜ |
+| 480 | WorkflowEngine | JSON tanımlı adım-adım iş akışını yürütür | ⬜ |
+| 481 | ApprovalWorkflow | Onay gerektiren eylemleri kuyruğa alır, dashboard'dan onaylanır | ⬜ |
+| 482 | TriggerWebhookOnChange | Belirtilen hücre değiştiğinde webhook tetikler | ⬜ |
+| 483 | BatchProcessRows | Sayfadaki her satır için modülü döngüsel çalıştırır | ⬜ |
+| 484 | RunModuleWithTimeout | Modülü zaman aşımı kontrolüyle çalıştırır | ⬜ |
+| 485 | LogWorkflowStep | Her adımı zaman damgasıyla sunucuya loglar | ⬜ |
+| 486 | PauseAndResume | Uzun işlemlerde ara verip devam etme desteği sağlar | ⬜ |
+| 487 | ParallelBatchRunner | Birden fazla modülü hızlı ardışık çalıştırır | ⬜ |
+| 488 | AutoDocumentWorkbook | Tüm sayfa/formül/named-range bilgisini dokümana döker | ⬜ |
+| 489 | SendModuleResultSummary | Modül çalışma özetini e-posta/Telegram ile gönderir | ⬜ |
+| 490 | RollbackOnError | Hata durumunda önceki veriyi yedekten geri yükler | ⬜ |
+
+---
+
+## 28. AĞ & İLETİŞİM PROTOKOLLERİ *(Yeni)*
+
+| # | MethodName | Açıklama | Durum |
+|---|-----------|----------|-------|
+| 491 | FtpUploadFile | FTP (Passive Mode) ile dosya yükler | ⬜ |
+| 492 | FtpDownloadFile | FTP sunucusundan dosya indirir | ⬜ |
+| 493 | FtpListDirectory | FTP dizin içeriğini listeler | ⬜ |
+| 494 | SftpUploadFile | WinSCP COM ile SFTP dosya yükleme | ⬜ |
+| 495 | SshExecuteCommand | Plink.exe ile SSH komut çalıştırır, çıktıyı döndürür | ⬜ |
+| 496 | SendUdpPacket | WScript.Shell ile UDP paket gönderir (basit protokoller) | ⬜ |
+| 497 | GetNetworkRoutes | `route print` çıktısını parse ederek aktif yolları listeler | ⬜ |
+| 498 | GetArpTable | `arp -a` çıktısını IP-MAC eşleştirmesiyle listeler | ⬜ |
+| 499 | DiscoverNetworkDevices | Yerel ağdaki aktif IP adreslerini ping sweep ile bulur | ⬜ |
+| 500 | GetMacVendor | MAC adresi üreticisini API'den sorgular | ⬜ |
+| 501 | SetDnsServers | Adaptörün DNS sunucularını PS ile değiştirir | ⬜ |
+| 502 | EnableDhcp | Belirtilen adaptörü DHCP moduna geçirir | ⬜ |
+| 503 | GetVpnConnections | Yüklü VPN bağlantılarını ve durumlarını listeler | ⬜ |
+| 504 | ConnectVpn | Belirtilen VPN profiline bağlanır (rasdial) | ⬜ |
+| 505 | DisconnectVpn | Aktif VPN bağlantısını sonlandırır | ⬜ |
