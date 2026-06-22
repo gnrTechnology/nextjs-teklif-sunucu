@@ -482,6 +482,7 @@ textarea.form-input { resize: vertical; min-height: 120px; line-height: 1.6; }
 .method-get  { background: var(--green-dim); color: var(--green); }
 .method-post { background: var(--accent-dim); color: var(--accent); }
 .method-patch{ background: var(--yellow-dim); color: var(--yellow); }
+.method-delete{ background: var(--red-dim); color: var(--red); }
 
 /* ── Grid 2 col ── */
 .grid-2 {
