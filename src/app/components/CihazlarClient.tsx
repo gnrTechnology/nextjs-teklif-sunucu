@@ -100,7 +100,7 @@ function DeviceCard({ snap }: { snap: DeviceSnapshot }) {
             <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 2 }}>
               {snap.mac}
               {snap.firmaAdi && ` · ${snap.firmaAdi}`}
-              {snap.data._ip && ` · ${String(snap.data._ip)}`}
+              {!!snap.data._ip && ` · ${String(snap.data._ip)}`}
             </div>
           </div>
         </div>
