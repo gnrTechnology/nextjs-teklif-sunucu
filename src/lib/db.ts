@@ -1,5 +1,11 @@
 import { neon } from "@neondatabase/serverless";
-import type { LicenseLog, LicensePostBody, LicenseRecord } from "./types";
+import type {
+  LicenseLog,
+  LicensePostBody,
+  LicenseRecord,
+  ModuleRecord,
+  ModuleUpsertBody,
+} from "./types";
 
 type LicenseRow = {
   mac_adresi: string;
@@ -183,6 +189,132 @@ export async function bulkToggleLicenses(
   `;
   return result.length;
 }
+
+// ─────────────────────────────────────────────
+// MODULES (VBA Modüller — Neon DB)
+// ─────────────────────────────────────────────
+
+type ModuleRow = {
+  id: number;
+  method_name: string;
+  description: string | null;
+  category: string | null;
+  active: boolean;
+  code: string;
+  created_at: string;
+  updated_at: string;
+};
+
+function rowToModule(r: ModuleRow): ModuleRecord {
+  return {
+    id: r.id,
+    methodName: r.method_name,
+    description: r.description ?? undefined,
+    category: r.category ?? "genel",
+    active: r.active,
+    code: r.code,
+    createdAt: new Date(r.created_at).toISOString(),
+    updatedAt: new Date(r.updated_at).toISOString(),
+  };
+}
+
+export async function ensureModulesTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS modules (
+      id          SERIAL PRIMARY KEY,
+      method_name TEXT UNIQUE NOT NULL,
+      description TEXT,
+      category    TEXT DEFAULT 'genel',
+      active      BOOLEAN DEFAULT true,
+      code        TEXT NOT NULL DEFAULT '',
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      updated_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
+export async function listDbModules(): Promise<ModuleRecord[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, method_name, description, category, active, code, created_at, updated_at
+    FROM modules
+    ORDER BY category, method_name
+  `;
+  return (rows as ModuleRow[]).map(rowToModule);
+}
+
+export async function getDbModuleByMethodName(
+  methodName: string,
+): Promise<ModuleRecord | undefined> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, method_name, description, category, active, code, created_at, updated_at
+    FROM modules
+    WHERE LOWER(method_name) = LOWER(${methodName})
+      AND active = true
+    LIMIT 1
+  `;
+  const row = rows[0] as ModuleRow | undefined;
+  return row ? rowToModule(row) : undefined;
+}
+
+export async function upsertDbModule(
+  body: ModuleUpsertBody,
+): Promise<ModuleRecord> {
+  const sql = getSql();
+  const now = new Date().toISOString();
+  const rows = await sql`
+    INSERT INTO modules (method_name, description, category, active, code, created_at, updated_at)
+    VALUES (
+      ${body.methodName},
+      ${body.description ?? null},
+      ${body.category ?? "genel"},
+      ${body.active ?? true},
+      ${body.code},
+      ${now},
+      ${now}
+    )
+    ON CONFLICT (method_name) DO UPDATE SET
+      description = EXCLUDED.description,
+      category    = EXCLUDED.category,
+      active      = EXCLUDED.active,
+      code        = EXCLUDED.code,
+      updated_at  = EXCLUDED.updated_at
+    RETURNING id, method_name, description, category, active, code, created_at, updated_at
+  `;
+  return rowToModule(rows[0] as ModuleRow);
+}
+
+export async function updateDbModule(
+  id: number,
+  fields: Partial<ModuleUpsertBody>,
+): Promise<ModuleRecord | null> {
+  const sql = getSql();
+  const now = new Date().toISOString();
+  const rows = await sql`
+    UPDATE modules SET
+      description = COALESCE(${fields.description ?? null}, description),
+      category    = COALESCE(${fields.category ?? null}, category),
+      active      = COALESCE(${fields.active ?? null}, active),
+      code        = COALESCE(${fields.code ?? null}, code),
+      updated_at  = ${now}
+    WHERE id = ${id}
+    RETURNING id, method_name, description, category, active, code, created_at, updated_at
+  `;
+  const row = rows[0] as ModuleRow | undefined;
+  return row ? rowToModule(row) : null;
+}
+
+export async function deleteDbModule(id: number): Promise<boolean> {
+  const sql = getSql();
+  const rows = await sql`
+    DELETE FROM modules WHERE id = ${id} RETURNING id
+  `;
+  return rows.length > 0;
+}
+
+// ─────────────────────────────────────────────
 
 /** SSE için: license_logs tablosundaki en son satırın id'sini döndürür */
 export async function getLatestLogId(): Promise<number> {

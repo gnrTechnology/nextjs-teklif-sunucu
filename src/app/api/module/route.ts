@@ -4,9 +4,9 @@ import { getRemoteModuleCode } from "@/lib/modules";
 import type { ModulePostBody } from "@/lib/types";
 
 /**
- * VBA: RunRemoteCode(methodName)
- * POST http://host:3000/api/module
- * Body: { "methodName": "ShowMessage" }
+ * VBA: zInternet.RunRemoteCode "MethodName"
+ * POST /api/module
+ * Body: { "methodName": "getLicense" }
  * Yanıt: { "code": "Public Function DynamicFunc(...)" }
  */
 export async function POST(request: NextRequest) {
@@ -22,14 +22,11 @@ export async function POST(request: NextRequest) {
     return errorResponse("methodName alanı zorunludur.", 400);
   }
 
-  const code = getRemoteModuleCode(body.methodName.trim());
+  const code = await getRemoteModuleCode(body.methodName.trim());
 
   if (!code) {
-    return errorResponse(`Bilinmeyen methodName: ${body.methodName}`, 404);
+    return errorResponse(`Bilinmeyen metodAdı: ${body.methodName}`, 404);
   }
 
-  return jsonResponse({
-    success: true,
-    code,
-  });
+  return jsonResponse({ success: true, code });
 }

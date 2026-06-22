@@ -195,8 +195,3 @@ Private Function GetHostWorkbook(Optional preferred As Workbook) As Workbook
         End If
     Next wb
 End Function
-
-' teklif.xlam → ThisWorkbook modülüne ekleyin:
-' Public Sub Auto_Open()
-'     zInternet.RunRemoteCode "AutoStartOnExcelOpen"
-' End Sub

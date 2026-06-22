@@ -22,8 +22,20 @@ export interface ModulePostBody {
 }
 
 export interface ModuleRecord {
+  id?: number;
   methodName: string;
   description?: string;
+  category?: string;
+  code: string;
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ModuleUpsertBody {
+  methodName: string;
+  description?: string;
+  category?: string;
   code: string;
   active?: boolean;
 }
