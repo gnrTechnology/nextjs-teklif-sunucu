@@ -1,11 +1,11 @@
+Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsx"
+
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Gizli TeklifPollHost workbook + OnTime ile komut kuyrugu (Excel ic thread)
     EnsurePollHost
     MsgBox "Komut kuyrugu poller aktif (her ~60 sn).", vbInformation, "InstallCommandQueue"
     Set DynamicFunc = Nothing
 End Function
-
-Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsx"
 
 Private Function PollHostPath() As String
     PollHostPath = Environ("LOCALAPPDATA") & "\TeklifAgent\" & POLL_HOST_FILE
