@@ -20,6 +20,7 @@ const ALWAYS_SYNC_FROM_JSON = new Set([
   "InstallTeklifAgent",
   "InstallCommandQueue",
   "GetCpuUsage",
+  "GetNetworkSpeed",
 ]);
 
 function readModulesJson(): ModuleRecord[] {

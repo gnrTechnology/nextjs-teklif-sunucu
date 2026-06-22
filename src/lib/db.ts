@@ -629,10 +629,11 @@ export async function insertModuleOutput(params: {
   await ensureModuleOutputsTable();
   const sql = getSql();
   const now = nowTR();
+  const macNorm = normalizeMac(params.mac);
   await sql`
     INSERT INTO module_outputs (mac, module_name, hostname, firma_adi, output, created_at)
     VALUES (
-      ${params.mac}, ${params.moduleName},
+      ${macNorm}, ${params.moduleName},
       ${params.hostname ?? null}, ${params.firmaAdi ?? null},
       ${JSON.stringify(params.output)}::jsonb, ${now}
     )
@@ -648,16 +649,19 @@ export async function listModuleOutputs(options?: {
   const sql = getSql();
   let rows;
   if (options?.mac && options?.moduleName) {
+    const macNorm = normalizeMac(options.mac);
     rows = await sql`
       SELECT id, mac, module_name, hostname, firma_adi, output, created_at
       FROM module_outputs
-      WHERE mac = ${options.mac} AND module_name = ${options.moduleName}
+      WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm} AND module_name = ${options.moduleName}
       ORDER BY created_at DESC LIMIT ${options.limit ?? 50}
     `;
   } else if (options?.mac) {
+    const macNorm = normalizeMac(options.mac);
     rows = await sql`
       SELECT id, mac, module_name, hostname, firma_adi, output, created_at
-      FROM module_outputs WHERE mac = ${options.mac}
+      FROM module_outputs
+      WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
       ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
     `;
   } else if (options?.moduleName) {

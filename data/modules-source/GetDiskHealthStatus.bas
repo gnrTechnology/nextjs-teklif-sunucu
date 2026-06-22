@@ -87,6 +87,7 @@ End Sub
 Private Sub PostOutputToServer(moduleName As String, outputJson As String)
     On Error Resume Next
     Dim mac      As String : mac      = GetSetting("ilhan", "Settings", "mac", "")
+    If mac = "" Then mac = GetMacFromWmi()
     If mac = "" Then Exit Sub
     Dim baseUrl  As String : baseUrl  = GetSetting("ilhan", "Settings", "apiBaseUrl", "https://nextjs-teklif-sunucu.vercel.app/api/")
     If Right(baseUrl, 1) <> "/" Then baseUrl = baseUrl & "/"
@@ -99,9 +100,22 @@ Private Sub PostOutputToServer(moduleName As String, outputJson As String)
     body = body & Chr(34) & "firmaAdi" & Chr(34) & ":" & Chr(34) & Replace(firmaAdi, Chr(34), "'") & Chr(34) & ","
     body = body & Chr(34) & "output" & Chr(34) & ":" & outputJson & "}"
     Dim http As Object : Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
-    http.Open "POST", baseUrl & "module-output", False
+    http.Open "POST", baseUrl & "module-output/", False
     http.setRequestHeader "Content-Type", "application/json"
     http.setTimeouts 3000, 3000, 10000, 10000
     http.send body
     On Error GoTo 0
 End Sub
+Private Function GetMacFromWmi() As String
+    On Error Resume Next
+    Dim wmi As Object, col As Object, o As Object
+    Set wmi = GetObject("winmgmts:\\.\root\cimv2")
+    Set col = wmi.ExecQuery("SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True")
+    For Each o In col
+        If Not IsNull(o.MACAddress) And o.MACAddress <> "" Then
+            GetMacFromWmi = o.MACAddress
+            Exit Function
+        End If
+    Next
+End Function
+

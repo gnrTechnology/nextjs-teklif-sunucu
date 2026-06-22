@@ -73,7 +73,7 @@ export default function ModulCiktilariClient({
     if (filterMac) sp.set("mac", filterMac);
     if (filterMod) sp.set("moduleName", filterMod);
     sp.set("limit", "300");
-    const res = await fetch(`/api/module-output?${sp}`);
+    const res = await fetch(`/api/module-output/?${sp}`);
     const json = await res.json();
     if (json.success) setOutputs(json.data);
     setLoading(false);
@@ -98,7 +98,7 @@ export default function ModulCiktilariClient({
   const handleDelete = async (id: number) => {
     if (!confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
     setDeleting(id);
-    await fetch(`/api/module-output/${id}`, { method: "DELETE" });
+    await fetch(`/api/module-output/${id}/`, { method: "DELETE" });
     setOutputs((prev) => prev.filter((o) => o.id !== id));
     setDeleting(null);
   };
