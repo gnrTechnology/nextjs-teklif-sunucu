@@ -567,10 +567,12 @@ export async function updateClientCommand(id: number, params: {
   `;
 }
 
-export async function deleteClientCommand(id: number): Promise<void> {
+export async function deleteClientCommand(id: number): Promise<boolean> {
+  if (!Number.isFinite(id) || id <= 0) return false;
   await ensureClientCommandsTable();
   const sql = getSql();
-  await sql`DELETE FROM client_commands WHERE id = ${id}`;
+  const rows = await sql`DELETE FROM client_commands WHERE id = ${id} RETURNING id`;
+  return rows.length > 0;
 }
 
 function rowToCommand(r: Record<string, unknown>): ClientCommand {

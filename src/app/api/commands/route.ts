@@ -30,8 +30,11 @@ export async function POST(request: NextRequest) {
 
 /** DELETE /api/commands?id= */
 export async function DELETE(request: NextRequest) {
-  const id = new URL(request.url).searchParams.get("id");
-  if (!id) return errorResponse("id zorunludur.", 400);
-  await deleteClientCommand(Number(id));
+  const idStr = new URL(request.url).searchParams.get("id");
+  if (!idStr) return errorResponse("id zorunludur.", 400);
+  const id = Number(idStr);
+  if (!Number.isFinite(id) || id <= 0) return errorResponse("Geçersiz id.", 400);
+  const ok = await deleteClientCommand(id);
+  if (!ok) return errorResponse("Komut bulunamadı.", 404);
   return jsonResponse({ success: true });
 }

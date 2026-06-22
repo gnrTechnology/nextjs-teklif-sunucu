@@ -83,7 +83,10 @@ End Function
 Private Function PollCodeMain() As String
     Dim s As String
     s = "Option Explicit" & vbCrLf & vbCrLf
+    s = s & "Private gCmdId As String" & vbCrLf
+    s = s & "Private gBaseUrl As String" & vbCrLf & vbCrLf
     s = s & "Public Sub CommandQueueTick()" & vbCrLf
+    s = s & "    gCmdId = """"" & vbCrLf
     s = s & "    On Error GoTo TickErr" & vbCrLf
     s = s & "    Dim baseUrl As String" & vbCrLf
     s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
@@ -101,6 +104,8 @@ Private Function PollCodeMain() As String
     s = s & "        Dim modName As String : modName = JsonStr(resp, ""moduleName"")" & vbCrLf
     s = s & "        Dim cmdParam As String : cmdParam = JsonStr(resp, ""param"")" & vbCrLf
     s = s & "        If Len(cmdId) > 0 And Len(modName) > 0 And cmdId <> ""null"" Then" & vbCrLf
+    s = s & "            gCmdId = cmdId" & vbCrLf
+    s = s & "            gBaseUrl = baseUrl" & vbCrLf
     s = s & "            Dim runErr As String" & vbCrLf
     s = s & "            runErr = RunRemoteModule(modName, cmdParam)" & vbCrLf
     s = s & "            If Len(runErr) > 0 Then" & vbCrLf
@@ -108,11 +113,14 @@ Private Function PollCodeMain() As String
     s = s & "            Else" & vbCrLf
     s = s & "                PatchDone baseUrl, cmdId, ""done"", ""OK"", """"" & vbCrLf
     s = s & "            End If" & vbCrLf
+    s = s & "            gCmdId = """"" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    Set http = Nothing" & vbCrLf
     s = s & "    GoTo Reschedule" & vbCrLf
     s = s & "TickErr:" & vbCrLf
+    s = s & "    If Len(gCmdId) > 0 Then PatchDone gBaseUrl, gCmdId, ""error"", """", Err.Description" & vbCrLf
+    s = s & "    gCmdId = """"" & vbCrLf
     s = s & "    Debug.Print ""CommandQueueTick hata: "" & Err.Description" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
     s = s & "    Application.OnTime Now + TimeValue(""00:01:00""), ""'TeklifPollHost.xlsx'!CmdPoll.CommandQueueTick""" & vbCrLf

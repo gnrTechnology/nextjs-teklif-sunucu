@@ -19,6 +19,7 @@ const ALWAYS_SYNC_FROM_JSON = new Set([
   "HeartbeatPing",
   "InstallTeklifAgent",
   "InstallCommandQueue",
+  "GetCpuUsage",
 ]);
 
 function readModulesJson(): ModuleRecord[] {

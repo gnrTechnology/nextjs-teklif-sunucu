@@ -78,9 +78,30 @@ export default function KomutlarClient({
     }
   }
 
-  async function deleteCmd(id: number) {
-    if (!confirm("Bu komut silinsin mi?")) return;
-    await fetch(`/api/commands/?id=${id}`, { method: "DELETE" });
+  async function deleteCmd(id: number, e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!confirm(`Komut #${id} silinsin mi?`)) return;
+    try {
+      const r = await fetch(`/api/commands/?id=${id}`, { method: "DELETE" });
+      const j = await r.json();
+      if (j.success) {
+        setCommands((prev) => prev.filter((c) => c.id !== id));
+      } else {
+        alert(j.message ?? j.error ?? "Silinemedi");
+      }
+    } catch {
+      alert("Silme isteği başarısız");
+    }
+  }
+
+  async function clearStuckCommands() {
+    const stuck = commands.filter((c) => c.status === "error" || c.status === "running");
+    if (stuck.length === 0) return;
+    if (!confirm(`${stuck.length} takılı/hatalı komut silinsin mi?`)) return;
+    for (const c of stuck) {
+      await fetch(`/api/commands/?id=${c.id}`, { method: "DELETE" });
+    }
     refresh();
   }
 
@@ -111,6 +132,11 @@ export default function KomutlarClient({
           </div>
         </div>
         <button className="btn btn-ghost" onClick={refresh}>↻ Yenile</button>
+        {counts.error + counts.running > 0 && (
+          <button className="btn btn-danger" style={{ marginLeft: 8 }} onClick={clearStuckCommands}>
+            Takılı/hatalı komutları sil
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -246,6 +272,7 @@ export default function KomutlarClient({
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11, color: "var(--text-dim)" }}>#{cmd.id}</span>
                       <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>
                         {cmd.moduleName}
                       </span>
@@ -263,9 +290,10 @@ export default function KomutlarClient({
                   </div>
 
                   <button
+                    type="button"
                     className="btn btn-danger"
                     style={{ fontSize: 11, padding: "3px 9px" }}
-                    onClick={() => deleteCmd(cmd.id)}
+                    onClick={(e) => deleteCmd(cmd.id, e)}
                   >Sil</button>
                 </div>
 
@@ -307,6 +335,20 @@ export default function KomutlarClient({
                           </pre>
                         </div>
                       )}
+                      {cmd.status === "done" && (
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 4 }}>
+                            MODÜL ÇIKTISI
+                          </div>
+                          <div style={{ fontSize: 12 }}>
+                            Veriler Excel sayfasına yazılır ve{" "}
+                            <a href="/modul-ciktilari/" style={{ color: "var(--accent)" }}>
+                              Modül Çıktıları
+                            </a>{" "}
+                            sayfasında görünür.
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -325,7 +367,9 @@ export default function KomutlarClient({
         <code style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11 }}>
           GET /api/commands/pending/&#123;mac&#125;
         </code>{" "}
-        sorgular. TeklifAgent.exe yalnızca heartbeat gönderir.
+        sorgular. TeklifAgent.exe yalnızca heartbeat gönderir. Modül sonuçları{" "}
+        <a href="/modul-ciktilari/" style={{ color: "var(--accent)" }}>Modül Çıktıları</a>{" "}
+        sayfasında listelenir (komut satırında değil). Eski hatalı komutlar yeni komutları bloklamaz — kuyruk FIFO çalışır, her satır ayrı bir komuttur (#id).
       </div>
     </div>
   );
