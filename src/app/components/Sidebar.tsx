@@ -11,6 +11,8 @@ const NAV = [
   { href: "/firma-modulleri",  icon: "⚡", label: "Oto. Modüller"    },
   { href: "/heartbeats",       icon: "📡", label: "Nabız İzleme"      },
   { href: "/cihazlar",         icon: "🖥", label: "Cihaz Bilgileri"   },
+  { href: "/komutlar",         icon: "🎮", label: "Uzak Komutlar"     },
+  { href: "/analitik",         icon: "📊", label: "Analitik"          },
   { href: "/api-referans",     icon: "🔌", label: "API Referans"      },
 ];
 

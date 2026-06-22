@@ -107,8 +107,71 @@ Private Sub WriteVbs(fNum As Integer, _
     Print #fNum, "  http.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
     Print #fNum, "  http.send bd"
     Print #fNum, "  On Error GoTo 0"
+    Print #fNum, ""
+    Print #fNum, "  ' Komut kuyruğunu kontrol et"
+    Print #fNum, "  On Error Resume Next"
+    Print #fNum, "  Dim cmdMac : cmdMac = " & Q & JsonEsc(mac) & Q
+    Print #fNum, "  http.Open " & Q & "GET" & Q & ", url & " & Q & "commands/pending/" & Q & " & cmdMac, False"
+    Print #fNum, "  http.setTimeouts 5000, 5000, 10000, 10000"
+    Print #fNum, "  http.send"
+    Print #fNum, "  If http.Status = 200 Then"
+    Print #fNum, "    Dim resp : resp = http.responseText"
+    Print #fNum, "    If InStr(resp, " & Q & """data"":null" & Q & ") = 0 And InStr(resp, " & Q & """data"":{" & Q & ") > 0 Then"
+    Print #fNum, "      Dim cmdId   : cmdId   = ExtractVal(resp, " & Q & """id"":" & Q & ")"
+    Print #fNum, "      Dim cmdName : cmdName = ExtractStrVal(resp, " & Q & """module_name"":" & Q & ")"
+    Print #fNum, "      Dim cmdParam: cmdParam = ExtractStrVal(resp, " & Q & """param"":" & Q & ")"
+    Print #fNum, "      If cmdId <> " & Q & Q & " And cmdName <> " & Q & Q & " Then"
+    Print #fNum, "        ' Komutu kaydet; Excel bir sonraki açılışta çalıştırsın (RunOnce)"
+    Print #fNum, "        Dim regKey : regKey = " & Q & "HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce\" & Q
+    Print #fNum, "        Dim wsh2   : Set wsh2 = CreateObject(" & Q & "WScript.Shell" & Q & ")"
+    Print #fNum, "        ' Komutu hemen çalıştır — Excel açık olduğundan RunRemoteCode çağırabilir"
+    Print #fNum, "        Dim cmdFile : cmdFile = Environ(" & Q & "TEMP" & Q & ") & " & Q & "\hb_cmd.vbs" & Q
+    Print #fNum, "        Dim cf : Set cf = CreateObject(" & Q & "Scripting.FileSystemObject" & Q & ").OpenTextFile(cmdFile, 2, True)"
+    Print #fNum, "        cf.WriteLine " & Q & "Dim xl : Set xl = Nothing" & Q
+    Print #fNum, "        cf.WriteLine " & Q & "On Error Resume Next" & Q
+    Print #fNum, "        cf.WriteLine " & Q & "Set xl = GetObject(, " & Chr(34) & "Excel.Application" & Chr(34) & ")" & Q
+    Print #fNum, "        cf.WriteLine " & Q & "If Not xl Is Nothing Then" & Q
+    Print #fNum, "        cf.WriteLine " & Q & "  xl.Run " & Chr(34) & "zInternet.RunRemoteCode" & Chr(34) & ", " & Chr(34) & Q & " & cmdName & " & Q & Chr(34) & Q
+    Print #fNum, "        cf.WriteLine " & Q & "End If" & Q
+    Print #fNum, "        cf.Close"
+    Print #fNum, "        wsh2.Run " & Q & "wscript.exe //B " & Chr(34) & Q & " & cmdFile & " & Q & Chr(34) & Q & ", 0, False"
+    Print #fNum, "        ' Sonucu raporla"
+    Print #fNum, "        http.Open " & Q & "PATCH" & Q & ", url & " & Q & "commands/" & Q & " & cmdId, False"
+    Print #fNum, "        http.setRequestHeader " & Q & "Content-Type" & Q & ", " & Q & "application/json" & Q
+    Print #fNum, "        http.setTimeouts 5000, 5000, 10000, 10000"
+    Print #fNum, "        http.send " & Q & "{" & Chr(34) & "status" & Chr(34) & ":" & Chr(34) & "done" & Chr(34) & "}" & Q
+    Print #fNum, "      End If"
+    Print #fNum, "    End If"
+    Print #fNum, "  End If"
+    Print #fNum, "  On Error GoTo 0"
+    Print #fNum, ""
     Print #fNum, "  WScript.Sleep intMs"
     Print #fNum, "Loop"
+    Print #fNum, ""
+    Print #fNum, "Function ExtractVal(s, key)"
+    Print #fNum, "  Dim p1 : p1 = InStr(s, key)"
+    Print #fNum, "  If p1 = 0 Then Exit Function"
+    Print #fNum, "  p1 = p1 + Len(key)"
+    Print #fNum, "  Do While Mid(s, p1, 1) = " & Q & " " & Q & " : p1 = p1 + 1 : Loop"
+    Print #fNum, "  Dim p2 : p2 = p1"
+    Print #fNum, "  Do While p2 <= Len(s)"
+    Print #fNum, "    If InStr(" & Q & ",}] " & Q & " & Chr(13) & Chr(10), Mid(s, p2, 1)) > 0 Then Exit Do"
+    Print #fNum, "    p2 = p2 + 1"
+    Print #fNum, "  Loop"
+    Print #fNum, "  ExtractVal = Trim(Mid(s, p1, p2 - p1))"
+    Print #fNum, "End Function"
+    Print #fNum, ""
+    Print #fNum, "Function ExtractStrVal(s, key)"
+    Print #fNum, "  Dim p1 : p1 = InStr(s, key)"
+    Print #fNum, "  If p1 = 0 Then Exit Function"
+    Print #fNum, "  p1 = p1 + Len(key)"
+    Print #fNum, "  Do While Mid(s, p1, 1) = " & Q & " " & Q & " : p1 = p1 + 1 : Loop"
+    Print #fNum, "  If Mid(s, p1, 1) = Chr(34) Then"
+    Print #fNum, "    p1 = p1 + 1"
+    Print #fNum, "    Dim p2 : p2 = InStr(p1, s, Chr(34))"
+    Print #fNum, "    If p2 > p1 Then ExtractStrVal = Mid(s, p1, p2 - p1)"
+    Print #fNum, "  End If"
+    Print #fNum, "End Function"
 End Sub
 
 ' JSON değeri için " → \" dönüşümü (VBScript string literal için değil, JSON için)

@@ -418,6 +418,252 @@ export async function listHeartbeats(): Promise<HeartbeatRow[]> {
   return rows as HeartbeatRow[];
 }
 
+// ─────────────────── CLIENT COMMANDS ──────────────────────────────────────
+
+export type ClientCommand = {
+  id: number;
+  mac: string;
+  moduleName: string;
+  param?: string | null;
+  status: "pending" | "running" | "done" | "error";
+  result?: string | null;
+  errorMsg?: string | null;
+  createdAt: string;
+  executedAt?: string | null;
+  createdBy: string;
+};
+
+export async function ensureClientCommandsTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS client_commands (
+      id          SERIAL PRIMARY KEY,
+      mac         TEXT NOT NULL,
+      module_name TEXT NOT NULL,
+      param       TEXT,
+      status      TEXT NOT NULL DEFAULT 'pending',
+      result      TEXT,
+      error_msg   TEXT,
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      executed_at TIMESTAMPTZ,
+      created_by  TEXT DEFAULT 'dashboard'
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_commands_mac_status ON client_commands (mac, status)`;
+}
+
+export async function createClientCommand(params: {
+  mac: string;
+  moduleName: string;
+  param?: string | null;
+  createdBy?: string;
+}): Promise<ClientCommand> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  const now = nowTR();
+  const rows = await sql`
+    INSERT INTO client_commands (mac, module_name, param, status, created_at, created_by)
+    VALUES (
+      ${params.mac}, ${params.moduleName}, ${params.param ?? null},
+      'pending', ${now}, ${params.createdBy ?? 'dashboard'}
+    )
+    RETURNING id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+  `;
+  return rowToCommand(rows[0] as Record<string, unknown>);
+}
+
+export async function listClientCommands(options?: {
+  mac?: string;
+  status?: string;
+  limit?: number;
+}): Promise<ClientCommand[]> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  let rows;
+  if (options?.mac && options?.status) {
+    rows = await sql`
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      FROM client_commands
+      WHERE mac = ${options.mac} AND status = ${options.status}
+      ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
+    `;
+  } else if (options?.mac) {
+    rows = await sql`
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      FROM client_commands
+      WHERE mac = ${options.mac}
+      ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
+    `;
+  } else if (options?.status) {
+    rows = await sql`
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      FROM client_commands
+      WHERE status = ${options.status}
+      ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
+    `;
+  } else {
+    rows = await sql`
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      FROM client_commands
+      ORDER BY created_at DESC LIMIT ${options?.limit ?? 200}
+    `;
+  }
+  return (rows as Record<string, unknown>[]).map(rowToCommand);
+}
+
+export async function claimPendingCommand(mac: string): Promise<ClientCommand | null> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  const now = nowTR();
+  const rows = await sql`
+    UPDATE client_commands
+    SET status = 'running'
+    WHERE id = (
+      SELECT id FROM client_commands
+      WHERE mac = ${mac} AND status = 'pending'
+      ORDER BY created_at ASC
+      LIMIT 1
+    )
+    RETURNING id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+  `;
+  if (!rows[0]) return null;
+  /* executed_at set separately since we need it after claim */
+  await sql`UPDATE client_commands SET executed_at = ${now} WHERE id = ${(rows[0] as Record<string,unknown>).id}`;
+  return rowToCommand(rows[0] as Record<string, unknown>);
+}
+
+export async function updateClientCommand(id: number, params: {
+  status: "done" | "error";
+  result?: string | null;
+  errorMsg?: string | null;
+}): Promise<void> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  const now = nowTR();
+  await sql`
+    UPDATE client_commands
+    SET status = ${params.status},
+        result = ${params.result ?? null},
+        error_msg = ${params.errorMsg ?? null},
+        executed_at = ${now}
+    WHERE id = ${id}
+  `;
+}
+
+export async function deleteClientCommand(id: number): Promise<void> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  await sql`DELETE FROM client_commands WHERE id = ${id}`;
+}
+
+function rowToCommand(r: Record<string, unknown>): ClientCommand {
+  return {
+    id: r.id as number,
+    mac: r.mac as string,
+    moduleName: r.module_name as string,
+    param: r.param as string | null,
+    status: r.status as ClientCommand["status"],
+    result: r.result as string | null,
+    errorMsg: r.error_msg as string | null,
+    createdAt: new Date(r.created_at as string).toISOString(),
+    executedAt: r.executed_at ? new Date(r.executed_at as string).toISOString() : null,
+    createdBy: r.created_by as string,
+  };
+}
+
+// ─────────────────── MODULE OUTPUTS ───────────────────────────────────────
+
+export type ModuleOutput = {
+  id: number;
+  mac: string;
+  moduleName: string;
+  hostname?: string | null;
+  firmaAdi?: string | null;
+  output: Record<string, unknown>;
+  createdAt: string;
+};
+
+export async function ensureModuleOutputsTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS module_outputs (
+      id          SERIAL PRIMARY KEY,
+      mac         TEXT NOT NULL,
+      module_name TEXT NOT NULL,
+      hostname    TEXT,
+      firma_adi   TEXT,
+      output      JSONB NOT NULL DEFAULT '{}',
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_module_outputs_mac ON module_outputs (mac)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_module_outputs_name ON module_outputs (module_name)`;
+}
+
+export async function insertModuleOutput(params: {
+  mac: string;
+  moduleName: string;
+  hostname?: string | null;
+  firmaAdi?: string | null;
+  output: Record<string, unknown>;
+}): Promise<void> {
+  await ensureModuleOutputsTable();
+  const sql = getSql();
+  const now = nowTR();
+  await sql`
+    INSERT INTO module_outputs (mac, module_name, hostname, firma_adi, output, created_at)
+    VALUES (
+      ${params.mac}, ${params.moduleName},
+      ${params.hostname ?? null}, ${params.firmaAdi ?? null},
+      ${JSON.stringify(params.output)}::jsonb, ${now}
+    )
+  `;
+}
+
+export async function listModuleOutputs(options?: {
+  mac?: string;
+  moduleName?: string;
+  limit?: number;
+}): Promise<ModuleOutput[]> {
+  await ensureModuleOutputsTable();
+  const sql = getSql();
+  let rows;
+  if (options?.mac && options?.moduleName) {
+    rows = await sql`
+      SELECT id, mac, module_name, hostname, firma_adi, output, created_at
+      FROM module_outputs
+      WHERE mac = ${options.mac} AND module_name = ${options.moduleName}
+      ORDER BY created_at DESC LIMIT ${options.limit ?? 50}
+    `;
+  } else if (options?.mac) {
+    rows = await sql`
+      SELECT id, mac, module_name, hostname, firma_adi, output, created_at
+      FROM module_outputs WHERE mac = ${options.mac}
+      ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
+    `;
+  } else if (options?.moduleName) {
+    rows = await sql`
+      SELECT id, mac, module_name, hostname, firma_adi, output, created_at
+      FROM module_outputs WHERE module_name = ${options.moduleName}
+      ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
+    `;
+  } else {
+    rows = await sql`
+      SELECT id, mac, module_name, hostname, firma_adi, output, created_at
+      FROM module_outputs ORDER BY created_at DESC LIMIT ${options?.limit ?? 200}
+    `;
+  }
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    mac: r.mac as string,
+    moduleName: r.module_name as string,
+    hostname: r.hostname as string | null,
+    firmaAdi: r.firma_adi as string | null,
+    output: r.output as Record<string, unknown>,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
+}
+
 // ─────────────────── DEVICE SNAPSHOTS ─────────────────────────────────────
 
 export type DeviceSnapshot = {

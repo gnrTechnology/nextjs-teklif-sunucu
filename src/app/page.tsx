@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { listLicenses, listLogs } from "@/lib/db";
+import { listLicenses, listLogs, listHeartbeats, listDeviceSnapshots } from "@/lib/db";
 import { listFirmAutoModules } from "@/lib/firm-auto-modules";
 import { listModules } from "@/lib/modules";
 import Refresher from "./components/Refresher";
@@ -37,16 +37,29 @@ function EventBadge({ type }: { type: string }) {
 }
 
 export default async function Dashboard() {
-  const [licenses, modules, firmAutoModules, logs] = await Promise.all([
+  const [licenses, modules, firmAutoModules, logs, heartbeats, snapshots] = await Promise.all([
     listLicenses(),
     listModules(),
-    Promise.resolve(listFirmAutoModules()),
+    listFirmAutoModules(),
     listLogs(10),
+    listHeartbeats(),
+    listDeviceSnapshots(),
   ]);
 
   const activeLicenses = licenses.filter((l) =>
     ["true", "1", "active", "evet"].includes(l.license.toLowerCase()),
   );
+
+  const now = Date.now();
+  const onlineDevices = heartbeats.filter(
+    (h) => now - new Date(h.last_seen).getTime() < 5 * 60 * 1000
+  );
+  const idleDevices = heartbeats.filter((h) => {
+    const ms = now - new Date(h.last_seen).getTime();
+    return ms >= 5 * 60 * 1000 && ms < 60 * 60 * 1000;
+  });
+
+  const totalModuleRuns = modules.reduce((sum, m) => sum + ((m as {runCount?: number}).runCount ?? 0), 0);
 
   const lastUpdated = licenses.length > 0
     ? new Date(licenses[0].updatedAt).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
@@ -67,22 +80,22 @@ export default async function Dashboard() {
         <div className="stat-card">
           <div className="stat-label">Toplam Lisans</div>
           <div className="stat-value">{licenses.length}</div>
-          <div className="stat-hint">Kayıtlı cihaz</div>
+          <div className="stat-hint">{activeLicenses.length} aktif · {licenses.length - activeLicenses.length} pasif</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Aktif</div>
-          <div className="stat-value green">{activeLicenses.length}</div>
-          <div className="stat-hint">Onaylı lisans</div>
+          <div className="stat-label">Online Cihaz</div>
+          <div className="stat-value green">{onlineDevices.length}</div>
+          <div className="stat-hint">{idleDevices.length} boşta · {heartbeats.length} toplam</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Uzak Modül</div>
           <div className="stat-value accent">{modules.length}</div>
-          <div className="stat-hint">VBA modülü</div>
+          <div className="stat-hint">{totalModuleRuns} toplam çalıştırma</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Son Güncelleme</div>
-          <div className="stat-value" style={{ fontSize: "16px", marginTop: "4px" }}>{lastUpdated ?? "—"}</div>
-          <div className="stat-hint">En son kayıt</div>
+          <div className="stat-label">Cihaz Anlık Görüntü</div>
+          <div className="stat-value" style={{ fontSize: 28 }}>{snapshots.length}</div>
+          <div className="stat-hint">Toplanan donanım verisi</div>
         </div>
       </div>
 
