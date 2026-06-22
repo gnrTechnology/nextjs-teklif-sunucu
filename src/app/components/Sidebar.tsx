@@ -10,6 +10,7 @@ const NAV = [
   { href: "/moduller",         icon: "📦", label: "Uzak Modüller"     },
   { href: "/firma-modulleri",  icon: "⚡", label: "Oto. Modüller"    },
   { href: "/heartbeats",       icon: "📡", label: "Nabız İzleme"      },
+  { href: "/cihazlar",         icon: "🖥", label: "Cihaz Bilgileri"   },
   { href: "/api-referans",     icon: "🔌", label: "API Referans"      },
 ];
 

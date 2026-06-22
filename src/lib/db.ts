@@ -418,6 +418,92 @@ export async function listHeartbeats(): Promise<HeartbeatRow[]> {
   return rows as HeartbeatRow[];
 }
 
+// ─────────────────── DEVICE SNAPSHOTS ─────────────────────────────────────
+
+export type DeviceSnapshot = {
+  mac: string;
+  hostname?: string | null;
+  firmaAdi?: string | null;
+  data: Record<string, unknown>;
+  collectedAt: string;
+};
+
+export async function ensureDeviceSnapshotsTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS device_snapshots (
+      mac          TEXT PRIMARY KEY,
+      hostname     TEXT,
+      firma_adi    TEXT,
+      data         JSONB NOT NULL DEFAULT '{}',
+      collected_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
+export async function upsertDeviceSnapshot(params: {
+  mac: string;
+  hostname?: string | null;
+  firmaAdi?: string | null;
+  data: Record<string, unknown>;
+}): Promise<void> {
+  await ensureDeviceSnapshotsTable();
+  const sql = getSql();
+  const now = nowTR();
+  await sql`
+    INSERT INTO device_snapshots (mac, hostname, firma_adi, data, collected_at)
+    VALUES (
+      ${params.mac},
+      ${params.hostname ?? null},
+      ${params.firmaAdi ?? null},
+      ${JSON.stringify(params.data)}::jsonb,
+      ${now}
+    )
+    ON CONFLICT (mac) DO UPDATE SET
+      hostname     = COALESCE(EXCLUDED.hostname,   device_snapshots.hostname),
+      firma_adi    = COALESCE(EXCLUDED.firma_adi,  device_snapshots.firma_adi),
+      data         = EXCLUDED.data,
+      collected_at = EXCLUDED.collected_at
+  `;
+}
+
+export async function listDeviceSnapshots(): Promise<DeviceSnapshot[]> {
+  await ensureDeviceSnapshotsTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT mac, hostname, firma_adi, data, collected_at
+    FROM device_snapshots
+    ORDER BY collected_at DESC
+  `;
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    mac: r.mac as string,
+    hostname: r.hostname as string | null,
+    firmaAdi: r.firma_adi as string | null,
+    data: r.data as Record<string, unknown>,
+    collectedAt: new Date(r.collected_at as string).toISOString(),
+  }));
+}
+
+export async function getDeviceSnapshot(mac: string): Promise<DeviceSnapshot | undefined> {
+  await ensureDeviceSnapshotsTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT mac, hostname, firma_adi, data, collected_at
+    FROM device_snapshots
+    WHERE mac = ${mac}
+    LIMIT 1
+  `;
+  const r = rows[0] as Record<string, unknown> | undefined;
+  if (!r) return undefined;
+  return {
+    mac: r.mac as string,
+    hostname: r.hostname as string | null,
+    firmaAdi: r.firma_adi as string | null,
+    data: r.data as Record<string, unknown>,
+    collectedAt: new Date(r.collected_at as string).toISOString(),
+  };
+}
+
 // ─────────────────── FIRM AUTO MODULES ────────────────────────────────────
 
 export async function ensureFirmAutoModulesTable(): Promise<void> {

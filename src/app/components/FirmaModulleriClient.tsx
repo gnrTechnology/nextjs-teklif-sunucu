@@ -1,8 +1,142 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { FirmAutoModuleRecord, FirmAutoStartModule } from "@/lib/types";
+
+/* ── Kategori renkleri (ModullerClient ile uyumlu) ───── */
+const CAT_COLOR: Record<string, string> = {
+  lisans: "#10b981", sistem: "#f59e0b", dosya: "#8b5cf6", internet: "#3b82f6",
+  excel: "#10b981", powershell: "#f59e0b", registry: "#f97316", guvenlik: "#ef4444",
+  bildirim: "#3b82f6", genel: "#6b7280", zamanlanmis: "#a78bfa", uzman: "#ec4899",
+  donanim: "#06b6d4",
+};
+
+/* ── Aranabilir modül seçici ─────────────────────────── */
+function SearchableModuleSelect({
+  value,
+  onChange,
+  modules,
+  moduleCategories,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  modules: string[];
+  moduleCategories?: Record<string, string>;
+}) {
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef  = useRef<HTMLDivElement>(null);
+
+  const displayText = !open && value ? value : search;
+  const filtered = modules.filter((m) =>
+    m.toLowerCase().includes(search.toLowerCase())
+  );
+
+  useEffect(() => {
+    if (!open) setSearch("");
+  }, [open]);
+
+  function select(m: string) {
+    onChange(m);
+    setOpen(false);
+    setSearch("");
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ position: "relative" }}>
+        <input
+          ref={inputRef}
+          className="form-input mono"
+          value={displayText}
+          placeholder="Modül adı yazarak ara…"
+          onFocus={() => setOpen(true)}
+          onBlur={(e) => {
+            if (!listRef.current?.contains(e.relatedTarget as Node)) {
+              setOpen(false);
+            }
+          }}
+          onChange={(e) => { setSearch(e.target.value); onChange(""); }}
+          autoComplete="off"
+        />
+        {value && (
+          <button
+            onMouseDown={() => { onChange(""); setSearch(""); inputRef.current?.focus(); }}
+            style={{
+              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--text-dim)", fontSize: 14, padding: "2px 4px",
+            }}
+          >×</button>
+        )}
+      </div>
+
+      {open && (
+        <div
+          ref={listRef}
+          tabIndex={-1}
+          style={{
+            position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 500,
+            background: "var(--bg-card)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)", maxHeight: 280, overflowY: "auto",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+          }}
+        >
+          {filtered.length === 0 ? (
+            <div style={{ padding: "12px 14px", fontSize: 12, color: "var(--text-dim)" }}>
+              Sonuç bulunamadı
+            </div>
+          ) : (
+            filtered.map((m) => {
+              const cat = moduleCategories?.[m];
+              const color = CAT_COLOR[cat ?? ""] ?? "#6b7280";
+              return (
+                <div
+                  key={m}
+                  onMouseDown={() => select(m)}
+                  style={{
+                    padding: "9px 14px", cursor: "pointer", display: "flex",
+                    alignItems: "center", gap: 10,
+                    background: m === value ? "var(--accent-dim)" : "transparent",
+                    borderBottom: "1px solid var(--border)",
+                    transition: "background 0.1s",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--bg)"; }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background = m === value ? "var(--accent-dim)" : "transparent";
+                  }}
+                >
+                  <span style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: color, flexShrink: 0,
+                  }} />
+                  <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, flex: 1 }}>
+                    {m}
+                  </span>
+                  {cat && (
+                    <span style={{ fontSize: 10, color, opacity: 0.8 }}>{cat}</span>
+                  )}
+                </div>
+              );
+            })
+          )}
+          <div
+            onMouseDown={() => { onChange("__custom__"); setOpen(false); }}
+            style={{
+              padding: "9px 14px", cursor: "pointer", fontSize: 12,
+              color: "var(--text-muted)", borderTop: "1px solid var(--border)",
+              display: "flex", alignItems: "center", gap: 8,
+            }}
+          >
+            ✏️ Özel modül adı gir
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── Küçük yardımcılar ─────────────────────────────── */
 function Badge({ ok, labels = ["Aktif", "Pasif"] }: { ok: boolean; labels?: [string, string] }) {
@@ -67,6 +201,7 @@ function ModuleEditPanel({
   firmaAdi,
   editing,
   availableModules,
+  moduleCategories,
   maxOrder,
   onClose,
   onSaved,
@@ -74,21 +209,25 @@ function ModuleEditPanel({
   firmaAdi: string;
   editing: FirmAutoStartModule | null;
   availableModules: string[];
+  moduleCategories: Record<string, string>;
   maxOrder: number;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [methodName, setMethodName] = useState(editing?.methodName ?? "");
-  const [order, setOrder] = useState(editing?.order ?? maxOrder + 1);
-  const [delay, setDelay] = useState(editing?.delaySeconds ?? 0);
-  const [saving, setSaving] = useState(false);
+  const [customName, setCustomName]  = useState("");
+  const [order, setOrder]            = useState(editing?.order ?? maxOrder + 1);
+  const [delay, setDelay]            = useState(editing?.delaySeconds ?? 0);
+  const [saving, setSaving]          = useState(false);
+
+  const finalName = methodName === "__custom__" ? customName.trim() : methodName.trim();
 
   async function save() {
-    if (!methodName.trim()) { alert("Modül adı zorunludur."); return; }
+    if (!finalName) { alert("Modül adı zorunludur."); return; }
     setSaving(true);
     const body = editing
-      ? { updateModule: { methodName: methodName.trim(), order, delaySeconds: delay } }
-      : { addModule:    { methodName: methodName.trim(), order, delaySeconds: delay } };
+      ? { updateModule: { methodName: finalName, order, delaySeconds: delay } }
+      : { addModule:    { methodName: finalName, order, delaySeconds: delay } };
     const r = await apiFetch(`/api/firm-modules/${encodeURIComponent(firmaAdi)}`, "PATCH", body);
     setSaving(false);
     if (r.success) { onSaved(); onClose(); }
@@ -103,15 +242,33 @@ function ModuleEditPanel({
           {editing ? (
             <input className="form-input mono" value={methodName} disabled style={{ opacity: 0.6 }} />
           ) : (
-            <select className="form-input" value={methodName} onChange={(e) => setMethodName(e.target.value)}>
-              <option value="">— Seçin —</option>
-              {availableModules.map((m) => <option key={m} value={m}>{m}</option>)}
-              <option value="__custom__">— Özel giriş —</option>
-            </select>
+            <SearchableModuleSelect
+              value={methodName}
+              onChange={setMethodName}
+              modules={availableModules}
+              moduleCategories={moduleCategories}
+            />
           )}
           {(!editing && methodName === "__custom__") && (
-            <input className="form-input mono" placeholder="MethodName" style={{ marginTop: 6 }}
-              onChange={(e) => setMethodName(e.target.value)} />
+            <input
+              className="form-input mono"
+              placeholder="MethodName girin"
+              style={{ marginTop: 6 }}
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+            />
+          )}
+          {finalName && finalName !== "__custom__" && (
+            <div style={{
+              marginTop: 6, padding: "6px 10px", borderRadius: "var(--radius-sm)",
+              background: "var(--accent-dim)", fontSize: 12,
+              color: "var(--accent)", fontFamily: "var(--font-geist-mono, monospace)",
+            }}>
+              ✓ {finalName}
+              {moduleCategories[finalName] && (
+                <span style={{ marginLeft: 8, opacity: 0.7 }}>— {moduleCategories[finalName]}</span>
+              )}
+            </div>
           )}
         </label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -137,9 +294,11 @@ function ModuleEditPanel({
 export default function FirmaModulleriClient({
   initial,
   allModuleNames,
+  moduleCategories = {},
 }: {
   initial: FirmAutoModuleRecord[];
   allModuleNames: string[];
+  moduleCategories?: Record<string, string>;
 }) {
   const router = useRouter();
   const [items, setItems] = useState<FirmAutoModuleRecord[]>(initial);
@@ -209,6 +368,7 @@ export default function FirmaModulleriClient({
           firmaAdi={modulePanel.firmaAdi}
           editing={modulePanel.editing}
           availableModules={allModuleNames}
+          moduleCategories={moduleCategories}
           maxOrder={Math.max(0, ...curPanel.onExcelOpen.modules.map((m) => m.order))}
           onClose={() => setModulePanel(null)}
           onSaved={refresh}
