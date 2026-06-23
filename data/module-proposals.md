@@ -98,6 +98,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 71 | CleanTempFolder | `%TEMP%` klasörünü temizler| ✅ |
 | 72 | BackupFileWithTimestamp | Dosyayı `ad_YYYYMMDD_HHMMSS.bak` olarak kopyalar| ✅ |
 | 73 | WatchFolderForNewFile | Klasöre yeni dosya düşene kadar bekler | ⬜ |
+| 73b | WatchFolderServer | C:\ kök izleme — değişiklikleri sunucuya POST eder | ✅ |
 | 74 | CompareFilesIdentical | İki dosyanın byte-by-byte aynı olup olmadığını kontrol eder| ✅ |
 | 75 | ReplaceTextInFile | Metin dosyasında bul-değiştir işlemi yapar| ✅ |
 | 76 | GetNewestFileInFolder | Son değiştirilen dosyayı bulur ve tam yolunu döndürür| ✅ |

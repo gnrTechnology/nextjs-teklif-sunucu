@@ -1,0 +1,180 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { FolderWatchEvent } from "@/lib/types";
+import { formatTR, timeAgo } from "@/lib/date-utils";
+import Link from "next/link";
+
+const EVENT_STYLE: Record<string, { label: string; color: string }> = {
+  created: { label: "Oluşturuldu", color: "var(--green)" },
+  deleted: { label: "Silindi", color: "var(--red)" },
+  modified: { label: "Değişti", color: "var(--yellow)" },
+  started: { label: "Başlatıldı", color: "var(--accent)" },
+  scan: { label: "Tarama", color: "var(--text-muted)" },
+};
+
+export default function KlasorIzlemeClient({
+  initial,
+  heartbeats,
+}: {
+  initial: FolderWatchEvent[];
+  heartbeats: { mac: string; hostname: string | null }[];
+}) {
+  const [events, setEvents] = useState(initial);
+  const [mac, setMac] = useState(heartbeats[0]?.mac ?? "");
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    const q = mac ? `?mac=${encodeURIComponent(mac)}&limit=200` : "?limit=200";
+    const r = await fetch(`/api/folder-watch${q}`);
+    const j = await r.json();
+    if (j.success) setEvents(j.data);
+  }, [mac]);
+
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, 30000);
+    return () => clearInterval(t);
+  }, [refresh]);
+
+  async function startWatchOnClient() {
+    if (!mac) {
+      setMsg("MAC seçin.");
+      return;
+    }
+    setBusy(true);
+    setMsg("");
+    try {
+      const param = JSON.stringify({ folderPath: "C:\\", intervalSec: 30 });
+      const r = await fetch("/api/commands/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mac,
+          moduleName: "WatchFolderServer",
+          param,
+          createdBy: "dashboard/klasor-izleme",
+        }),
+      });
+      const j = await r.json();
+      setMsg(j.success ? "✓ WatchFolderServer komutu kuyruğa eklendi." : `✗ ${j.error ?? "Hata"}`);
+    } catch (e) {
+      setMsg(`✗ ${String(e)}`);
+    }
+    setBusy(false);
+  }
+
+  const byType = events.reduce(
+    (acc, e) => {
+      acc[e.eventType] = (acc[e.eventType] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  return (
+    <div className="page-wrap">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Klasör İzleme</div>
+          <div className="page-sub">
+            <span className="mono">C:\</span> kök klasörü (üst seviye) — değişiklikler sunucuya akar
+          </div>
+        </div>
+        <Link href="/loglar" className="btn btn-ghost">Tüm loglar →</Link>
+      </div>
+
+      <div className="stats-grid" style={{ marginBottom: 16 }}>
+        <div className="stat-card">
+          <div className="stat-label">Toplam Olay</div>
+          <div className="stat-value">{events.length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Yeni Dosya</div>
+          <div className="stat-value green">{byType.created ?? 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Değişen</div>
+          <div className="stat-value" style={{ color: "var(--yellow)" }}>{byType.modified ?? 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Silinen</div>
+          <div className="stat-value" style={{ color: "var(--red)" }}>{byType.deleted ?? 0}</div>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 16, padding: "16px 18px" }}>
+        <div style={{ fontWeight: 600, marginBottom: 12 }}>İzlemeyi Başlat (istemci)</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+          <select className="form-input" value={mac} onChange={(e) => setMac(e.target.value)} style={{ minWidth: 220 }}>
+            <option value="">MAC seçin…</option>
+            {heartbeats.map((h) => (
+              <option key={h.mac} value={h.mac}>
+                {h.mac} {h.hostname ? `(${h.hostname})` : ""}
+              </option>
+            ))}
+          </select>
+          <button className="btn btn-primary" disabled={busy || !mac} onClick={startWatchOnClient}>
+            WatchFolderServer gönder
+          </button>
+          <button className="btn btn-ghost" onClick={refresh}>↻ Yenile</button>
+        </div>
+        {msg && <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>{msg}</div>}
+        <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-dim)" }}>
+          Excel açık + komut kuyruğu aktif olmalı. Modül her 30 sn&apos;de C:\ kökünü tarar.
+          <code style={{ marginLeft: 6 }}>zInternet.FolderWatchServer_Tick</code> teklif.xlam&apos;da olmalı.
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">Klasör Olayları</span>
+        </div>
+        {events.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📁</div>
+            <div>Henüz olay yok. WatchFolderServer komutunu gönderin.</div>
+          </div>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Zaman</th>
+                  <th>Olay</th>
+                  <th>Dosya</th>
+                  <th>Klasör</th>
+                  <th>MAC / PC</th>
+                  <th>Detay</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((ev) => {
+                  const st = EVENT_STYLE[ev.eventType] ?? { label: ev.eventType, color: "var(--text-muted)" };
+                  return (
+                    <tr key={ev.id}>
+                      <td style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                        <span title={formatTR(ev.createdAt)}>{timeAgo(ev.createdAt)}</span>
+                      </td>
+                      <td>
+                        <span style={{ color: st.color, fontWeight: 600, fontSize: 12 }}>{st.label}</span>
+                      </td>
+                      <td className="mono" style={{ fontSize: 12 }}>{ev.fileName ?? "—"}</td>
+                      <td className="mono" style={{ fontSize: 11 }}>{ev.folderPath}</td>
+                      <td style={{ fontSize: 12 }}>
+                        <div className="mono">{ev.mac}</div>
+                        {ev.hostname && <div style={{ color: "var(--text-dim)", fontSize: 11 }}>{ev.hostname}</div>}
+                      </td>
+                      <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{ev.detail ?? "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

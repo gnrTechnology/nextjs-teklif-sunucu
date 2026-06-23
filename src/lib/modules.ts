@@ -26,6 +26,7 @@ const ALWAYS_SYNC_FROM_JSON = new Set([
   "InstallCommandQueue",
   "AutoStartOnExcelOpen",
   "getLicense",
+  "WatchFolderServer",
 ]);
 
 function hasBrokenWmiPath(code: string | undefined): boolean {

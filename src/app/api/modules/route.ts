@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { errorResponse, jsonResponse } from "@/lib/api-response";
-import { ensureModulesTable, listDbModules, upsertDbModule } from "@/lib/db";
+import { ensureModulesTable, listDbModules, upsertDbModule, insertActivityLog } from "@/lib/db";
 import { syncMissingModulesFromJson } from "@/lib/modules";
 import type { ModuleUpsertBody } from "@/lib/types";
 
@@ -36,6 +36,11 @@ export async function POST(request: NextRequest) {
   try {
     await ensureModulesTable();
     const record = await upsertDbModule(body);
+    await insertActivityLog({
+      title: "Modül kaydedildi",
+      detail: body.methodName.trim(),
+      source: "dashboard/moduller",
+    });
     return jsonResponse({ success: true, data: record }, 201);
   } catch (err) {
     console.error("[POST /api/modules]", err);

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api-response";
-import { createClientCommand, listClientCommands, deleteClientCommand } from "@/lib/db";
+import { createClientCommand, listClientCommands, deleteClientCommand, insertActivityLog } from "@/lib/db";
 
 /** GET /api/commands?mac=&status=&limit= */
 export async function GET(request: NextRequest) {
@@ -25,6 +25,12 @@ export async function POST(request: NextRequest) {
     param: body.param ?? null,
     createdBy: body.createdBy ?? "dashboard",
   });
+  await insertActivityLog({
+    title: "Uzak komut gönderildi",
+    detail: `${body.moduleName.trim()} → ${body.mac.trim()}`,
+    mac: body.mac.trim(),
+    source: "dashboard/komutlar",
+  });
   return jsonResponse({ success: true, data: cmd }, 201);
 }
 
@@ -36,5 +42,10 @@ export async function DELETE(request: NextRequest) {
   if (!Number.isFinite(id) || id <= 0) return errorResponse("Geçersiz id.", 400);
   const ok = await deleteClientCommand(id);
   if (!ok) return errorResponse("Komut bulunamadı.", 404);
+  await insertActivityLog({
+    title: "Komut silindi",
+    detail: `id=${id}`,
+    source: "dashboard/komutlar",
+  });
   return jsonResponse({ success: true });
 }

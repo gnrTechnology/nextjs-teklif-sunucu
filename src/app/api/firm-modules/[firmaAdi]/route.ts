@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api-response";
 import { getFirmAutoModule } from "@/lib/firm-auto-modules";
-import { upsertFirmAutoModuleDb, deleteFirmAutoModuleDb } from "@/lib/db";
+import { upsertFirmAutoModuleDb, deleteFirmAutoModuleDb, insertActivityLog } from "@/lib/db";
 import type { FirmAutoModuleRecord, FirmAutoStartModule } from "@/lib/types";
 
 type PatchBody = {
@@ -88,6 +88,11 @@ export async function PATCH(
   }
 
   await upsertFirmAutoModuleDb(firm);
+  await insertActivityLog({
+    title: "Firma modül ayarı güncellendi",
+    detail: decoded,
+    source: "dashboard/firma-modulleri",
+  });
   return jsonResponse({ success: true, data: firm });
 }
 

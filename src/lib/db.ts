@@ -405,6 +405,14 @@ export async function upsertHeartbeat(params: {
       ip_address    = COALESCE(EXCLUDED.ip_address,    heartbeats.ip_address),
       last_seen     = EXCLUDED.last_seen
   `;
+
+  await insertHeartbeatLog({
+    mac: params.mac,
+    hostname: params.hostname,
+    userName: params.userName,
+    excelVersion: params.excelVersion,
+    ipAddress: params.ipAddress,
+  });
 }
 
 export async function listHeartbeats(): Promise<HeartbeatRow[]> {
@@ -932,6 +940,254 @@ export async function listLogs(limit = 500): Promise<LicenseLog[]> {
     ipAdresi: (r.ip_adresi as string) ?? null,
     eventType: r.event_type as string,
     details: (r.details as string) ?? null,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
+}
+
+// ─────────────────── FOLDER WATCH ───────────────────────────────────────────
+
+export async function ensureFolderWatchTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS folder_watch_events (
+      id          SERIAL PRIMARY KEY,
+      mac         TEXT NOT NULL,
+      hostname    TEXT,
+      folder_path TEXT NOT NULL,
+      event_type  TEXT NOT NULL,
+      file_name   TEXT,
+      file_path   TEXT,
+      detail      TEXT,
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_folder_watch_mac ON folder_watch_events (mac)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_folder_watch_created ON folder_watch_events (created_at DESC)`;
+}
+
+export async function insertFolderWatchEvent(params: {
+  mac: string;
+  hostname?: string | null;
+  folderPath: string;
+  eventType: string;
+  fileName?: string | null;
+  filePath?: string | null;
+  detail?: string | null;
+}): Promise<void> {
+  await ensureFolderWatchTable();
+  const sql = getSql();
+  await sql`
+    INSERT INTO folder_watch_events
+      (mac, hostname, folder_path, event_type, file_name, file_path, detail, created_at)
+    VALUES (
+      ${normalizeMac(params.mac)},
+      ${params.hostname ?? null},
+      ${params.folderPath},
+      ${params.eventType},
+      ${params.fileName ?? null},
+      ${params.filePath ?? null},
+      ${params.detail ?? null},
+      ${new Date().toISOString()}
+    )
+  `;
+}
+
+export async function listFolderWatchEvents(options?: {
+  mac?: string;
+  limit?: number;
+}): Promise<import("./types").FolderWatchEvent[]> {
+  await ensureFolderWatchTable();
+  const sql = getSql();
+  const limit = options?.limit ?? 200;
+  let rows;
+  if (options?.mac) {
+    const macNorm = normalizeMac(options.mac);
+    rows = await sql`
+      SELECT id, mac, hostname, folder_path, event_type, file_name, file_path, detail, created_at
+      FROM folder_watch_events
+      WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+      ORDER BY created_at DESC LIMIT ${limit}
+    `;
+  } else {
+    rows = await sql`
+      SELECT id, mac, hostname, folder_path, event_type, file_name, file_path, detail, created_at
+      FROM folder_watch_events
+      ORDER BY created_at DESC LIMIT ${limit}
+    `;
+  }
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    mac: r.mac as string,
+    hostname: r.hostname as string | null,
+    folderPath: r.folder_path as string,
+    eventType: r.event_type as import("./types").FolderWatchEvent["eventType"],
+    fileName: r.file_name as string | null,
+    filePath: r.file_path as string | null,
+    detail: r.detail as string | null,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
+}
+
+export async function deleteFolderWatchEvent(id: number): Promise<boolean> {
+  await ensureFolderWatchTable();
+  const sql = getSql();
+  const result = await sql`DELETE FROM folder_watch_events WHERE id = ${id}`;
+  return (result as unknown as { count: number }).count > 0;
+}
+
+// ─────────────────── HEARTBEAT LOGS ───────────────────────────────────────
+
+export async function ensureHeartbeatLogsTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS heartbeat_logs (
+      id            SERIAL PRIMARY KEY,
+      mac           TEXT NOT NULL,
+      hostname      TEXT,
+      user_name     TEXT,
+      excel_version TEXT,
+      ip_address    TEXT,
+      created_at    TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_heartbeat_logs_created ON heartbeat_logs (created_at DESC)`;
+}
+
+export async function insertHeartbeatLog(params: {
+  mac: string;
+  hostname?: string | null;
+  userName?: string | null;
+  excelVersion?: string | null;
+  ipAddress?: string | null;
+}): Promise<void> {
+  try {
+    await ensureHeartbeatLogsTable();
+    const sql = getSql();
+    await sql`
+      INSERT INTO heartbeat_logs (mac, hostname, user_name, excel_version, ip_address, created_at)
+      VALUES (
+        ${normalizeMac(params.mac)},
+        ${params.hostname ?? null},
+        ${params.userName ?? null},
+        ${params.excelVersion ?? null},
+        ${params.ipAddress ?? null},
+        ${new Date().toISOString()}
+      )
+    `;
+  } catch (err) {
+    console.error("[insertHeartbeatLog]", err);
+  }
+}
+
+export async function listHeartbeatLogs(options?: {
+  mac?: string;
+  limit?: number;
+}): Promise<{
+  id: number;
+  mac: string;
+  hostname: string | null;
+  userName: string | null;
+  excelVersion: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+}[]> {
+  await ensureHeartbeatLogsTable();
+  const sql = getSql();
+  const limit = options?.limit ?? 200;
+  let rows;
+  if (options?.mac) {
+    const macNorm = normalizeMac(options.mac);
+    rows = await sql`
+      SELECT id, mac, hostname, user_name, excel_version, ip_address, created_at
+      FROM heartbeat_logs
+      WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+      ORDER BY created_at DESC LIMIT ${limit}
+    `;
+  } else {
+    rows = await sql`
+      SELECT id, mac, hostname, user_name, excel_version, ip_address, created_at
+      FROM heartbeat_logs
+      ORDER BY created_at DESC LIMIT ${limit}
+    `;
+  }
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    mac: r.mac as string,
+    hostname: r.hostname as string | null,
+    userName: r.user_name as string | null,
+    excelVersion: r.excel_version as string | null,
+    ipAddress: r.ip_address as string | null,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
+}
+
+// ─────────────────── ACTIVITY LOGS (dashboard) ────────────────────────────
+
+export async function ensureActivityLogsTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS activity_logs (
+      id         SERIAL PRIMARY KEY,
+      title      TEXT NOT NULL,
+      detail     TEXT,
+      mac        TEXT,
+      hostname   TEXT,
+      source     TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
+export async function insertActivityLog(params: {
+  title: string;
+  detail?: string | null;
+  mac?: string | null;
+  hostname?: string | null;
+  source?: string | null;
+}): Promise<void> {
+  try {
+    await ensureActivityLogsTable();
+    const sql = getSql();
+    await sql`
+      INSERT INTO activity_logs (title, detail, mac, hostname, source, created_at)
+      VALUES (
+        ${params.title},
+        ${params.detail ?? null},
+        ${params.mac ? normalizeMac(params.mac) : null},
+        ${params.hostname ?? null},
+        ${params.source ?? null},
+        ${new Date().toISOString()}
+      )
+    `;
+  } catch (err) {
+    console.error("[insertActivityLog]", err);
+  }
+}
+
+export async function listActivityLogs(options?: { limit?: number }): Promise<{
+  id: number;
+  title: string;
+  detail: string | null;
+  mac: string | null;
+  hostname: string | null;
+  source: string | null;
+  createdAt: string;
+}[]> {
+  await ensureActivityLogsTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, title, detail, mac, hostname, source, created_at
+    FROM activity_logs
+    ORDER BY created_at DESC
+    LIMIT ${options?.limit ?? 200}
+  `;
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    title: r.title as string,
+    detail: r.detail as string | null,
+    mac: r.mac as string | null,
+    hostname: r.hostname as string | null,
+    source: r.source as string | null,
     createdAt: new Date(r.created_at as string).toISOString(),
   }));
 }

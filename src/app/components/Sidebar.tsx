@@ -11,6 +11,7 @@ const NAV = [
   { href: "/oneriler",          icon: "💡", label: "Modül Önerileri"   },
   { href: "/firma-modulleri",   icon: "⚡", label: "Oto. Modüller"    },
   { href: "/heartbeats",        icon: "📡", label: "Nabız İzleme"      },
+  { href: "/klasor-izleme",     icon: "📁", label: "Klasör İzleme"     },
   { href: "/cihazlar",          icon: "🖥", label: "Cihaz Bilgileri"   },
   { href: "/komutlar",          icon: "🎮", label: "Uzak Komutlar"     },
   { href: "/modul-ciktilari",   icon: "📤", label: "Modül Çıktıları"  },

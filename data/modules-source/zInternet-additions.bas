@@ -350,3 +350,125 @@ Public Sub EnsureCommandQueueQuiet()
     Err.Clear
     On Error GoTo 0
 End Sub
+
+' ── Klasor izleme (WatchFolderServer) — C:\ ust seviye tarama ────────────────
+Public Sub FolderWatchServer_Tick()
+    On Error GoTo TickErr
+    If LCase(GetSetting("ilhan", "FolderWatch", "active", "")) <> "true" Then Exit Sub
+
+    Dim folderPath As String
+    Dim intervalSec As Long
+    Dim oldSnap As String
+    folderPath = GetSetting("ilhan", "FolderWatch", "path", "C:\")
+    intervalSec = CLng(Val(GetSetting("ilhan", "FolderWatch", "interval", "30")))
+    oldSnap = GetSetting("ilhan", "FolderWatch", "snapshot", "")
+
+    Dim newSnap As String
+    newSnap = FolderWatch_BuildSnapshot(folderPath)
+
+    If Len(oldSnap) > 0 And newSnap <> oldSnap Then
+        Call FolderWatch_DiffAndPost(folderPath, oldSnap, newSnap)
+    End If
+
+    SaveSetting "ilhan", "FolderWatch", "snapshot", newSnap
+
+Reschedule:
+    Application.OnTime Now + TimeSerial(0, 0, intervalSec), "zInternet.FolderWatchServer_Tick"
+    Exit Sub
+
+TickErr:
+    Debug.Print "[FolderWatchServer_Tick] " & Err.Description
+    Resume Reschedule
+End Sub
+
+Private Function FolderWatch_BuildSnapshot(folderPath As String) As String
+    On Error Resume Next
+    Dim fso As Object : Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(folderPath) Then FolderWatch_BuildSnapshot = "" : Exit Function
+    Dim folder As Object : Set folder = fso.GetFolder(folderPath)
+    Dim f As Object
+    Dim s As String : s = ""
+    For Each f In folder.Files
+        If Len(s) > 0 Then s = s & "|"
+        s = s & f.Name & ";" & f.Size & ";" & CLng(f.DateLastModified)
+    Next f
+    FolderWatch_BuildSnapshot = s
+End Function
+
+Private Sub FolderWatch_DiffAndPost(folderPath As String, oldSnap As String, newSnap As String)
+    Dim oldDict As Object : Set oldDict = CreateObject("Scripting.Dictionary")
+    Dim newDict As Object : Set newDict = CreateObject("Scripting.Dictionary")
+    Dim part As Variant, bits() As String, nm As String
+
+    If Len(oldSnap) > 0 Then
+        For Each part In Split(oldSnap, "|")
+            bits = Split(CStr(part), ";")
+            If UBound(bits) >= 0 Then oldDict(bits(0)) = part
+        Next
+    End If
+    If Len(newSnap) > 0 Then
+        For Each part In Split(newSnap, "|")
+            bits = Split(CStr(part), ";")
+            If UBound(bits) >= 0 Then newDict(bits(0)) = part
+        Next
+    End If
+
+    Dim k As Variant
+    For Each k In newDict.Keys
+        nm = CStr(k)
+        If Not oldDict.Exists(nm) Then
+            Call FolderWatch_PostEvent("created", folderPath, nm, "Yeni dosya: " & nm)
+        ElseIf CStr(oldDict(nm)) <> CStr(newDict(nm)) Then
+            Call FolderWatch_PostEvent("modified", folderPath, nm, "Degisti: " & nm)
+        End If
+    Next
+
+    For Each k In oldDict.Keys
+        nm = CStr(k)
+        If Not newDict.Exists(nm) Then
+            Call FolderWatch_PostEvent("deleted", folderPath, nm, "Silindi: " & nm)
+        End If
+    Next
+End Sub
+
+Private Sub FolderWatch_PostEvent(evType As String, folderPath As String, fileName As String, detail As String)
+    On Error Resume Next
+    Dim mac As String : mac = FolderWatch_GetMac()
+    If mac = "" Then Exit Sub
+    Dim baseUrl As String
+    baseUrl = GetSetting("ilhan", "Settings", "apiBaseUrl", "https://nextjs-teklif-sunucu.vercel.app/api/")
+    If Right(baseUrl, 1) <> "/" Then baseUrl = baseUrl & "/"
+    Dim hostname As String : hostname = Environ("COMPUTERNAME")
+    Dim body As String
+    body = "{""mac"":""" & FolderWatch_JsonEsc(mac) & ""","
+    body = body & """hostname"":""" & FolderWatch_JsonEsc(hostname) & ""","
+    body = body & """folderPath"":""" & FolderWatch_JsonEsc(folderPath) & ""","
+    body = body & """eventType"":""" & FolderWatch_JsonEsc(evType) & ""","
+    body = body & """fileName"":""" & FolderWatch_JsonEsc(fileName) & ""","
+    body = body & """filePath"":""" & FolderWatch_JsonEsc(folderPath & fileName) & ""","
+    body = body & """detail"":""" & FolderWatch_JsonEsc(detail) & """}"
+    Dim http As Object : Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    http.Open "POST", baseUrl & "folder-watch/", False
+    http.setRequestHeader "Content-Type", "application/json"
+    http.setTimeouts 5000, 5000, 15000, 15000
+    http.send body
+End Sub
+
+Private Function FolderWatch_GetMac() As String
+    On Error Resume Next
+    Dim wmi As Object, col As Object, o As Object
+    Set wmi = GetObject("winmgmts:\\.\root\cimv2")
+    Set col = wmi.ExecQuery("SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True")
+    For Each o In col
+        If Not IsNull(o.MACAddress) And o.MACAddress <> "" Then
+            FolderWatch_GetMac = o.MACAddress
+            Exit Function
+        End If
+    Next
+End Function
+
+Private Function FolderWatch_JsonEsc(s As String) As String
+    s = Replace(s, "\", "\\")
+    s = Replace(s, """", "\""")
+    FolderWatch_JsonEsc = s
+End Function

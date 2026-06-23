@@ -19,6 +19,7 @@ import Refresher from "./components/Refresher";
 const QUICK_LINKS = [
   { href: "/komutlar",        icon: "🎮", label: "Uzak Komutlar"    },
   { href: "/heartbeats",      icon: "📡", label: "Nabız İzleme"     },
+  { href: "/klasor-izleme",   icon: "📁", label: "Klasör İzleme"    },
   { href: "/cihazlar",        icon: "🖥", label: "Cihaz Bilgileri"  },
   { href: "/modul-ciktilari", icon: "📤", label: "Modül Çıktıları"  },
   { href: "/moduller",        icon: "📦", label: "Uzak Modüller"    },

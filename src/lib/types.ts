@@ -90,3 +90,38 @@ export interface LicenseLog {
   details: string | null;
   createdAt: string;
 }
+
+export type ActivityCategory =
+  | "all"
+  | "lisans"
+  | "ihlal"
+  | "guncelleme"
+  | "dashboard"
+  | "modul"
+  | "heartbeat"
+  | "komut"
+  | "klasor"
+  | "cihaz";
+
+export interface UnifiedActivityItem {
+  id: string;
+  category: Exclude<ActivityCategory, "all">;
+  title: string;
+  detail?: string | null;
+  mac?: string | null;
+  hostname?: string | null;
+  source?: string | null;
+  createdAt: string;
+}
+
+export interface FolderWatchEvent {
+  id: number;
+  mac: string;
+  hostname?: string | null;
+  folderPath: string;
+  eventType: "created" | "deleted" | "modified" | "started" | "scan";
+  fileName?: string | null;
+  filePath?: string | null;
+  detail?: string | null;
+  createdAt: string;
+}

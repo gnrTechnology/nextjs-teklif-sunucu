@@ -453,6 +453,29 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
     uiLink: "/",
     tags: ["sse"],
   },
+  {
+    group: "Cihaz & Nabız",
+    method: "GET|POST|DELETE",
+    path: "/folder-watch/",
+    title: "Klasör İzleme Olayları",
+    desc: "WatchFolderServer — C:\\ değişiklik bildirimleri.",
+    request: `{\n  "mac": "04:EC:D8:AE:C0:4A",\n  "folderPath": "C:\\\\",\n  "eventType": "created",\n  "fileName": "yeni.txt"\n}`,
+    response: `{ "success": true, "data": [...] }`,
+    responses: [{ code: "200", desc: "OK" }],
+    uiLink: "/klasor-izleme",
+  },
+  {
+    group: "Cihaz & Nabız",
+    method: "GET",
+    path: "/activity/",
+    title: "Birleşik Aktivite Logu",
+    desc: "Lisans, heartbeat, modül, komut, klasör ve dashboard olaylarını tek listede döner.",
+    request: null,
+    response: `{ "success": true, "data": [{ "category": "heartbeat", "title": "..." }] }`,
+    responses: [{ code: "200", desc: "Liste" }],
+    uiLink: "/loglar",
+    tags: ["query: category, limit, mac"],
+  },
 ];
 
 export function getApiCatalogStats() {
