@@ -113,8 +113,10 @@ Private Function PollCodeMain() As String
     s = s & "        If Len(cmdId) > 0 And Len(modName) > 0 And cmdId <> ""null"" Then" & vbCrLf
     s = s & "            gCmdId = cmdId" & vbCrLf
     s = s & "            gBaseUrl = baseUrl" & vbCrLf
+    s = s & "            PatchProgress baseUrl, cmdId, 20, ""Modul indiriliyor""" & vbCrLf
     s = s & "            Dim runErr As String" & vbCrLf
     s = s & "            runErr = RunRemoteModule(modName, cmdParam)" & vbCrLf
+    s = s & "            PatchProgress baseUrl, cmdId, 85, ""Modul bitti""" & vbCrLf
     s = s & "            If Len(runErr) > 0 Then" & vbCrLf
     s = s & "                PatchDone baseUrl, cmdId, ""error"", """", runErr" & vbCrLf
     s = s & "            Else" & vbCrLf
@@ -207,6 +209,15 @@ Private Function PollCodeHelpers() As String
     s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
     s = s & "    Dim body As String" & vbCrLf
     s = s & "    body = ""{""""status"""":"""""" & st & """""",""""result"""":"""""" & JsonEsc(res) & """""",""""errorMsg"""":"""""" & JsonEsc(errMsg) & """"""}""" & vbCrLf
+    s = s & "    http.Open ""PATCH"", baseUrl & ""commands/"" & cmdId & ""/"", False" & vbCrLf
+    s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
+    s = s & "    http.send body" & vbCrLf
+    s = s & "End Sub" & vbCrLf & vbCrLf
+    s = s & "Private Sub PatchProgress(baseUrl As String, cmdId As String, pct As Long, label As String)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
+    s = s & "    Dim body As String" & vbCrLf
+    s = s & "    body = ""{""""progressPct"""":" & """ & pct & "",""""progressLabel"""":"""""" & JsonEsc(label) & """"""}""" & vbCrLf
     s = s & "    http.Open ""PATCH"", baseUrl & ""commands/"" & cmdId & ""/"", False" & vbCrLf
     s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
     s = s & "    http.send body" & vbCrLf

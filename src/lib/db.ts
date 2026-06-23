@@ -439,6 +439,9 @@ export type ClientCommand = {
   createdAt: string;
   executedAt?: string | null;
   createdBy: string;
+  progressPct?: number;
+  progressLabel?: string | null;
+  progressAt?: string | null;
 };
 
 export async function ensureClientCommandsTable(): Promise<void> {
@@ -454,10 +457,16 @@ export async function ensureClientCommandsTable(): Promise<void> {
       error_msg   TEXT,
       created_at  TIMESTAMPTZ DEFAULT NOW(),
       executed_at TIMESTAMPTZ,
-      created_by  TEXT DEFAULT 'dashboard'
+      created_by  TEXT DEFAULT 'dashboard',
+      progress_pct    INTEGER DEFAULT 0,
+      progress_label  TEXT,
+      progress_at     TIMESTAMPTZ
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_commands_mac_status ON client_commands (mac, status)`;
+  await sql`ALTER TABLE client_commands ADD COLUMN IF NOT EXISTS progress_pct INTEGER DEFAULT 0`;
+  await sql`ALTER TABLE client_commands ADD COLUMN IF NOT EXISTS progress_label TEXT`;
+  await sql`ALTER TABLE client_commands ADD COLUMN IF NOT EXISTS progress_at TIMESTAMPTZ`;
 }
 
 /** 10 dk+ running kalan komutlari hata olarak kapat (sonsuz pending dongusu olmasin) */
@@ -490,7 +499,7 @@ export async function createClientCommand(params: {
       ${macNorm}, ${params.moduleName}, ${params.param ?? null},
       'pending', ${now}, ${params.createdBy ?? 'dashboard'}
     )
-    RETURNING id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+    RETURNING id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by, progress_pct, progress_label, progress_at
   `;
   return rowToCommand(rows[0] as Record<string, unknown>);
 }
@@ -507,28 +516,28 @@ export async function listClientCommands(options?: {
   let rows;
   if (options?.mac && options?.status) {
     rows = await sql`
-      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by, progress_pct, progress_label, progress_at
       FROM client_commands
       WHERE mac = ${options.mac} AND status = ${options.status}
       ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
     `;
   } else if (options?.mac) {
     rows = await sql`
-      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by, progress_pct, progress_label, progress_at
       FROM client_commands
       WHERE mac = ${options.mac}
       ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
     `;
   } else if (options?.status) {
     rows = await sql`
-      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by, progress_pct, progress_label, progress_at
       FROM client_commands
       WHERE status = ${options.status}
       ORDER BY created_at DESC LIMIT ${options.limit ?? 100}
     `;
   } else {
     rows = await sql`
-      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+      SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by, progress_pct, progress_label, progress_at
       FROM client_commands
       ORDER BY created_at DESC LIMIT ${options?.limit ?? 200}
     `;
@@ -559,12 +568,65 @@ export async function claimPendingCommand(mac: string): Promise<ClientCommand | 
       ORDER BY created_at ASC
       LIMIT 1
     )
-    RETURNING id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by
+    RETURNING id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by, progress_pct, progress_label, progress_at
   `;
   if (!rows[0]) return null;
-  /* executed_at set separately since we need it after claim */
-  await sql`UPDATE client_commands SET executed_at = ${now} WHERE id = ${(rows[0] as Record<string,unknown>).id}`;
-  return rowToCommand(rows[0] as Record<string, unknown>);
+  const cmdId = (rows[0] as Record<string, unknown>).id;
+  const nowIso = new Date().toISOString();
+  await sql`
+    UPDATE client_commands
+    SET executed_at = ${now},
+        progress_pct = 15,
+        progress_label = 'Excel''de alindi',
+        progress_at = ${nowIso}
+    WHERE id = ${cmdId}
+  `;
+  return rowToCommand({
+    ...(rows[0] as Record<string, unknown>),
+    progress_pct: 15,
+    progress_label: "Excel'de alindi",
+    progress_at: nowIso,
+  });
+}
+
+export async function updateCommandProgress(
+  id: number,
+  progressPct: number,
+  progressLabel: string,
+): Promise<void> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  const pct = Math.max(0, Math.min(100, Math.round(progressPct)));
+  const nowIso = new Date().toISOString();
+  await sql`
+    UPDATE client_commands
+    SET progress_pct = ${pct},
+        progress_label = ${progressLabel},
+        progress_at = ${nowIso}
+    WHERE id = ${id} AND status = 'running'
+  `;
+}
+
+export async function updateRunningCommandProgressByMac(
+  mac: string,
+  moduleName: string,
+  progressPct: number,
+  progressLabel: string,
+): Promise<void> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  const macNorm = normalizeMac(mac);
+  const rows = await sql`
+    SELECT id FROM client_commands
+    WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+      AND status = 'running'
+      AND module_name = ${moduleName}
+    ORDER BY executed_at DESC NULLS LAST
+    LIMIT 1
+  `;
+  if (rows[0]) {
+    await updateCommandProgress(rows[0].id as number, progressPct, progressLabel);
+  }
 }
 
 export async function updateClientCommand(id: number, params: {
@@ -575,12 +637,18 @@ export async function updateClientCommand(id: number, params: {
   await ensureClientCommandsTable();
   const sql = getSql();
   const now = nowTR();
+  const nowIso = new Date().toISOString();
+  const progressPct = params.status === "done" ? 100 : 0;
+  const progressLabel = params.status === "done" ? "Tamamlandi" : "Hata";
   await sql`
     UPDATE client_commands
     SET status = ${params.status},
         result = ${params.result ?? null},
         error_msg = ${params.errorMsg ?? null},
-        executed_at = ${now}
+        executed_at = ${now},
+        progress_pct = ${progressPct},
+        progress_label = ${progressLabel},
+        progress_at = ${nowIso}
     WHERE id = ${id}
   `;
 }
@@ -605,6 +673,9 @@ function rowToCommand(r: Record<string, unknown>): ClientCommand {
     createdAt: new Date(r.created_at as string).toISOString(),
     executedAt: r.executed_at ? new Date(r.executed_at as string).toISOString() : null,
     createdBy: r.created_by as string,
+    progressPct: r.progress_pct != null ? Number(r.progress_pct) : 0,
+    progressLabel: (r.progress_label as string) ?? null,
+    progressAt: r.progress_at ? new Date(r.progress_at as string).toISOString() : null,
   };
 }
 
@@ -1125,7 +1196,10 @@ export async function insertFolderWatchEvent(params: {
     eventType: params.eventType,
   });
   if (params.eventType === "started") {
+    await updateRunningCommandProgressByMac(macNorm, "WatchFolderServer", 85, "Izleme baslatildi");
     await completeRunningWatchFolderCommand(macNorm);
+  } else if (params.eventType === "scan") {
+    await updateRunningCommandProgressByMac(macNorm, "WatchFolderServer", 95, "Izleme aktif (ping)");
   }
 }
 

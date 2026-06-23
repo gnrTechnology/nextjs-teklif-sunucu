@@ -16,7 +16,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         Dim intStr As String : intStr = ExtractJsonValue(p, "intervalSec")
         intervalSec = 30
         If Len(intStr) > 0 Then intervalSec = CLng(intStr)
-    ElseIf Len(p) > 0 Then
+    ElseIf Len(p) > 0 And Not IsUrlLike(p) Then
         folderPath = p
         intervalSec = 30
     Else
@@ -97,12 +97,6 @@ Private Function GetMacFromWmi() As String
     Next
 End Function
 
-Private Function JsonEsc(s As String) As String
-    s = Replace(s, "\", "\\")
-    s = Replace(s, """", "\""")
-    JsonEsc = s
-End Function
-
 Private Function ExtractJsonValue(json As String, key As String) As String
     Dim sk As String, p1 As Long, p2 As Long
     sk = """" & key & """:"
@@ -121,4 +115,15 @@ Private Function ExtractJsonValue(json As String, key As String) As String
         Loop
         ExtractJsonValue = Trim(Mid(json, p1, p2 - p1))
     End If
+End Function
+
+Private Function IsUrlLike(s As String) As Boolean
+    Dim t As String : t = LCase$(Trim$(s))
+    IsUrlLike = (Left$(t, 7) = "http://" Or Left$(t, 8) = "https://")
+End Function
+
+Private Function JsonEsc(s As String) As String
+    s = Replace(s, "\", "\\")
+    s = Replace(s, """", "\""")
+    JsonEsc = s
 End Function

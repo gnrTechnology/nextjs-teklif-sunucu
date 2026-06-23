@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { formatTR, formatDurationSec, elapsedSecSince, timeAgo } from "@/lib/date-utils";
+import {
+  getCommandProgressView,
+  stuckStateColor,
+  stuckStateHint,
+  type StuckState,
+} from "@/lib/command-progress";
 import type { ClientCommand } from "@/lib/db";
 import type { FolderWatchHealth } from "@/lib/types";
 
@@ -20,6 +26,52 @@ function StatusBadge({ status }: { status: string }) {
       fontSize: 11, padding: "2px 9px", borderRadius: 10, fontWeight: 600,
       background: c.bg, color: c.color,
     }}>{c.label}</span>
+  );
+}
+
+function CommandProgressBar({
+  pct,
+  label,
+  stuckState,
+  animate,
+}: {
+  pct: number;
+  label: string;
+  stuckState: StuckState;
+  animate?: boolean;
+}) {
+  const color = stuckStateColor(stuckState);
+  const hint = stuckStateHint(stuckState);
+  return (
+    <div style={{ marginTop: 8, maxWidth: 480 }}>
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        fontSize: 10, color: "var(--text-muted)", marginBottom: 4, gap: 8,
+      }}>
+        <span style={{ flex: 1, minWidth: 0 }}>{label}</span>
+        <span style={{ fontWeight: 700, color, flexShrink: 0 }}>{pct}%</span>
+      </div>
+      <div style={{
+        height: 7, background: "var(--border)", borderRadius: 4, overflow: "hidden",
+      }}>
+        <div style={{
+          width: `${pct}%`,
+          height: "100%",
+          background: color,
+          borderRadius: 4,
+          transition: animate ? "width 0.5s ease" : undefined,
+          boxShadow: stuckState === "stuck" ? `0 0 8px ${color}` : undefined,
+        }} />
+      </div>
+      {hint && (
+        <div style={{
+          fontSize: 10,
+          color,
+          marginTop: 5,
+          lineHeight: 1.4,
+        }}>{hint}</div>
+      )}
+    </div>
   );
 }
 
@@ -74,9 +126,11 @@ export default function KomutlarClient({
 
   /* 10sn'de bir yenile (pending/running görünür hale gelsin) */
   useEffect(() => {
-    const id = setInterval(refresh, 10000);
+    const hasActive = commands.some((c) => c.status === "pending" || c.status === "running");
+    const ms = hasActive ? 5000 : 10000;
+    const id = setInterval(refresh, ms);
     return () => clearInterval(id);
-  }, [refresh]);
+  }, [refresh, commands]);
 
   /* running süresi canlı güncellensin */
   useEffect(() => {
@@ -93,7 +147,7 @@ export default function KomutlarClient({
       .map((c) => c.mac);
     if (macs.length === 0) return;
     refreshWatchHealth(macs);
-    const id = setInterval(() => refreshWatchHealth(macs), 15000);
+    const id = setInterval(() => refreshWatchHealth(macs), 10000);
     return () => clearInterval(id);
   }, [commands, refreshWatchHealth]);
 
@@ -300,6 +354,9 @@ export default function KomutlarClient({
             const runSec = cmd.status === "running" ? elapsedSecSince(cmd.executedAt) : null;
             const isWatch = cmd.moduleName === "WatchFolderServer";
             const health = isWatch ? watchHealth[cmd.mac] : undefined;
+            const progress = getCommandProgressView(cmd, health);
+            const showProgress = cmd.status === "pending" || cmd.status === "running"
+              || (isOpen && (cmd.status === "done" || cmd.status === "error"));
             return (
               <div key={cmd.id} style={{ borderBottom: "1px solid var(--border)" }}>
                 <div style={{
@@ -323,14 +380,22 @@ export default function KomutlarClient({
                         {cmd.moduleName}
                       </span>
                       <StatusBadge status={cmd.status} />
-                      {runSec != null && runSec >= 30 && (
+                      {runSec != null && runSec >= 30 && progress.stuckState !== "alive_bg" && (
                         <span style={{
                           fontSize: 10, padding: "2px 8px", borderRadius: 8,
-                          background: runSec >= 120 ? "#ef444420" : "#f59e0b20",
-                          color: runSec >= 120 ? "#ef4444" : "#f59e0b",
+                          background: progress.stuckState === "stuck" ? "#ef444420" : "#f59e0b20",
+                          color: progress.stuckState === "stuck" ? "#ef4444" : "#f59e0b",
                           fontWeight: 600,
                         }}>
                           {formatDurationSec(runSec)} süredir
+                        </span>
+                      )}
+                      {progress.stuckState === "alive_bg" && (
+                        <span style={{
+                          fontSize: 10, padding: "2px 8px", borderRadius: 8,
+                          background: "#10b98120", color: "var(--green)", fontWeight: 600,
+                        }}>
+                          Arka plan aktif
                         </span>
                       )}
                     </div>
@@ -338,27 +403,18 @@ export default function KomutlarClient({
                       <span className="mono">{cmd.mac}</span>
                       {cmd.param && <span style={{ marginLeft: 8 }}>param: {cmd.param.slice(0, 40)}</span>}
                     </div>
-                    {isWatch && cmd.status === "running" && (
-                      <div style={{ fontSize: 11, marginTop: 4 }}>
-                        {health?.isAlive ? (
-                          <span style={{ color: "var(--green)" }}>
-                            ✓ Klasör izleme aktif — son sinyal {timeAgo(health.lastPingAt)}
-                          </span>
-                        ) : health?.lastPingAt ? (
-                          <span style={{ color: "#f59e0b" }}>
-                            ⚠ Son sinyal {timeAgo(health.lastPingAt)} —{" "}
-                            <Link href="/klasor-izleme" style={{ color: "var(--accent)" }}>Klasör İzleme</Link>
-                          </span>
-                        ) : (
-                          <span style={{ color: "var(--text-dim)" }}>
-                            Henüz sunucudan sinyal yok — modül hâlâ başlıyor veya takılı olabilir
-                          </span>
-                        )}
-                        {runSec != null && runSec >= 60 && (
-                          <span style={{ display: "block", color: "var(--text-dim)", marginTop: 2 }}>
-                            Not: WatchFolderServer saniyeler içinde biter; komut satırı takılı kalsa bile izleme arka planda çalışabilir.
-                          </span>
-                        )}
+                    {showProgress && (
+                      <CommandProgressBar
+                        pct={progress.pct}
+                        label={progress.label}
+                        stuckState={progress.stuckState}
+                        animate={cmd.status === "running"}
+                      />
+                    )}
+                    {isWatch && cmd.status === "running" && health?.isAlive && (
+                      <div style={{ fontSize: 11, marginTop: 4, color: "var(--green)" }}>
+                        Son ping {timeAgo(health.lastPingAt)} —{" "}
+                        <Link href="/klasor-izleme" style={{ color: "var(--accent)" }}>Klasör İzleme</Link>
                       </div>
                     )}
                   </div>
@@ -401,6 +457,9 @@ export default function KomutlarClient({
                           <div>Modül: <span className="mono">{cmd.moduleName}</span></div>
                           {cmd.param && <div>Param: <span className="mono">{cmd.param}</span></div>}
                           <div>Oluşturan: {cmd.createdBy}</div>
+                          {cmd.progressAt && (
+                            <div>Son ilerleme: {formatTR(cmd.progressAt)} ({cmd.progressPct ?? 0}%)</div>
+                          )}
                         </div>
                       </div>
                       {(cmd.result || cmd.errorMsg) && (
@@ -457,11 +516,10 @@ export default function KomutlarClient({
         </code>{" "}
         sorgular. TeklifAgent.exe yalnızca heartbeat gönderir.         Modül sonuçları{" "}
         <a href="/modul-ciktilari/" style={{ color: "var(--accent)" }}>Modül Çıktıları</a>{" "}
-        sayfasında listelenir (komut satırında değil).{" "}
-        <strong>WatchFolderServer</strong> gibi arka plan modülleri saniyeler içinde biter; komut satırı
-        &quot;Çalışıyor&quot; takılı kalırsa{" "}
-        <Link href="/klasor-izleme" style={{ color: "var(--accent)" }}>Klasör İzleme</Link>
-        {" "}sayfasında son sinyal zamanına bakın (90 sn içindeyse aktif). 5 dk sonra otomatik hata olur.
+        sayfasında listelenir (komut satırında değil). Çalışan komutlarda{" "}
+        <strong>ilerleme çubuğu</strong> Excel&apos;den gelen aşama bildirimlerini gösterir;
+        turuncu/kırmızı uyarı takılı olabileceğini işaret eder.{" "}
+        <strong>WatchFolderServer</strong> için yeşil %100 = arka plan izleme aktif.
       </div>
     </div>
   );
