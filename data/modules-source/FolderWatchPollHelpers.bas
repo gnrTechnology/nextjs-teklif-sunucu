@@ -33,24 +33,44 @@ Private Function FwIsDir(key As String) As Boolean
     FwIsDir = (Left(key, 3) = "[D]")
 End Function
 
+Private Sub FwSnapFill(snap As String, d As Object)
+    If Len(snap) = 0 Then Exit Sub
+    Dim part As Variant, bits() As String
+    For Each part In Split(snap, "|")
+        If Len(CStr(part)) = 0 Then GoTo NextPart
+        bits = Split(CStr(part), ";")
+        If UBound(bits) >= 0 Then d(bits(0)) = CStr(part)
+NextPart:
+    Next part
+End Sub
+
 Private Sub FwDiffAndPost(folderPath As String, oldSnap As String, newSnap As String)
     Dim oldD As Object : Set oldD = CreateObject("Scripting.Dictionary")
     Dim newD As Object : Set newD = CreateObject("Scripting.Dictionary")
-    Dim part As Variant, bits() As String, nm As String, k As Variant
-    If Len(oldSnap) > 0 Then For Each part In Split(oldSnap, "|"): bits = Split(CStr(part), ";"): If UBound(bits) >= 0 Then oldD(bits(0)) = part: Next
-    If Len(newSnap) > 0 Then For Each part In Split(newSnap, "|"): bits = Split(CStr(part), ";"): If UBound(bits) >= 0 Then newD(bits(0)) = part: Next
+    Dim nm As String, k As Variant
+    Call FwSnapFill(oldSnap, oldD)
+    Call FwSnapFill(newSnap, newD)
     For Each k In newD.Keys
         nm = CStr(k)
         If Not oldD.Exists(nm) Then
-            If FwIsDir(nm) Then FwPostEvent "created", folderPath, FwDispName(nm), "Yeni klasor: " & FwDispName(nm)
-            Else FwPostEvent "created", folderPath, FwDispName(nm), "Yeni dosya: " & FwDispName(nm)
-        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then FwPostEvent "modified", folderPath, FwDispName(nm), "Degisti: " & FwDispName(nm)
+            If FwIsDir(nm) Then
+                FwPostEvent "created", folderPath, FwDispName(nm), "Yeni klasor: " & FwDispName(nm)
+            Else
+                FwPostEvent "created", folderPath, FwDispName(nm), "Yeni dosya: " & FwDispName(nm)
+            End If
+        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then
+            FwPostEvent "modified", folderPath, FwDispName(nm), "Degisti: " & FwDispName(nm)
+        End If
     Next k
     For Each k In oldD.Keys
         nm = CStr(k)
         If Not newD.Exists(nm) Then
-            If FwIsDir(nm) Then FwPostEvent "deleted", folderPath, FwDispName(nm), "Silinen klasor: " & FwDispName(nm)
-            Else FwPostEvent "deleted", folderPath, FwDispName(nm), "Silinen dosya: " & FwDispName(nm)
+            If FwIsDir(nm) Then
+                FwPostEvent "deleted", folderPath, FwDispName(nm), "Silinen klasor: " & FwDispName(nm)
+            Else
+                FwPostEvent "deleted", folderPath, FwDispName(nm), "Silinen dosya: " & FwDispName(nm)
+            End If
+        End If
     Next k
 End Sub
 

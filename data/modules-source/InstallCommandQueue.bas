@@ -168,24 +168,44 @@ Private Function FwPollHelpersCode() As String
     s = s & "    FwIsDir = (Left(key, 3) = ""[D]"")" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
+    s = s & "Private Sub FwSnapFill(snap As String, d As Object)" & vbCrLf
+    s = s & "    If Len(snap) = 0 Then Exit Sub" & vbCrLf
+    s = s & "    Dim part As Variant, bits() As String" & vbCrLf
+    s = s & "    For Each part In Split(snap, ""|"")" & vbCrLf
+    s = s & "        If Len(CStr(part)) = 0 Then GoTo NextPart" & vbCrLf
+    s = s & "        bits = Split(CStr(part), "";"")" & vbCrLf
+    s = s & "        If UBound(bits) >= 0 Then d(bits(0)) = CStr(part)" & vbCrLf
+    s = s & "NextPart:" & vbCrLf
+    s = s & "    Next part" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
     s = s & "Private Sub FwDiffAndPost(folderPath As String, oldSnap As String, newSnap As String)" & vbCrLf
     s = s & "    Dim oldD As Object : Set oldD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
     s = s & "    Dim newD As Object : Set newD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
-    s = s & "    Dim part As Variant, bits() As String, nm As String, k As Variant" & vbCrLf
-    s = s & "    If Len(oldSnap) > 0 Then For Each part In Split(oldSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then oldD(bits(0)) = part: Next" & vbCrLf
-    s = s & "    If Len(newSnap) > 0 Then For Each part In Split(newSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then newD(bits(0)) = part: Next" & vbCrLf
+    s = s & "    Dim nm As String, k As Variant" & vbCrLf
+    s = s & "    Call FwSnapFill(oldSnap, oldD)" & vbCrLf
+    s = s & "    Call FwSnapFill(newSnap, newD)" & vbCrLf
     s = s & "    For Each k In newD.Keys" & vbCrLf
     s = s & "        nm = CStr(k)" & vbCrLf
     s = s & "        If Not oldD.Exists(nm) Then" & vbCrLf
-    s = s & "            If FwIsDir(nm) Then FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni klasor: "" & FwDispName(nm)" & vbCrLf
-    s = s & "            Else FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni dosya: "" & FwDispName(nm)" & vbCrLf
-    s = s & "        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then FwPostEvent ""modified"", folderPath, FwDispName(nm), ""Degisti: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            If FwIsDir(nm) Then" & vbCrLf
+    s = s & "                FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni klasor: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            Else" & vbCrLf
+    s = s & "                FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni dosya: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then" & vbCrLf
+    s = s & "            FwPostEvent ""modified"", folderPath, FwDispName(nm), ""Degisti: "" & FwDispName(nm)" & vbCrLf
+    s = s & "        End If" & vbCrLf
     s = s & "    Next k" & vbCrLf
     s = s & "    For Each k In oldD.Keys" & vbCrLf
     s = s & "        nm = CStr(k)" & vbCrLf
     s = s & "        If Not newD.Exists(nm) Then" & vbCrLf
-    s = s & "            If FwIsDir(nm) Then FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen klasor: "" & FwDispName(nm)" & vbCrLf
-    s = s & "            Else FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen dosya: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            If FwIsDir(nm) Then" & vbCrLf
+    s = s & "                FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen klasor: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            Else" & vbCrLf
+    s = s & "                FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen dosya: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        End If" & vbCrLf
     s = s & "    Next k" & vbCrLf
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
