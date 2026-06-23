@@ -125,94 +125,103 @@ Private Function GetFolderWatchPollCode(hostName As String) As String
     GetFolderWatchPollCode = s
 End Function
 
-Private Function FwPollHelpersCode() As String
-    Dim s As String
-    s = "Private Function FwBuildSnapshot(folderPath As String) As String" & vbCrLf
-    s = s & "    On Error Resume Next" & vbCrLf
-    s = s & "    Dim fso As Object : Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
-    s = s & "    If Not fso.FolderExists(folderPath) Then Exit Function" & vbCrLf
-    s = s & "    Dim folder As Object : Set folder = fso.GetFolder(folderPath)" & vbCrLf
-    s = s & "    Dim sf As Object, out As String, n As Long, fn As String" & vbCrLf
-    s = s & "    out = """" : n = 0" & vbCrLf
-    s = s & "    For Each sf In folder.SubFolders" & vbCrLf
-    s = s & "        If Len(out) > 0 Then out = out & ""|""" & vbCrLf
-    s = s & "        out = out & ""[D]"" & sf.Name & "";0;"" & CLng(sf.DateLastModified)" & vbCrLf
-    s = s & "    Next sf" & vbCrLf
-    s = s & "    fn = Dir(folderPath & ""*.*"", vbNormal Or vbHidden Or vbSystem)" & vbCrLf
-    s = s & "    Do While Len(fn) > 0 And n < 800" & vbCrLf
-    s = s & "        If fn <> ""."" And fn <> "".."" Then" & vbCrLf
-    s = s & "            n = n + 1" & vbCrLf
-    s = s & "            If Len(out) > 0 Then out = out & ""|""" & vbCrLf
-    s = s & "            Dim fp As String : fp = folderPath & fn" & vbCrLf
-    s = s & "            If fso.FileExists(fp) Then" & vbCrLf
-    s = s & "                Dim fi As Object : Set fi = fso.GetFile(fp)" & vbCrLf
-    s = s & "                out = out & ""[F]"" & fn & "";"" & fi.Size & "";"" & CLng(fi.DateLastModified)" & vbCrLf
-    s = s & "            End If" & vbCrLf
-    s = s & "        End If" & vbCrLf
-    s = s & "        fn = Dir()" & vbCrLf
-    s = s & "    Loop" & vbCrLf
-    s = s & "    FwBuildSnapshot = out" & vbCrLf
-    s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Function FwDispName(key As String) As String" & vbCrLf
-    s = s & "    If Left(key, 3) = ""[D]"" Then FwDispName = Mid(key, 4) Else If Left(key, 3) = ""[F]"" Then FwDispName = Mid(key, 4) Else FwDispName = key" & vbCrLf
-    s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Function FwIsDir(key As String) As Boolean" & vbCrLf
-    s = s & "    FwIsDir = (Left(key, 3) = ""[D]"")" & vbCrLf
-    s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Sub FwDiffAndPost(folderPath As String, oldSnap As String, newSnap As String)" & vbCrLf
-    s = s & "    Dim oldD As Object : Set oldD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
-    s = s & "    Dim newD As Object : Set newD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
-    s = s & "    Dim part As Variant, bits() As String, nm As String, k As Variant" & vbCrLf
-    s = s & "    If Len(oldSnap) > 0 Then For Each part In Split(oldSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then oldD(bits(0)) = part: Next" & vbCrLf
-    s = s & "    If Len(newSnap) > 0 Then For Each part In Split(newSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then newD(bits(0)) = part: Next" & vbCrLf
-    s = s & "    For Each k In newD.Keys" & vbCrLf
-    s = s & "        nm = CStr(k)" & vbCrLf
-    s = s & "        If Not oldD.Exists(nm) Then" & vbCrLf
-    s = s & "            If FwIsDir(nm) Then FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni klasor: "" & FwDispName(nm)" & vbCrLf
-    s = s & "            Else FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni dosya: "" & FwDispName(nm)" & vbCrLf
-    s = s & "        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then FwPostEvent ""modified"", folderPath, FwDispName(nm), ""Degisti: "" & FwDispName(nm)" & vbCrLf
-    s = s & "    Next k" & vbCrLf
-    s = s & "    For Each k In oldD.Keys" & vbCrLf
-    s = s & "        nm = CStr(k)" & vbCrLf
-    s = s & "        If Not newD.Exists(nm) Then" & vbCrLf
-    s = s & "            If FwIsDir(nm) Then FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen klasor: "" & FwDispName(nm)" & vbCrLf
-    s = s & "            Else FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen dosya: "" & FwDispName(nm)" & vbCrLf
-    s = s & "    Next k" & vbCrLf
-    s = s & "End Sub" & vbCrLf & vbCrLf
-    s = s & "Private Sub FwPostEvent(evType As String, folderPath As String, fileName As String, detail As String)" & vbCrLf
-    s = s & "    On Error Resume Next" & vbCrLf
-    s = s & "    Dim mac As String : mac = FwGetMac()" & vbCrLf
-    s = s & "    If mac = """" Then Exit Sub" & vbCrLf
-    s = s & "    Dim baseUrl As String" & vbCrLf
-    s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
-    s = s & "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf
-    s = s & "    Dim body As String, hostname As String : hostname = Environ(""COMPUTERNAME"")" & vbCrLf
-    s = s & "    body = ""{"" & FwJf(""mac"", mac) & "","" & FwJf(""hostname"", hostname) & "","" & FwJf(""folderPath"", folderPath)" & vbCrLf
-    s = s & "    body = body & "","" & FwJf(""eventType"", evType) & "","" & FwJf(""fileName"", fileName) & "","" & FwJf(""filePath"", folderPath & fileName) & "","" & FwJf(""detail"", detail) & ""}""" & vbCrLf
-    s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
-    s = s & "    http.Open ""POST"", baseUrl & ""folder-watch/"", False" & vbCrLf
-    s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
-    s = s & "    http.setTimeouts 3000, 3000, 5000, 5000" & vbCrLf
-    s = s & "    http.send body" & vbCrLf
-    s = s & "End Sub" & vbCrLf & vbCrLf
-    s = s & "Private Function FwGetMac() As String" & vbCrLf
-    s = s & "    On Error Resume Next" & vbCrLf
-    s = s & "    Dim wmi As Object, col As Object, o As Object" & vbCrLf
-    s = s & "    Set wmi = GetObject(""winmgmts:\\.\root\cimv2"")" & vbCrLf
-    s = s & "    Set col = wmi.ExecQuery(""SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True"")" & vbCrLf
-    s = s & "    For Each o In col" & vbCrLf
-    s = s & "        If Not IsNull(o.MACAddress) And o.MACAddress <> """" Then FwGetMac = o.MACAddress : Exit Function" & vbCrLf
-    s = s & "    Next" & vbCrLf
-    s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Function FwJsonEsc(s As String) As String" & vbCrLf
-    s = s & "    s = CStr(s & """")" & vbCrLf
-    s = s & "    FwJsonEsc = Replace(Replace(s, Chr(92), Chr(92) & Chr(92)), Chr(34), Chr(92) & Chr(34))" & vbCrLf
-    s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Function FwJf(k As String, v As String) As String" & vbCrLf
-    s = s & "    FwJf = Chr(34) & k & Chr(34) & "":"" & Chr(34) & FwJsonEsc(v) & Chr(34)" & vbCrLf
-    s = s & "End Function" & vbCrLf
-    FwPollHelpersCode = s
-End Function
+Private Function FwPollHelpersCode() As String
+    Dim s As String
+    s = s & "Private Function FwBuildSnapshot(folderPath As String) As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim fso As Object : Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "    If Not fso.FolderExists(folderPath) Then Exit Function" & vbCrLf
+    s = s & "    Dim folder As Object : Set folder = fso.GetFolder(folderPath)" & vbCrLf
+    s = s & "    Dim sf As Object, out As String, n As Long, fn As String" & vbCrLf
+    s = s & "    out = """" : n = 0" & vbCrLf
+    s = s & "    For Each sf In folder.SubFolders" & vbCrLf
+    s = s & "        If Len(out) > 0 Then out = out & ""|""" & vbCrLf
+    s = s & "        out = out & ""[D]"" & sf.Name & "";0;"" & CLng(sf.DateLastModified)" & vbCrLf
+    s = s & "    Next sf" & vbCrLf
+    s = s & "    fn = Dir(folderPath & ""*.*"", vbNormal Or vbHidden Or vbSystem)" & vbCrLf
+    s = s & "    Do While Len(fn) > 0 And n < 800" & vbCrLf
+    s = s & "        If fn <> ""."" And fn <> "".."" Then" & vbCrLf
+    s = s & "            n = n + 1" & vbCrLf
+    s = s & "            If Len(out) > 0 Then out = out & ""|""" & vbCrLf
+    s = s & "            Dim fp As String : fp = folderPath & fn" & vbCrLf
+    s = s & "            If fso.FileExists(fp) Then" & vbCrLf
+    s = s & "                Dim fi As Object : Set fi = fso.GetFile(fp)" & vbCrLf
+    s = s & "                out = out & ""[F]"" & fn & "";"" & fi.Size & "";"" & CLng(fi.DateLastModified)" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "        fn = Dir()" & vbCrLf
+    s = s & "    Loop" & vbCrLf
+    s = s & "    FwBuildSnapshot = out" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function FwDispName(key As String) As String" & vbCrLf
+    s = s & "    If Left(key, 3) = ""[D]"" Then FwDispName = Mid(key, 4) Else If Left(key, 3) = ""[F]"" Then FwDispName = Mid(key, 4) Else FwDispName = key" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function FwIsDir(key As String) As Boolean" & vbCrLf
+    s = s & "    FwIsDir = (Left(key, 3) = ""[D]"")" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Sub FwDiffAndPost(folderPath As String, oldSnap As String, newSnap As String)" & vbCrLf
+    s = s & "    Dim oldD As Object : Set oldD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
+    s = s & "    Dim newD As Object : Set newD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
+    s = s & "    Dim part As Variant, bits() As String, nm As String, k As Variant" & vbCrLf
+    s = s & "    If Len(oldSnap) > 0 Then For Each part In Split(oldSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then oldD(bits(0)) = part: Next" & vbCrLf
+    s = s & "    If Len(newSnap) > 0 Then For Each part In Split(newSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then newD(bits(0)) = part: Next" & vbCrLf
+    s = s & "    For Each k In newD.Keys" & vbCrLf
+    s = s & "        nm = CStr(k)" & vbCrLf
+    s = s & "        If Not oldD.Exists(nm) Then" & vbCrLf
+    s = s & "            If FwIsDir(nm) Then FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni klasor: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            Else FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni dosya: "" & FwDispName(nm)" & vbCrLf
+    s = s & "        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then FwPostEvent ""modified"", folderPath, FwDispName(nm), ""Degisti: "" & FwDispName(nm)" & vbCrLf
+    s = s & "    Next k" & vbCrLf
+    s = s & "    For Each k In oldD.Keys" & vbCrLf
+    s = s & "        nm = CStr(k)" & vbCrLf
+    s = s & "        If Not newD.Exists(nm) Then" & vbCrLf
+    s = s & "            If FwIsDir(nm) Then FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen klasor: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            Else FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen dosya: "" & FwDispName(nm)" & vbCrLf
+    s = s & "    Next k" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Sub FwPostEvent(evType As String, folderPath As String, fileName As String, detail As String)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim mac As String : mac = FwGetMac()" & vbCrLf
+    s = s & "    If mac = """" Then Exit Sub" & vbCrLf
+    s = s & "    Dim baseUrl As String" & vbCrLf
+    s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
+    s = s & "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf
+    s = s & "    Dim hostname As String : hostname = Environ(""COMPUTERNAME"")" & vbCrLf
+    s = s & "    Dim body As String" & vbCrLf
+    s = s & "    body = ""{"" & Chr(34) & ""mac"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(mac) & Chr(34) & "",""" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""hostname"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(hostname) & Chr(34) & "",""" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""folderPath"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(folderPath) & Chr(34) & "",""" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""eventType"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(evType) & Chr(34) & "",""" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""fileName"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(fileName) & Chr(34) & "",""" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""filePath"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(folderPath & fileName) & Chr(34) & "",""" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""detail"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(detail) & Chr(34) & ""}""" & vbCrLf
+    s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
+    s = s & "    http.Open ""POST"", baseUrl & ""folder-watch/"", False" & vbCrLf
+    s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
+    s = s & "    http.setTimeouts 3000, 3000, 5000, 5000" & vbCrLf
+    s = s & "    http.send body" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function FwGetMac() As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim wmi As Object, col As Object, o As Object" & vbCrLf
+    s = s & "    Set wmi = GetObject(""winmgmts:\\.\root\cimv2"")" & vbCrLf
+    s = s & "    Set col = wmi.ExecQuery(""SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True"")" & vbCrLf
+    s = s & "    For Each o In col" & vbCrLf
+    s = s & "        If Not IsNull(o.MACAddress) And o.MACAddress <> """" Then FwGetMac = o.MACAddress : Exit Function" & vbCrLf
+    s = s & "    Next" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function FwJsonEsc(s As String) As String" & vbCrLf
+    s = s & "    s = CStr(s & """")" & vbCrLf
+    s = s & "    FwJsonEsc = Replace(Replace(s, Chr(92), Chr(92) & Chr(92)), Chr(34), Chr(92) & Chr(34))" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    FwPollHelpersCode = s
+End Function
 
 Private Function GetPollModuleCode() As String
     Dim s As String

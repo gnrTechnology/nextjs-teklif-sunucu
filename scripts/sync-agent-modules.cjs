@@ -43,6 +43,18 @@ const cmdIdx = modules.findIndex((m) => m.methodName === "InstallCommandQueue");
 if (cmdIdx >= 0) modules[cmdIdx] = cmdEntry;
 else modules.splice(installIdx >= 0 ? installIdx + 1 : hbIdx + 2, 0, cmdEntry);
 
+const watchEntry = {
+  methodName: "WatchFolderServer",
+  description: "Klasor izleme — degisiklikleri sunucuya POST eder",
+  category: "zamanlanmis",
+  active: true,
+  code: readBas("WatchFolderServer.bas"),
+};
+
+const watchIdx = modules.findIndex((m) => m.methodName === "WatchFolderServer");
+if (watchIdx >= 0) modules[watchIdx] = watchEntry;
+else modules.push(watchEntry);
+
 fs.writeFileSync(
   path.join(root, "data", "modules.json"),
   JSON.stringify(modules, null, 2),
