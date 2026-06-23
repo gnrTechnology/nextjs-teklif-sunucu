@@ -37,8 +37,12 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     SaveSetting "ilhan", "FolderWatch", "path", folderPath
     SaveSetting "ilhan", "FolderWatch", "interval", CStr(intervalSec)
     SaveSetting "ilhan", "FolderWatch", "active", "true"
-    SaveSetting "ilhan", "FolderWatch", "snapshot", ""
     SaveSetting "ilhan", "FolderWatch", "baseline", "pending"
+    On Error Resume Next
+    Dim snapFile As String
+    snapFile = Environ("LOCALAPPDATA") & "\TeklifAgent\folder-watch-snap.dat"
+    If fso.FileExists(snapFile) Then fso.DeleteFile snapFile, True
+    On Error GoTo 0
 
     Call PostFolderEvent("started", folderPath, "", "Izleme baslatildi: " & folderPath)
 

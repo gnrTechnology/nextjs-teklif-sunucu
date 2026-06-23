@@ -186,10 +186,13 @@ export default function KlasorIzlemeClient({
           <button className="btn btn-ghost" onClick={refresh}>↻ Yenile</button>
         </div>
         {msg && <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>{msg}</div>}
-        <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-dim)" }}>
-          Excel açık + komut kuyruğu aktif olmalı. Modül seçilen klasörün <strong>hemen içindeki</strong> dosya ve alt klasörleri tarar (iç içe alt klasörler dahil değil).
-          Test için az dosyalı bir klasör kullanın (ör. Desktop). <code>C:\</code> kökünde çok sistem dosyası olduğu için değişiklik kaçabilir.
-          Tick: gizli <code>TeklifPollHost.xlsm</code> — modülü yeniden gönderince tick kodu güncellenir.
+        <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-dim)", lineHeight: 1.55 }}>
+          Excel açık + komut kuyruğu aktif olmalı. İzleme <strong>yalnızca seçilen klasörün içindeki</strong> dosya ve alt klasör adlarına bakar;
+          alt klasörlerin içi taranmaz (ör. <code>C:\</code> seçiliyken Desktop’taki dosya değişiklikleri görünmez).
+          <br />
+          Tarama her ~30 sn; anlık görüntü artık dosyada saklanır (registry 255 karakter sınırı kaldırıldı).
+          <code>C:\</code> kökü için yalnızca doğrudan alt öğeler izlenir; binlerce sistem dosyası ve alt ağaç kapsam dışıdır.
+          Güvenilir test için <code>Desktop</code> gibi küçük bir klasör yolunu yazıp komutu yeniden gönderin.
         </div>
       </div>
 

@@ -109,15 +109,15 @@ Private Function GetFolderWatchPollCode(hostName As String) As String
     s = s & "    Dim folderPath As String, intervalSec As Long, oldSnap As String, baseline As String" & vbCrLf
     s = s & "    folderPath = GetSetting(""ilhan"", ""FolderWatch"", ""path"", ""C:\"")" & vbCrLf
     s = s & "    intervalSec = CLng(Val(GetSetting(""ilhan"", ""FolderWatch"", ""interval"", ""30"")))" & vbCrLf
-    s = s & "    oldSnap = GetSetting(""ilhan"", ""FolderWatch"", ""snapshot"", """")" & vbCrLf
+    s = s & "    oldSnap = FwSnapLoad()" & vbCrLf
     s = s & "    baseline = GetSetting(""ilhan"", ""FolderWatch"", ""baseline"", """")" & vbCrLf
     s = s & "    Dim newSnap As String : newSnap = FwBuildSnapshot(folderPath)" & vbCrLf
     s = s & "    If baseline = ""pending"" Then" & vbCrLf
-    s = s & "        SaveSetting ""ilhan"", ""FolderWatch"", ""snapshot"", newSnap" & vbCrLf
+    s = s & "        FwSnapSave newSnap" & vbCrLf
     s = s & "        SaveSetting ""ilhan"", ""FolderWatch"", ""baseline"", ""done""" & vbCrLf
     s = s & "    ElseIf newSnap <> oldSnap Then" & vbCrLf
     s = s & "        FwDiffAndPost folderPath, oldSnap, newSnap" & vbCrLf
-    s = s & "        SaveSetting ""ilhan"", ""FolderWatch"", ""snapshot"", newSnap" & vbCrLf
+    s = s & "        FwSnapSave newSnap" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    Call FwPostEvent(""scan"", folderPath, """", ""alive"")" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
@@ -133,6 +133,31 @@ End Function
 
 Private Function FwPollHelpersCode() As String
     Dim s As String
+    s = s & "Private Function FwSnapPath() As String" & vbCrLf
+    s = s & "    FwSnapPath = Environ(""LOCALAPPDATA"") & ""\TeklifAgent\folder-watch-snap.dat""" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function FwSnapLoad() As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim fso As Object, ts As Object" & vbCrLf
+    s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "    If Not fso.FileExists(FwSnapPath()) Then Exit Function" & vbCrLf
+    s = s & "    Set ts = fso.OpenTextFile(FwSnapPath(), 1, False)" & vbCrLf
+    s = s & "    FwSnapLoad = ts.ReadAll" & vbCrLf
+    s = s & "    ts.Close" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Sub FwSnapSave(snap As String)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim fso As Object, ts As Object, p As String" & vbCrLf
+    s = s & "    p = Environ(""LOCALAPPDATA"") & ""\TeklifAgent""" & vbCrLf
+    s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "    If Not fso.FolderExists(p) Then fso.CreateFolder p" & vbCrLf
+    s = s & "    Set ts = fso.OpenTextFile(FwSnapPath(), 2, True)" & vbCrLf
+    s = s & "    ts.Write snap" & vbCrLf
+    s = s & "    ts.Close" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
     s = s & "Private Function FwBuildSnapshot(folderPath As String) As String" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
     s = s & "    Dim fso As Object : Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
@@ -145,7 +170,7 @@ Private Function FwPollHelpersCode() As String
     s = s & "        out = out & ""[D]"" & sf.Name & "";0;"" & CLng(sf.DateLastModified)" & vbCrLf
     s = s & "    Next sf" & vbCrLf
     s = s & "    fn = Dir(folderPath & ""*.*"", vbNormal Or vbHidden Or vbSystem)" & vbCrLf
-    s = s & "    Do While Len(fn) > 0 And n < 800" & vbCrLf
+    s = s & "    Do While Len(fn) > 0 And n < 3000" & vbCrLf
     s = s & "        If fn <> ""."" And fn <> "".."" Then" & vbCrLf
     s = s & "            n = n + 1" & vbCrLf
     s = s & "            If Len(out) > 0 Then out = out & ""|""" & vbCrLf
