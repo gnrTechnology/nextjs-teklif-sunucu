@@ -187,7 +187,7 @@ export default function KlasorIzlemeClient({
         <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-dim)" }}>
           Excel açık + komut kuyruğu aktif olmalı. Modül seçilen klasörün <strong>hemen içindeki</strong> dosya ve alt klasörleri tarar (iç içe alt klasörler dahil değil).
           Test için az dosyalı bir klasör kullanın (ör. Desktop). <code>C:\</code> kökünde çok sistem dosyası olduğu için değişiklik kaçabilir.
-          Tick: gizli <code>TeklifPollHost.xlsx</code> — modülü yeniden gönderince tick kodu güncellenir.
+          Tick: gizli <code>TeklifPollHost.xlsm</code> — modülü yeniden gönderince tick kodu güncellenir.
         </div>
       </div>
 

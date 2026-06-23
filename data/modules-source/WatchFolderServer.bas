@@ -1,4 +1,5 @@
-Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsx"
+Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsm"
+Private Const POLL_FILE_FORMAT As Long = 52
 
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Herhangi bir klasoru izler (ust seviye, alt klasor yok)
@@ -64,6 +65,9 @@ Private Sub EnsureFolderWatchPoller()
     Dim path As String
     path = PollHostPath()
     EnsureAgentFolder Environ("LOCALAPPDATA") & "\TeklifAgent"
+    On Error Resume Next
+    If Dir(Replace(path, ".xlsm", ".xlsx")) <> "" Then Kill Replace(path, ".xlsm", ".xlsx")
+    On Error GoTo 0
 
     Set wb = FindOpenPollHost()
     If wb Is Nothing Then
@@ -71,7 +75,7 @@ Private Sub EnsureFolderWatchPoller()
             Set wb = Workbooks.Open(path, UpdateLinks:=0, ReadOnly:=False)
         Else
             Set wb = Workbooks.Add(xlWBATWorksheet)
-            wb.SaveAs Filename:=path, FileFormat:=51, CreateBackup:=False
+            wb.SaveAs Filename:=path, FileFormat:=POLL_FILE_FORMAT, CreateBackup:=False
         End If
         On Error Resume Next
         wb.Windows(1).Visible = False

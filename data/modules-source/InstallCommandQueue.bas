@@ -1,4 +1,5 @@
-Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsx"
+Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsm"
+Private Const POLL_FILE_FORMAT As Long = 52
 
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Gizli TeklifPollHost workbook + OnTime ile komut kuyrugu (Excel ic thread)
@@ -27,6 +28,7 @@ Private Sub EnsurePollHost()
 
     path = PollHostPath()
     EnsureFolder Environ("LOCALAPPDATA") & "\TeklifAgent"
+    Call RemoveLegacyPollHost
 
     Set wb = FindOpenPollHost()
     If wb Is Nothing Then
@@ -34,7 +36,7 @@ Private Sub EnsurePollHost()
             Set wb = Workbooks.Open(path, UpdateLinks:=0, ReadOnly:=False)
         Else
             Set wb = Workbooks.Add(xlWBATWorksheet)
-            wb.SaveAs Filename:=path, FileFormat:=51, CreateBackup:=False
+            wb.SaveAs Filename:=path, FileFormat:=POLL_FILE_FORMAT, CreateBackup:=False
         End If
         On Error Resume Next
         wb.Windows(1).Visible = False
@@ -67,6 +69,13 @@ Private Sub EnsureFolder(path As String)
     If Not fso.FolderExists(path) Then fso.CreateFolder path
 End Sub
 
+Private Sub RemoveLegacyPollHost()
+    On Error Resume Next
+    Dim legacy As String
+    legacy = Environ("LOCALAPPDATA") & "\TeklifAgent\TeklifPollHost.xlsx"
+    If Dir(legacy) <> "" Then Kill legacy
+End Sub
+
 Private Sub InjectPollModule(wb As Workbook)
     Dim vbComp As Object
     On Error Resume Next
@@ -89,6 +98,7 @@ End Function
 Private Function PollCodeMain() As String
     Dim s As String
     s = "Option Explicit" & vbCrLf & vbCrLf
+    s = s & "Private Const POLL_TICK As String = ""'TeklifPollHost.xlsm'!CmdPoll.CommandQueueTick""" & vbCrLf
     s = s & "Private gCmdId As String" & vbCrLf
     s = s & "Private gBaseUrl As String" & vbCrLf & vbCrLf
     s = s & "Public Sub CommandQueueTick()" & vbCrLf
@@ -133,7 +143,7 @@ Private Function PollCodeMain() As String
     s = s & "    gCmdId = """"" & vbCrLf
     s = s & "    Debug.Print ""CommandQueueTick hata: "" & Err.Description" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
-    s = s & "    Application.OnTime Now + TimeValue(waitSec), ""'TeklifPollHost.xlsx'!CmdPoll.CommandQueueTick""" & vbCrLf
+    s = s & "    Application.OnTime Now + TimeValue(waitSec), POLL_TICK" & vbCrLf
     s = s & "End Sub" & vbCrLf & vbCrLf
     PollCodeMain = s
 End Function
@@ -172,53 +182,8 @@ Private Function PollCodeHelpers() As String
     s = s & "    Dim p2 As Long : p2 = InStr(p1, s, """""""")" & vbCrLf
     s = s & "    If p2 > p1 Then JsonStr = Mid(s, p1, p2 - p1)" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Function JsonExtractParam(s As String) As String" & vbCrLf
-    s = s & "    Dim sk As String : sk = """"""param"""":""" & vbCrLf
-    s = s & "    Dim p1 As Long : p1 = InStr(1, s, sk, vbTextCompare)" & vbCrLf
-    s = s & "    If p1 = 0 Then Exit Function" & vbCrLf
-    s = s & "    p1 = p1 + Len(sk)" & vbCrLf
-    s = s & "    Do While p1 <= Len(s) And Mid(s, p1, 1) = "" "" : p1 = p1 + 1 : Loop" & vbCrLf
-    s = s & "    If Mid(s, p1, 4) = ""null"" Then Exit Function" & vbCrLf
-    s = s & "    If Mid(s, p1, 1) = ""{"" Then JsonExtractParam = JsonSliceObject(s, p1) : Exit Function" & vbCrLf
-    s = s & "    If Mid(s, p1, 1) = """"""" Then JsonExtractParam = JsonSliceString(s, p1)" & vbCrLf
-    s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Function JsonSliceString(s As String, qPos As Long) As String" & vbCrLf
-    s = s & "    Dim i As Long : i = qPos + 1" & vbCrLf
-    s = s & "    Dim out As String : out = """"" & vbCrLf
-    s = s & "    Do While i <= Len(s)" & vbCrLf
-    s = s & "        Dim ch As String : ch = Mid(s, i, 1)" & vbCrLf
-    s = s & "        If ch = ""\"" Then" & vbCrLf
-    s = s & "            i = i + 1" & vbCrLf
-    s = s & "            If i <= Len(s) Then" & vbCrLf
-    s = s & "                ch = Mid(s, i, 1)" & vbCrLf
-    s = s & "                If ch = """"""" Then out = out & """"""""" & vbCrLf
-    s = s & "                ElseIf ch = ""\"" Then out = out & ""\"""" & vbCrLf
-    s = s & "                Else out = out & ch" & vbCrLf
-    s = s & "            End If" & vbCrLf
-    s = s & "        ElseIf ch = """"""" Then JsonSliceString = out : Exit Function" & vbCrLf
-    s = s & "        Else out = out & ch" & vbCrLf
-    s = s & "        i = i + 1" & vbCrLf
-    s = s & "    Loop" & vbCrLf
-    s = s & "End Function" & vbCrLf & vbCrLf
-    s = s & "Private Function JsonSliceObject(s As String, startPos As Long) As String" & vbCrLf
-    s = s & "    Dim depth As Long : depth = 0" & vbCrLf
-    s = s & "    Dim i As Long : i = startPos" & vbCrLf
-    s = s & "    Dim inQ As Boolean : inQ = False" & vbCrLf
-    s = s & "    Do While i <= Len(s)" & vbCrLf
-    s = s & "        Dim ch As String : ch = Mid(s, i, 1)" & vbCrLf
-    s = s & "        If inQ Then" & vbCrLf
-    s = s & "            If ch = ""\"" Then i = i + 1" & vbCrLf
-    s = s & "            ElseIf ch = """"""" Then inQ = False" & vbCrLf
-    s = s & "        Else" & vbCrLf
-    s = s & "            If ch = """"""" Then inQ = True" & vbCrLf
-    s = s & "            ElseIf ch = ""{"" Then depth = depth + 1" & vbCrLf
-    s = s & "            ElseIf ch = ""}"" Then" & vbCrLf
-    s = s & "                depth = depth - 1" & vbCrLf
-    s = s & "                If depth = 0 Then JsonSliceObject = Mid(s, startPos, i - startPos + 1) : Exit Function" & vbCrLf
-    s = s & "            End If" & vbCrLf
-    s = s & "        End If" & vbCrLf
-    s = s & "        i = i + 1" & vbCrLf
-    s = s & "    Loop" & vbCrLf
+    s = s & "Private Function JsonExtractParam(resp As String) As String" & vbCrLf
+    s = s & "    JsonExtractParam = JsonStr(resp, ""folderPath"")" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Function RunRemoteModule(modName As String, cmdParam As String) As String" & vbCrLf
     s = s & "    Dim lastErr As String" & vbCrLf
