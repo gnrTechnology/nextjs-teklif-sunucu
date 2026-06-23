@@ -187,13 +187,8 @@ Private Function FwPollHelpersCode() As String
     s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
     s = s & "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf
     s = s & "    Dim body As String, hostname As String : hostname = Environ(""COMPUTERNAME"")" & vbCrLf
-    s = s & "    body = ""{"" & Chr(34) & ""mac"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(mac) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""hostname"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(hostname) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""folderPath"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(folderPath) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""eventType"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(evType) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""fileName"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(fileName) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""filePath"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(folderPath & fileName) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""detail"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(detail) & Chr(34) & ""}""" & vbCrLf
+    s = s & "    body = ""{"" & FwJf(""mac"", mac) & "","" & FwJf(""hostname"", hostname) & "","" & FwJf(""folderPath"", folderPath)" & vbCrLf
+    s = s & "    body = body & "","" & FwJf(""eventType"", evType) & "","" & FwJf(""fileName"", fileName) & "","" & FwJf(""filePath"", folderPath & fileName) & "","" & FwJf(""detail"", detail) & ""}""" & vbCrLf
     s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
     s = s & "    http.Open ""POST"", baseUrl & ""folder-watch/"", False" & vbCrLf
     s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
@@ -212,6 +207,9 @@ Private Function FwPollHelpersCode() As String
     s = s & "Private Function FwJsonEsc(s As String) As String" & vbCrLf
     s = s & "    s = CStr(s & """")" & vbCrLf
     s = s & "    FwJsonEsc = Replace(Replace(s, Chr(92), Chr(92) & Chr(92)), Chr(34), Chr(92) & Chr(34))" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function FwJf(k As String, v As String) As String" & vbCrLf
+    s = s & "    FwJf = Chr(34) & k & Chr(34) & "":"" & Chr(34) & FwJsonEsc(v) & Chr(34)" & vbCrLf
     s = s & "End Function" & vbCrLf
     FwPollHelpersCode = s
 End Function
