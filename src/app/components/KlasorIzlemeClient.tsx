@@ -25,6 +25,7 @@ export default function KlasorIzlemeClient({
   const [health, setHealth] = useState<FolderWatchHealth | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [folderPath, setFolderPath] = useState("C:\\Users\\onurm\\Desktop\\");
 
   const refresh = useCallback(async () => {
     const q = mac ? `?mac=${encodeURIComponent(mac)}&limit=200` : "?limit=200";
@@ -54,7 +55,7 @@ export default function KlasorIzlemeClient({
     setBusy(true);
     setMsg("");
     try {
-      const param = JSON.stringify({ folderPath: "C:\\", intervalSec: 30 });
+      const param = JSON.stringify({ folderPath: folderPath.trim() || "C:\\", intervalSec: 30 });
       const r = await fetch("/api/commands/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,7 +88,7 @@ export default function KlasorIzlemeClient({
         <div>
           <div className="page-title">Klasör İzleme</div>
           <div className="page-sub">
-            <span className="mono">C:\</span> kök klasörü (üst seviye) — değişiklikler sunucuya akar
+            Herhangi bir klasör (üst seviye) — değişiklikler sunucuya akar
           </div>
         </div>
         <Link href="/loglar" className="btn btn-ghost">Tüm loglar →</Link>
@@ -127,7 +128,7 @@ export default function KlasorIzlemeClient({
               )}
               {!health.isAlive && health.lastPingAt && (
                 <div style={{ fontSize: 12, color: "#f59e0b", marginTop: 6 }}>
-                  90 sn içinde yeni sinyal gelmediyse izleme durmuş olabilir (Excel kapalı, OnTime iptal, zInternet.FolderWatchServer_Tick eksik).
+                  90 sn içinde yeni sinyal gelmediyse izleme durmuş olabilir (Excel kapalı veya TeklifPollHost tick çalışmıyor).
                 </div>
               )}
             </div>
@@ -165,6 +166,14 @@ export default function KlasorIzlemeClient({
               </option>
             ))}
           </select>
+          <input
+            className="form-input mono"
+            value={folderPath}
+            onChange={(e) => setFolderPath(e.target.value)}
+            placeholder="C:\Users\...\Desktop\"
+            style={{ minWidth: 280, flex: 1 }}
+            title="İzlenecek klasör yolu"
+          />
           <button className="btn btn-primary" disabled={busy || !mac} onClick={startWatchOnClient}>
             WatchFolderServer gönder
           </button>
@@ -172,8 +181,8 @@ export default function KlasorIzlemeClient({
         </div>
         {msg && <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>{msg}</div>}
         <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-dim)" }}>
-          Excel açık + komut kuyruğu aktif olmalı. Modül her 30 sn&apos;de C:\ kökünü tarar.
-          <code style={{ marginLeft: 6 }}>zInternet.FolderWatchServer_Tick</code> teklif.xlam&apos;da olmalı.
+          Excel açık + komut kuyruğu aktif olmalı. Modül seçilen klasörü her 30 sn tarar.
+          Tick kodu otomatik olarak gizli <code>TeklifPollHost.xlsx</code> dosyasına yazılır (teklif.xlam merge gerekmez).
         </div>
       </div>
 

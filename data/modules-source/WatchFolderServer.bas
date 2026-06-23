@@ -1,6 +1,8 @@
+Private Const POLL_HOST_FILE As String = "TeklifPollHost.xlsx"
+
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
-    ' C:\ kok klasorunu izler (ust seviye), degisiklikleri sunucuya POST eder
-    ' param: {"folderPath":"C:\\","intervalSec":30}  veya bos -> varsayilan C:\
+    ' Herhangi bir klasoru izler (ust seviye, alt klasor yok)
+    ' param: {"folderPath":"D:\\Veri","intervalSec":30}  veya  D:\Veri  veya bos -> C:\
     Dim p As String
     If IsMissing(param) Or IsEmpty(param) Then
         p = ""
@@ -37,38 +39,165 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     SaveSetting "ilhan", "FolderWatch", "path", folderPath
     SaveSetting "ilhan", "FolderWatch", "interval", CStr(intervalSec)
     SaveSetting "ilhan", "FolderWatch", "active", "true"
-    ' Ilk snapshot OnTime tick'inde — C:\ taramasi burada takilmasin
     SaveSetting "ilhan", "FolderWatch", "snapshot", ""
 
     Call PostFolderEvent("started", folderPath, "", "Izleme baslatildi: " & folderPath)
 
-    On Error Resume Next
-    Application.OnTime Now + TimeValue("00:00:05"), "zInternet.FolderWatchServer_Tick"
-    On Error GoTo 0
+    Call EnsureFolderWatchPoller
 
-    Debug.Print "[WatchFolderServer] Aktif: " & folderPath & " (" & intervalSec & " sn)"
+    Debug.Print "[WatchFolderServer] Aktif: " & folderPath & " (" & intervalSec & " sn) — TeklifPollHost tick"
     Set DynamicFunc = Nothing
 End Function
 
-Private Function BuildFolderSnapshot(folderPath As String) As String
-    BuildFolderSnapshot = BuildFolderSnapshotSafe(folderPath, 400)
+' ── TeklifPollHost icine kalici tick (teklif.xlam merge gerekmez) ─────────────
+
+Private Function PollHostPath() As String
+    PollHostPath = Environ("LOCALAPPDATA") & "\TeklifAgent\" & POLL_HOST_FILE
 End Function
 
-Private Function BuildFolderSnapshotSafe(folderPath As String, maxFiles As Long) As String
+Private Function FolderWatchRunRef(wb As Workbook) As String
+    FolderWatchRunRef = "'" & wb.Name & "'!FolderWatchPoll.FolderWatchTick"
+End Function
+
+Private Sub EnsureFolderWatchPoller()
+    Dim wb As Workbook
+    Dim path As String
+    path = PollHostPath()
+    EnsureAgentFolder Environ("LOCALAPPDATA") & "\TeklifAgent"
+
+    Set wb = FindOpenPollHost()
+    If wb Is Nothing Then
+        If Dir(path) <> "" Then
+            Set wb = Workbooks.Open(path, UpdateLinks:=0, ReadOnly:=False)
+        Else
+            Set wb = Workbooks.Add(xlWBATWorksheet)
+            wb.SaveAs Filename:=path, FileFormat:=51, CreateBackup:=False
+        End If
+        On Error Resume Next
+        wb.Windows(1).Visible = False
+        On Error GoTo 0
+    End If
+
+    InjectFolderWatchModule wb
     On Error Resume Next
-    Dim fso As Object : Set fso = CreateObject("Scripting.FileSystemObject")
-    If Not fso.FolderExists(folderPath) Then Exit Function
-    Dim folder As Object : Set folder = fso.GetFolder(folderPath)
-    Dim f As Object
-    Dim s As String : s = ""
-    Dim n As Long : n = 0
-    For Each f In folder.Files
-        n = n + 1
-        If n > maxFiles Then Exit For
-        If Len(s) > 0 Then s = s & "|"
-        s = s & f.Name & ";" & f.Size & ";" & CLng(f.DateLastModified)
-    Next f
-    BuildFolderSnapshotSafe = s
+    Application.OnTime Now + TimeValue("00:00:05"), FolderWatchRunRef(wb)
+    On Error GoTo 0
+End Sub
+
+Private Function FindOpenPollHost() As Workbook
+    Dim wb As Workbook
+    For Each wb In Application.Workbooks
+        If InStr(1, wb.Name, "TeklifPollHost", vbTextCompare) > 0 Then
+            Set FindOpenPollHost = wb
+            Exit Function
+        End If
+    Next wb
+End Function
+
+Private Sub EnsureAgentFolder(path As String)
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(path) Then fso.CreateFolder path
+End Sub
+
+Private Sub InjectFolderWatchModule(wb As Workbook)
+    Dim vbComp As Object
+    On Error Resume Next
+    wb.VBProject.VBComponents.Remove wb.VBProject.VBComponents("FolderWatchPoll")
+    On Error GoTo 0
+    Set vbComp = wb.VBProject.VBComponents.Add(1)
+    vbComp.Name = "FolderWatchPoll"
+    vbComp.CodeModule.AddFromString GetFolderWatchPollCode(wb.Name)
+End Sub
+
+Private Function GetFolderWatchPollCode(hostName As String) As String
+    Dim s As String
+    Dim runRef As String
+    runRef = "'" & hostName & "'!FolderWatchPoll.FolderWatchTick"
+    s = "Option Explicit" & vbCrLf & vbCrLf
+    s = s & "Public Sub FolderWatchTick()" & vbCrLf
+    s = s & "    On Error GoTo TickErr" & vbCrLf
+    s = s & "    If LCase(GetSetting(""ilhan"", ""FolderWatch"", ""active"", """")) <> ""true"" Then Exit Sub" & vbCrLf
+    s = s & "    Dim folderPath As String, intervalSec As Long, oldSnap As String" & vbCrLf
+    s = s & "    folderPath = GetSetting(""ilhan"", ""FolderWatch"", ""path"", ""C:\"")" & vbCrLf
+    s = s & "    intervalSec = CLng(Val(GetSetting(""ilhan"", ""FolderWatch"", ""interval"", ""30"")))" & vbCrLf
+    s = s & "    oldSnap = GetSetting(""ilhan"", ""FolderWatch"", ""snapshot"", """")" & vbCrLf
+    s = s & "    Dim newSnap As String : newSnap = FwBuildSnapshot(folderPath)" & vbCrLf
+    s = s & "    If Len(oldSnap) > 0 And newSnap <> oldSnap Then FwDiffAndPost folderPath, oldSnap, newSnap" & vbCrLf
+    s = s & "    SaveSetting ""ilhan"", ""FolderWatch"", ""snapshot"", newSnap" & vbCrLf
+    s = s & "    Call FwPostEvent(""scan"", folderPath, """", ""alive"")" & vbCrLf
+    s = s & "Reschedule:" & vbCrLf
+    s = s & "    Application.OnTime Now + TimeSerial(0, 0, intervalSec), """ & runRef & """" & vbCrLf
+    s = s & "    Exit Sub" & vbCrLf
+    s = s & "TickErr:" & vbCrLf
+    s = s & "    Debug.Print ""[FolderWatchTick] "" & Err.Description" & vbCrLf
+    s = s & "    Resume Reschedule" & vbCrLf
+    s = s & "End Sub" & vbCrLf & vbCrLf
+    s = s & FwPollHelpers()
+    GetFolderWatchPollCode = s
+End Function
+
+Private Function FwPollHelpers() As String
+    Dim s As String
+    s = "Private Function FwBuildSnapshot(folderPath As String) As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim fso As Object : Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "    If Not fso.FolderExists(folderPath) Then Exit Function" & vbCrLf
+    s = s & "    Dim folder As Object : Set folder = fso.GetFolder(folderPath)" & vbCrLf
+    s = s & "    Dim f As Object, out As String, n As Long : out = """" : n = 0" & vbCrLf
+    s = s & "    For Each f In folder.Files" & vbCrLf
+    s = s & "        n = n + 1 : If n > 400 Then Exit For" & vbCrLf
+    s = s & "        If Len(out) > 0 Then out = out & ""|""" & vbCrLf
+    s = s & "        out = out & f.Name & "";"" & f.Size & "";"" & CLng(f.DateLastModified)" & vbCrLf
+    s = s & "    Next f" & vbCrLf
+    s = s & "    FwBuildSnapshot = out" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Sub FwDiffAndPost(folderPath As String, oldSnap As String, newSnap As String)" & vbCrLf
+    s = s & "    Dim oldD As Object : Set oldD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
+    s = s & "    Dim newD As Object : Set newD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
+    s = s & "    Dim part As Variant, bits() As String, nm As String, k As Variant" & vbCrLf
+    s = s & "    If Len(oldSnap) > 0 Then For Each part In Split(oldSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then oldD(bits(0)) = part: Next" & vbCrLf
+    s = s & "    If Len(newSnap) > 0 Then For Each part In Split(newSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then newD(bits(0)) = part: Next" & vbCrLf
+    s = s & "    For Each k In newD.Keys" & vbCrLf
+    s = s & "        nm = CStr(k)" & vbCrLf
+    s = s & "        If Not oldD.Exists(nm) Then FwPostEvent ""created"", folderPath, nm, ""Yeni: "" & nm" & vbCrLf
+    s = s & "        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then FwPostEvent ""modified"", folderPath, nm, ""Degisti: "" & nm" & vbCrLf
+    s = s & "    Next k" & vbCrLf
+    s = s & "    For Each k In oldD.Keys" & vbCrLf
+    s = s & "        nm = CStr(k)" & vbCrLf
+    s = s & "        If Not newD.Exists(nm) Then FwPostEvent ""deleted"", folderPath, nm, ""Silindi: "" & nm" & vbCrLf
+    s = s & "    Next k" & vbCrLf
+    s = s & "End Sub" & vbCrLf & vbCrLf
+    s = s & "Private Sub FwPostEvent(evType As String, folderPath As String, fileName As String, detail As String)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim mac As String : mac = FwGetMac()" & vbCrLf
+    s = s & "    If mac = """" Then Exit Sub" & vbCrLf
+    s = s & "    Dim baseUrl As String" & vbCrLf
+    s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
+    s = s & "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf
+    s = s & "    Dim body As String, hostname As String : hostname = Environ(""COMPUTERNAME"")" & vbCrLf
+    s = s & "    body = ""{""""mac"""":"""""" & FwJsonEsc(mac) & """""",""""hostname"""":"""""" & FwJsonEsc(hostname) & """""",""""folderPath"""":"""""" & FwJsonEsc(folderPath) & """""",""""eventType"""":"""""" & FwJsonEsc(evType) & """""",""""fileName"""":"""""" & FwJsonEsc(fileName) & """""",""""filePath"""":"""""" & FwJsonEsc(folderPath & fileName) & """""",""""detail"""":"""""" & FwJsonEsc(detail) & """"""}""" & vbCrLf
+    s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
+    s = s & "    http.Open ""POST"", baseUrl & ""folder-watch/"", False" & vbCrLf
+    s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
+    s = s & "    http.setTimeouts 3000, 3000, 5000, 5000" & vbCrLf
+    s = s & "    http.send body" & vbCrLf
+    s = s & "End Sub" & vbCrLf & vbCrLf
+    s = s & "Private Function FwGetMac() As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim wmi As Object, col As Object, o As Object" & vbCrLf
+    s = s & "    Set wmi = GetObject(""winmgmts:\\.\root\cimv2"")" & vbCrLf
+    s = s & "    Set col = wmi.ExecQuery(""SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True"")" & vbCrLf
+    s = s & "    For Each o In col" & vbCrLf
+    s = s & "        If Not IsNull(o.MACAddress) And o.MACAddress <> """" Then FwGetMac = o.MACAddress : Exit Function" & vbCrLf
+    s = s & "    Next" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function FwJsonEsc(s As String) As String" & vbCrLf
+    s = s & "    s = Replace(s, ""\"", ""\\"")" & vbCrLf
+    s = s & "    s = Replace(s, """""""", ""\"""")" & vbCrLf
+    s = s & "    FwJsonEsc = s" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    FwPollHelpers = s
 End Function
 
 Private Sub PostFolderEvent(evType As String, folderPath As String, fileName As String, detail As String)
