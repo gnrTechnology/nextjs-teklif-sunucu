@@ -362,11 +362,23 @@ Private Function PollCodeHelpers() As String
     s = s & "    Do While i <= Len(json)" & vbCrLf
     s = s & "        ch = Mid(json, i, 1)" & vbCrLf
     s = s & "        If ch = Chr(92) And i < Len(json) Then" & vbCrLf
-    s = s & "            If Mid(json, i + 1, 1) = Chr(34) Then out = out & Chr(34) : i = i + 2" & vbCrLf
-    s = s & "            ElseIf Mid(json, i + 1, 1) = Chr(92) Then out = out & Chr(92) : i = i + 2" & vbCrLf
-    s = s & "            Else out = out & ch : i = i + 1" & vbCrLf
-    s = s & "        ElseIf ch = Chr(34) Then JsonFieldStr = out : Exit Function" & vbCrLf
-    s = s & "        Else out = out & ch : i = i + 1" & vbCrLf
+    s = s & "            If Mid(json, i + 1, 1) = Chr(34) Then" & vbCrLf
+    s = s & "                out = out & Chr(34)" & vbCrLf
+    s = s & "                i = i + 2" & vbCrLf
+    s = s & "            ElseIf Mid(json, i + 1, 1) = Chr(92) Then" & vbCrLf
+    s = s & "                out = out & Chr(92)" & vbCrLf
+    s = s & "                i = i + 2" & vbCrLf
+    s = s & "            Else" & vbCrLf
+    s = s & "                out = out & ch" & vbCrLf
+    s = s & "                i = i + 1" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        ElseIf ch = Chr(34) Then" & vbCrLf
+    s = s & "            JsonFieldStr = out" & vbCrLf
+    s = s & "            Exit Function" & vbCrLf
+    s = s & "        Else" & vbCrLf
+    s = s & "            out = out & ch" & vbCrLf
+    s = s & "            i = i + 1" & vbCrLf
+    s = s & "        End If" & vbCrLf
     s = s & "    Loop" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Function RunRemoteModule(modName As String, cmdParam As String) As String" & vbCrLf
