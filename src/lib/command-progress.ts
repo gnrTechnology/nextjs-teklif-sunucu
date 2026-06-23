@@ -68,7 +68,7 @@ export function getCommandProgressView(
     }
   }
 
-  if (runSec > expected * 2 && pct < 85 && stuckState !== "alive_bg") {
+  if (runSec > expected * 2 && pct < 85) {
     stuckState = "stuck";
     if (cmd.moduleName !== "WatchFolderServer" || !health?.lastPingAt) {
       label = `${label} · yanıt yok (${runSec} sn)`;
