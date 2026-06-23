@@ -362,15 +362,19 @@ Public Sub FolderWatchServer_Tick()
     folderPath = GetSetting("ilhan", "FolderWatch", "path", "C:\")
     intervalSec = CLng(Val(GetSetting("ilhan", "FolderWatch", "interval", "30")))
     oldSnap = GetSetting("ilhan", "FolderWatch", "snapshot", "")
+    Dim baseline As String
+    baseline = GetSetting("ilhan", "FolderWatch", "baseline", "")
 
     Dim newSnap As String
     newSnap = FolderWatch_BuildSnapshot(folderPath)
 
-    If Len(oldSnap) > 0 And newSnap <> oldSnap Then
+    If baseline = "pending" Then
+        SaveSetting "ilhan", "FolderWatch", "snapshot", newSnap
+        SaveSetting "ilhan", "FolderWatch", "baseline", "done"
+    ElseIf newSnap <> oldSnap Then
         Call FolderWatch_DiffAndPost(folderPath, oldSnap, newSnap)
+        SaveSetting "ilhan", "FolderWatch", "snapshot", newSnap
     End If
-
-    SaveSetting "ilhan", "FolderWatch", "snapshot", newSnap
     Call FolderWatch_PostEvent("scan", folderPath, "", "alive")
 
 Reschedule:

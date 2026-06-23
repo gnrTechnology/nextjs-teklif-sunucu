@@ -38,6 +38,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     SaveSetting "ilhan", "FolderWatch", "interval", CStr(intervalSec)
     SaveSetting "ilhan", "FolderWatch", "active", "true"
     SaveSetting "ilhan", "FolderWatch", "snapshot", ""
+    SaveSetting "ilhan", "FolderWatch", "baseline", "pending"
 
     Call PostFolderEvent("started", folderPath, "", "Izleme baslatildi: " & folderPath)
 

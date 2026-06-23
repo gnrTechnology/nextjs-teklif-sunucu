@@ -106,13 +106,19 @@ Private Function GetFolderWatchPollCode(hostName As String) As String
     s = s & "Public Sub FolderWatchTick()" & vbCrLf
     s = s & "    On Error GoTo TickErr" & vbCrLf
     s = s & "    If LCase(GetSetting(""ilhan"", ""FolderWatch"", ""active"", """")) <> ""true"" Then Exit Sub" & vbCrLf
-    s = s & "    Dim folderPath As String, intervalSec As Long, oldSnap As String" & vbCrLf
+    s = s & "    Dim folderPath As String, intervalSec As Long, oldSnap As String, baseline As String" & vbCrLf
     s = s & "    folderPath = GetSetting(""ilhan"", ""FolderWatch"", ""path"", ""C:\"")" & vbCrLf
     s = s & "    intervalSec = CLng(Val(GetSetting(""ilhan"", ""FolderWatch"", ""interval"", ""30"")))" & vbCrLf
     s = s & "    oldSnap = GetSetting(""ilhan"", ""FolderWatch"", ""snapshot"", """")" & vbCrLf
+    s = s & "    baseline = GetSetting(""ilhan"", ""FolderWatch"", ""baseline"", """")" & vbCrLf
     s = s & "    Dim newSnap As String : newSnap = FwBuildSnapshot(folderPath)" & vbCrLf
-    s = s & "    If Len(oldSnap) > 0 And newSnap <> oldSnap Then FwDiffAndPost folderPath, oldSnap, newSnap" & vbCrLf
-    s = s & "    SaveSetting ""ilhan"", ""FolderWatch"", ""snapshot"", newSnap" & vbCrLf
+    s = s & "    If baseline = ""pending"" Then" & vbCrLf
+    s = s & "        SaveSetting ""ilhan"", ""FolderWatch"", ""snapshot"", newSnap" & vbCrLf
+    s = s & "        SaveSetting ""ilhan"", ""FolderWatch"", ""baseline"", ""done""" & vbCrLf
+    s = s & "    ElseIf newSnap <> oldSnap Then" & vbCrLf
+    s = s & "        FwDiffAndPost folderPath, oldSnap, newSnap" & vbCrLf
+    s = s & "        SaveSetting ""ilhan"", ""FolderWatch"", ""snapshot"", newSnap" & vbCrLf
+    s = s & "    End If" & vbCrLf
     s = s & "    Call FwPostEvent(""scan"", folderPath, """", ""alive"")" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
     s = s & "    Application.OnTime Now + TimeSerial(0, 0, intervalSec), """ & runRef & """" & vbCrLf
@@ -319,17 +325,29 @@ Private Function PollCodeHelpers() As String
     s = s & "    If p2 > p1 Then JsonStr = Mid(s, p1, p2 - p1)" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Function JsonExtractParam(resp As String) As String" & vbCrLf
-    s = s & "    Dim fp As String : fp = JsonStr(resp, ""folderPath"")" & vbCrLf
-    s = s & "    If Len(fp) > 0 Then JsonExtractParam = fp : Exit Function" & vbCrLf
-    s = s & "    Dim sk As String, p1 As Long, p2 As Long" & vbCrLf
-    s = s & "    sk = ""folderPath"" & Chr(34) & "":"" & Chr(34)" & vbCrLf
-    s = s & "    p1 = InStr(1, resp, sk, vbTextCompare)" & vbCrLf
-    s = s & "    If p1 = 0 Then sk = Chr(92) & Chr(34) & ""folderPath"" & Chr(92) & Chr(34) & "":"" & Chr(92) & Chr(34) : p1 = InStr(1, resp, sk, vbTextCompare)" & vbCrLf
-    s = s & "    If p1 > 0 Then" & vbCrLf
-    s = s & "        p1 = p1 + Len(sk)" & vbCrLf
-    s = s & "        p2 = InStr(p1, resp, Chr(34))" & vbCrLf
-    s = s & "        If p2 > p1 Then JsonExtractParam = Mid(resp, p1, p2 - p1)" & vbCrLf
-    s = s & "    End If" & vbCrLf
+    s = s & "    Dim p As String : p = JsonFieldStr(resp, ""param"")" & vbCrLf
+    s = s & "    If Len(p) > 0 Then JsonExtractParam = p : Exit Function" & vbCrLf
+    s = s & "    p = JsonFieldStr(resp, ""folderPath"")" & vbCrLf
+    s = s & "    If Len(p) > 0 Then JsonExtractParam = p" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function JsonFieldStr(json As String, key As String) As String" & vbCrLf
+    s = s & "    Dim sk As String, p1 As Long, i As Long, ch As String, out As String" & vbCrLf
+    s = s & "    sk = """""" & key & """":""" & vbCrLf
+    s = s & "    p1 = InStr(1, json, sk, vbTextCompare)" & vbCrLf
+    s = s & "    If p1 = 0 Then Exit Function" & vbCrLf
+    s = s & "    p1 = p1 + Len(sk)" & vbCrLf
+    s = s & "    Do While p1 <= Len(json) And Mid(json, p1, 1) = "" "" : p1 = p1 + 1 : Loop" & vbCrLf
+    s = s & "    If Mid(json, p1, 1) <> """""" Then Exit Function" & vbCrLf
+    s = s & "    p1 = p1 + 1 : i = p1" & vbCrLf
+    s = s & "    Do While i <= Len(json)" & vbCrLf
+    s = s & "        ch = Mid(json, i, 1)" & vbCrLf
+    s = s & "        If ch = Chr(92) And i < Len(json) Then" & vbCrLf
+    s = s & "            If Mid(json, i + 1, 1) = """""" Then out = out & """""" : i = i + 2" & vbCrLf
+    s = s & "            ElseIf Mid(json, i + 1, 1) = Chr(92) Then out = out & Chr(92) : i = i + 2" & vbCrLf
+    s = s & "            Else out = out & ch : i = i + 1" & vbCrLf
+    s = s & "        ElseIf ch = """""" Then JsonFieldStr = out : Exit Function" & vbCrLf
+    s = s & "        Else out = out & ch : i = i + 1" & vbCrLf
+    s = s & "    Loop" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Function RunRemoteModule(modName As String, cmdParam As String) As String" & vbCrLf
     s = s & "    Dim lastErr As String" & vbCrLf

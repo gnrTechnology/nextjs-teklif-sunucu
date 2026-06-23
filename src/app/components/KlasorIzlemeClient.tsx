@@ -56,7 +56,9 @@ export default function KlasorIzlemeClient({
     setBusy(true);
     setMsg("");
     try {
-      const param = JSON.stringify({ folderPath: folderPath.trim() || "C:\\", intervalSec: 30 });
+      let path = folderPath.trim() || "C:\\";
+      if (!path.endsWith("\\")) path += "\\";
+      const param = JSON.stringify({ folderPath: path, intervalSec: 30 });
       const r = await fetch("/api/commands/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
