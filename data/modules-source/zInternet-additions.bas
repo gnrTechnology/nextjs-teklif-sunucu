@@ -389,7 +389,10 @@ Private Function FolderWatch_BuildSnapshot(folderPath As String) As String
     Dim folder As Object : Set folder = fso.GetFolder(folderPath)
     Dim f As Object
     Dim s As String : s = ""
+    Dim n As Long : n = 0
     For Each f In folder.Files
+        n = n + 1
+        If n > 400 Then Exit For
         If Len(s) > 0 Then s = s & "|"
         s = s & f.Name & ";" & f.Size & ";" & CLng(f.DateLastModified)
     Next f
@@ -451,7 +454,7 @@ Private Sub FolderWatch_PostEvent(evType As String, folderPath As String, fileNa
     Dim http As Object : Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
     http.Open "POST", baseUrl & "folder-watch/", False
     http.setRequestHeader "Content-Type", "application/json"
-    http.setTimeouts 5000, 5000, 15000, 15000
+    http.setTimeouts 3000, 3000, 5000, 5000
     http.send body
 End Sub
 

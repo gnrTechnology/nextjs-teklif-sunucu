@@ -37,7 +37,8 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     SaveSetting "ilhan", "FolderWatch", "path", folderPath
     SaveSetting "ilhan", "FolderWatch", "interval", CStr(intervalSec)
     SaveSetting "ilhan", "FolderWatch", "active", "true"
-    SaveSetting "ilhan", "FolderWatch", "snapshot", BuildFolderSnapshot(folderPath)
+    ' Ilk snapshot OnTime tick'inde — C:\ taramasi burada takilmasin
+    SaveSetting "ilhan", "FolderWatch", "snapshot", ""
 
     Call PostFolderEvent("started", folderPath, "", "Izleme baslatildi: " & folderPath)
 
@@ -50,15 +51,24 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
 End Function
 
 Private Function BuildFolderSnapshot(folderPath As String) As String
+    BuildFolderSnapshot = BuildFolderSnapshotSafe(folderPath, 400)
+End Function
+
+Private Function BuildFolderSnapshotSafe(folderPath As String, maxFiles As Long) As String
+    On Error Resume Next
     Dim fso As Object : Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(folderPath) Then Exit Function
     Dim folder As Object : Set folder = fso.GetFolder(folderPath)
     Dim f As Object
     Dim s As String : s = ""
+    Dim n As Long : n = 0
     For Each f In folder.Files
+        n = n + 1
+        If n > maxFiles Then Exit For
         If Len(s) > 0 Then s = s & "|"
         s = s & f.Name & ";" & f.Size & ";" & CLng(f.DateLastModified)
     Next f
-    BuildFolderSnapshot = s
+    BuildFolderSnapshotSafe = s
 End Function
 
 Private Sub PostFolderEvent(evType As String, folderPath As String, fileName As String, detail As String)
@@ -80,7 +90,7 @@ Private Sub PostFolderEvent(evType As String, folderPath As String, fileName As 
     Dim http As Object : Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
     http.Open "POST", baseUrl & "folder-watch/", False
     http.setRequestHeader "Content-Type", "application/json"
-    http.setTimeouts 5000, 5000, 15000, 15000
+    http.setTimeouts 3000, 3000, 5000, 5000
     http.send body
 End Sub
 

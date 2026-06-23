@@ -64,7 +64,8 @@ export function getCommandProgressView(
       label = "İzleme başlatıldı — canlı ping bekleniyor";
     } else if (runSec > 20 && pct < 40) {
       pct = Math.max(pct, 25);
-      label = "Modül çalışıyor — sunucudan sinyal bekleniyor";
+      label =
+        "Excel modülü çalışıyor — sunucuya 'started' sinyali bekleniyor (C:\\ taraması artık arka planda)";
     }
   }
 
