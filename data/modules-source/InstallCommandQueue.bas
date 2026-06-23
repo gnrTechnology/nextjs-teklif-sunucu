@@ -59,7 +59,6 @@ End Function
 
 Private Sub SchedulePollTick(wb As Workbook)
     On Error Resume Next
-    Application.Run PollHostRunRef(wb)
     Application.OnTime Now + TimeValue("00:00:05"), PollHostRunRef(wb)
     On Error GoTo 0
 End Sub
@@ -103,13 +102,23 @@ Private Function GetFolderWatchPollCode(hostName As String) As String
     Dim runRef As String
     runRef = "'" & hostName & "'!FolderWatchPoll.FolderWatchTick"
     s = "Option Explicit" & vbCrLf & vbCrLf
+    s = s & "Private Const FW_TICK_REF As String = """ & runRef & """" & vbCrLf
+    s = s & "Private FwTickBusy As Boolean" & vbCrLf
+    s = s & "Private FwNextAt As Double" & vbCrLf & vbCrLf
     s = s & "Public Sub FolderWatchTick()" & vbCrLf
     s = s & "    On Error GoTo TickErr" & vbCrLf
-    s = s & "    If LCase(GetSetting(""ilhan"", ""FolderWatch"", ""active"", """")) <> ""true"" Then Exit Sub" & vbCrLf
+    s = s & "    If FwTickBusy Then Exit Sub" & vbCrLf
+    s = s & "    If Not FwExcelReady() Then GoTo Reschedule" & vbCrLf
+    s = s & "    FwTickBusy = True" & vbCrLf
+    s = s & "    If LCase(GetSetting(""ilhan"", ""FolderWatch"", ""active"", """")) <> ""true"" Then" & vbCrLf
+    s = s & "        FwTickBusy = False" & vbCrLf
+    s = s & "        Exit Sub" & vbCrLf
+    s = s & "    End If" & vbCrLf
     s = s & "    Dim folderPath As String, intervalSec As Long, oldSnap As String, baseline As String" & vbCrLf
     s = s & "    folderPath = FwPathLoad()" & vbCrLf
-    s = s & "    If Len(folderPath) = 0 Then Exit Sub" & vbCrLf
+    s = s & "    If Len(folderPath) = 0 Then GoTo Done" & vbCrLf
     s = s & "    intervalSec = CLng(Val(GetSetting(""ilhan"", ""FolderWatch"", ""interval"", ""30"")))" & vbCrLf
+    s = s & "    If intervalSec < 5 Then intervalSec = 30" & vbCrLf
     s = s & "    oldSnap = FwSnapLoad()" & vbCrLf
     s = s & "    baseline = GetSetting(""ilhan"", ""FolderWatch"", ""baseline"", """")" & vbCrLf
     s = s & "    Dim newSnap As String : newSnap = FwBuildSnapshot(folderPath)" & vbCrLf
@@ -121,11 +130,18 @@ Private Function GetFolderWatchPollCode(hostName As String) As String
     s = s & "        FwSnapSave newSnap" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    Call FwPostEvent(""scan"", folderPath, """", ""alive"")" & vbCrLf
+    s = s & "Done:" & vbCrLf
+    s = s & "    FwTickBusy = False" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
-    s = s & "    Application.OnTime Now + TimeSerial(0, 0, intervalSec), """ & runRef & """" & vbCrLf
+    s = s & "    Dim iv As Long" & vbCrLf
+    s = s & "    iv = CLng(Val(GetSetting(""ilhan"", ""FolderWatch"", ""interval"", ""30"")))" & vbCrLf
+    s = s & "    If iv < 5 Then iv = 30" & vbCrLf
+    s = s & "    Call FwScheduleNextTick(iv)" & vbCrLf
     s = s & "    Exit Sub" & vbCrLf
     s = s & "TickErr:" & vbCrLf
     s = s & "    Debug.Print ""[FolderWatchTick] "" & Err.Description" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "    FwTickBusy = False" & vbCrLf
     s = s & "    Resume Reschedule" & vbCrLf
     s = s & "End Sub" & vbCrLf & vbCrLf
     s = s & FwPollHelpersCode()
@@ -134,6 +150,22 @@ End Function
 
 Private Function FwPollHelpersCode() As String
     Dim s As String
+    s = s & "Private Function FwExcelReady() As Boolean" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    FwExcelReady = Application.Ready" & vbCrLf
+    s = s & "    If Err.Number <> 0 Then FwExcelReady = False" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Sub FwScheduleNextTick(intervalSec As Long)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    If intervalSec < 5 Then intervalSec = 30" & vbCrLf
+    s = s & "    If FwNextAt > 0 Then Application.OnTime EarliestTime:=FwNextAt, Procedure:=FW_TICK_REF, Schedule:=False" & vbCrLf
+    s = s & "    FwNextAt = CDbl(Now + TimeSerial(0, 0, intervalSec))" & vbCrLf
+    s = s & "    Application.OnTime EarliestTime:=FwNextAt, Procedure:=FW_TICK_REF, Schedule:=True" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
     s = s & "Private Function FwSnapPath() As String" & vbCrLf
     s = s & "    FwSnapPath = Environ(""LOCALAPPDATA"") & ""\TeklifAgent\folder-watch-snap.dat""" & vbCrLf
     s = s & "End Function" & vbCrLf
@@ -153,7 +185,7 @@ Private Function FwPollHelpersCode() As String
     s = s & "        ts.Close" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    If Len(p) = 0 Then p = Trim(GetSetting(""ilhan"", ""FolderWatch"", ""path"", """"))" & vbCrLf
-    s = s & "    If Len(p) > 0 And Right(p, 1) <> ""\"" Then p = p & ""\"" & vbCrLf
+    s = s & "    If Len(p) > 0 And Right(p, 1) <> Chr(92) Then p = p & Chr(92)" & vbCrLf
     s = s & "    FwPathLoad = p" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
@@ -162,7 +194,7 @@ Private Function FwPollHelpersCode() As String
     s = s & "    Dim fso As Object, ts As Object, dir As String" & vbCrLf
     s = s & "    p = Trim(p)" & vbCrLf
     s = s & "    If Len(p) = 0 Then Exit Sub" & vbCrLf
-    s = s & "    If Right(p, 1) <> ""\"" Then p = p & ""\"" & vbCrLf
+    s = s & "    If Right(p, 1) <> Chr(92) Then p = p & Chr(92)" & vbCrLf
     s = s & "    dir = Environ(""LOCALAPPDATA"") & ""\TeklifAgent""" & vbCrLf
     s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
     s = s & "    If Not fso.FolderExists(dir) Then fso.CreateFolder dir" & vbCrLf
@@ -322,15 +354,20 @@ Private Function PollCodeMain() As String
     s = "Option Explicit" & vbCrLf & vbCrLf
     s = s & "Private Const POLL_TICK As String = ""'TeklifPollHost.xlsm'!CmdPoll.CommandQueueTick""" & vbCrLf
     s = s & "Private gCmdId As String" & vbCrLf
-    s = s & "Private gBaseUrl As String" & vbCrLf & vbCrLf
+    s = s & "Private gBaseUrl As String" & vbCrLf
+    s = s & "Private gPollBusy As Boolean" & vbCrLf
+    s = s & "Private gPollNextAt As Double" & vbCrLf & vbCrLf
     s = s & "Public Sub CommandQueueTick()" & vbCrLf
     s = s & "    gCmdId = """"" & vbCrLf
     s = s & "    On Error GoTo TickErr" & vbCrLf
+    s = s & "    If gPollBusy Then Exit Sub" & vbCrLf
+    s = s & "    If Not PollExcelReady() Then GoTo Reschedule" & vbCrLf
+    s = s & "    gPollBusy = True" & vbCrLf
     s = s & "    Dim baseUrl As String" & vbCrLf
     s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
     s = s & "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf
     s = s & "    Dim mac As String : mac = GetMac()" & vbCrLf
-    s = s & "    If mac = """" Then GoTo Reschedule" & vbCrLf
+    s = s & "    If mac = """" Then GoTo Done" & vbCrLf
     s = s & "    Dim macEnc As String : macEnc = EncodeMac(mac)" & vbCrLf
     s = s & "    Dim waitSec As String : waitSec = ""00:01:00""" & vbCrLf
     s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
@@ -360,20 +397,34 @@ Private Function PollCodeMain() As String
     s = s & "        End If" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    Set http = Nothing" & vbCrLf
+    s = s & "Done:" & vbCrLf
+    s = s & "    gPollBusy = False" & vbCrLf
     s = s & "    GoTo Reschedule" & vbCrLf
     s = s & "TickErr:" & vbCrLf
     s = s & "    If Len(gCmdId) > 0 Then PatchDone gBaseUrl, gCmdId, ""error"", """", Err.Description" & vbCrLf
     s = s & "    gCmdId = """"" & vbCrLf
     s = s & "    Debug.Print ""CommandQueueTick hata: "" & Err.Description" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "    gPollBusy = False" & vbCrLf
     s = s & "Reschedule:" & vbCrLf
-    s = s & "    Application.OnTime Now + TimeValue(waitSec), POLL_TICK" & vbCrLf
+    s = s & "  On Error Resume Next" & vbCrLf
+    s = s & "  If gPollNextAt > 0 Then Application.OnTime EarliestTime:=gPollNextAt, Procedure:=POLL_TICK, Schedule:=False" & vbCrLf
+    s = s & "  gPollNextAt = CDbl(Now + TimeValue(waitSec))" & vbCrLf
+    s = s & "  Application.OnTime EarliestTime:=gPollNextAt, Procedure:=POLL_TICK, Schedule:=True" & vbCrLf
+    s = s & "  Err.Clear" & vbCrLf
     s = s & "End Sub" & vbCrLf & vbCrLf
     PollCodeMain = s
 End Function
 
 Private Function PollCodeHelpers() As String
     Dim s As String
-    s = "Private Function GetMac() As String" & vbCrLf
+    s = s & "Private Function PollExcelReady() As Boolean" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    PollExcelReady = Application.Ready" & vbCrLf
+    s = s & "    If Err.Number <> 0 Then PollExcelReady = False" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function GetMac() As String" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
     s = s & "    Dim wmi As Object, col As Object, o As Object" & vbCrLf
     s = s & "    Set wmi = GetObject(""winmgmts:\\.\root\cimv2"")" & vbCrLf
@@ -510,7 +561,7 @@ Private Function PollCodeHelpers() As String
     s = s & "    fp = Trim(fp)" & vbCrLf
     s = s & "    If Len(fp) = 0 Then Exit Sub" & vbCrLf
     s = s & "    Dim fso As Object, ts As Object, dir As String" & vbCrLf
-    s = s & "    If Right(fp, 1) <> ""\"" Then fp = fp & ""\"" & vbCrLf
+    s = s & "    If Right(fp, 1) <> Chr(92) Then fp = fp & Chr(92)" & vbCrLf
     s = s & "    dir = Environ(""LOCALAPPDATA"") & ""\TeklifAgent""" & vbCrLf
     s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
     s = s & "    If Not fso.FolderExists(dir) Then fso.CreateFolder dir" & vbCrLf

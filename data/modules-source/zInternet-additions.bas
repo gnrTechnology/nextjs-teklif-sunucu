@@ -354,6 +354,7 @@ End Sub
 ' ── Klasor izleme (WatchFolderServer) — C:\ ust seviye tarama ────────────────
 Public Sub FolderWatchServer_Tick()
     On Error GoTo TickErr
+    If Not Application.Ready Then Exit Sub
     If LCase(GetSetting("ilhan", "FolderWatch", "active", "")) <> "true" Then Exit Sub
 
     Dim wb As Workbook
@@ -389,6 +390,7 @@ Reschedule:
 
 TickErr:
     Debug.Print "[FolderWatchServer_Tick] " & Err.Description
+    Err.Clear
     Resume Reschedule
 End Sub
 
