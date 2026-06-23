@@ -1,6 +1,6 @@
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     ' Herhangi bir klasoru izler (ust seviye, alt klasor yok)
-    ' param: {"folderPath":"D:\\Veri","intervalSec":30}  veya  D:\Veri  veya bos -> C:\
+    ' param: D:\Veri\  veya  {"folderPath":"D:\\Veri","intervalSec":30}
     Dim p As String
     If IsMissing(param) Or IsEmpty(param) Then
         p = ""
@@ -10,21 +10,24 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
 
     Dim folderPath As String
     Dim intervalSec As Long
+    intervalSec = 30
 
     If Len(p) > 0 And Left(p, 1) = "{" Then
         folderPath = ExtractJsonValue(p, "folderPath")
         Dim intStr As String : intStr = ExtractJsonValue(p, "intervalSec")
-        intervalSec = 30
         If Len(intStr) > 0 Then intervalSec = CLng(intStr)
     ElseIf Len(p) > 0 And Not IsUrlLike(p) Then
         folderPath = p
-        intervalSec = 30
     Else
-        folderPath = "C:\"
-        intervalSec = 30
+        folderPath = LoadWatchPath()
     End If
 
-    If Right(folderPath, 1) <> "\" Then folderPath = folderPath & "\"
+    folderPath = NormalizeFolderPath(folderPath)
+    If Len(folderPath) = 0 Then
+        Debug.Print "[WatchFolderServer] Klasor yolu yok — param gerekli"
+        Set DynamicFunc = Nothing
+        Exit Function
+    End If
 
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -34,7 +37,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         Exit Function
     End If
 
-    SaveSetting "ilhan", "FolderWatch", "path", folderPath
+    SaveWatchPath folderPath
     SaveSetting "ilhan", "FolderWatch", "interval", CStr(intervalSec)
     SaveSetting "ilhan", "FolderWatch", "active", "true"
     SaveSetting "ilhan", "FolderWatch", "baseline", "pending"
@@ -46,7 +49,6 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
 
     Call PostFolderEvent("started", folderPath, "", "Izleme baslatildi: " & folderPath)
 
-    ' PollHost icinde modul enjekte etme — deadlock. Sadece tick zamanla.
     Call ScheduleFolderWatchTickOnly
 
     Debug.Print "[WatchFolderServer] Aktif: " & folderPath & " (" & intervalSec & " sn)"
@@ -64,6 +66,46 @@ Private Sub ScheduleFolderWatchTickOnly()
     Next wb
     Debug.Print "[WatchFolderServer] FolderWatchPoll yok — once InstallCommandQueue calistirin"
 End Sub
+
+Private Function WatchPathFile() As String
+    WatchPathFile = Environ("LOCALAPPDATA") & "\TeklifAgent\folder-watch-path.txt"
+End Function
+
+Private Function LoadWatchPath() As String
+    On Error Resume Next
+    Dim fso As Object, ts As Object, p As String
+    p = ""
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If fso.FileExists(WatchPathFile()) Then
+        Set ts = fso.OpenTextFile(WatchPathFile(), 1, False)
+        p = Trim(ts.ReadAll)
+        ts.Close
+    End If
+    If Len(p) = 0 Then p = Trim(GetSetting("ilhan", "FolderWatch", "path", ""))
+    LoadWatchPath = NormalizeFolderPath(p)
+End Function
+
+Private Sub SaveWatchPath(folderPath As String)
+    On Error Resume Next
+    Dim fso As Object, ts As Object, dir As String
+    folderPath = NormalizeFolderPath(folderPath)
+    dir = Environ("LOCALAPPDATA") & "\TeklifAgent"
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(dir) Then fso.CreateFolder dir
+    Set ts = fso.OpenTextFile(WatchPathFile(), 2, True)
+    ts.Write folderPath
+    ts.Close
+    SaveSetting "ilhan", "FolderWatch", "path", folderPath
+End Sub
+
+Private Function NormalizeFolderPath(p As String) As String
+    p = Trim(Replace(Replace(CStr(p & ""), "/", "\"), "\\", "\"))
+    Do While InStr(p, "\\\\") > 0
+        p = Replace(p, "\\\\", "\")
+    Loop
+    If Len(p) > 0 And Right(p, 1) <> "\" Then p = p & "\"
+    NormalizeFolderPath = p
+End Function
 
 Private Sub PostFolderEvent(evType As String, folderPath As String, fileName As String, detail As String)
     On Error Resume Next
@@ -102,17 +144,37 @@ Private Function GetMacFromWmi() As String
 End Function
 
 Private Function ExtractJsonValue(json As String, key As String) As String
-    Dim sk As String, p1 As Long, p2 As Long
+    Dim sk As String, p1 As Long, i As Long, ch As String, out As String
     sk = """" & key & """:"
     p1 = InStr(1, json, sk, vbTextCompare)
     If p1 = 0 Then Exit Function
     p1 = p1 + Len(sk)
     Do While Mid(json, p1, 1) = " " : p1 = p1 + 1 : Loop
     If Mid(json, p1, 1) = """" Then
-        p1 = p1 + 1 : p2 = InStr(p1, json, """")
-        If p2 > p1 Then ExtractJsonValue = Mid(json, p1, p2 - p1)
+        p1 = p1 + 1 : i = p1
+        Do While i <= Len(json)
+            ch = Mid(json, i, 1)
+            If ch = Chr(92) And i < Len(json) Then
+                If Mid(json, i + 1, 1) = Chr(34) Then
+                    out = out & Chr(34)
+                    i = i + 2
+                ElseIf Mid(json, i + 1, 1) = Chr(92) Then
+                    out = out & Chr(92)
+                    i = i + 2
+                Else
+                    out = out & ch
+                    i = i + 1
+                End If
+            ElseIf ch = Chr(34) Then
+                ExtractJsonValue = out
+                Exit Function
+            Else
+                out = out & ch
+                i = i + 1
+            End If
+        Loop
     Else
-        p2 = p1
+        Dim p2 As Long : p2 = p1
         Do While p2 <= Len(json)
             If InStr(",}] " & Chr(13) & Chr(10), Mid(json, p2, 1)) > 0 Then Exit Do
             p2 = p2 + 1

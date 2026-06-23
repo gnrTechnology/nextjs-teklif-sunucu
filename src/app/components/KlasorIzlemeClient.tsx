@@ -56,16 +56,20 @@ export default function KlasorIzlemeClient({
     setBusy(true);
     setMsg("");
     try {
-      let path = folderPath.trim() || "C:\\";
+      let path = folderPath.trim();
+      if (!path) {
+        setMsg("Klasör yolu girin.");
+        setBusy(false);
+        return;
+      }
       if (!path.endsWith("\\")) path += "\\";
-      const param = JSON.stringify({ folderPath: path, intervalSec: 30 });
       const r = await fetch("/api/commands/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mac,
           moduleName: "WatchFolderServer",
-          param,
+          param: path,
           createdBy: "dashboard/klasor-izleme",
         }),
       });

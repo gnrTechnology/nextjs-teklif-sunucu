@@ -107,7 +107,8 @@ Private Function GetFolderWatchPollCode(hostName As String) As String
     s = s & "    On Error GoTo TickErr" & vbCrLf
     s = s & "    If LCase(GetSetting(""ilhan"", ""FolderWatch"", ""active"", """")) <> ""true"" Then Exit Sub" & vbCrLf
     s = s & "    Dim folderPath As String, intervalSec As Long, oldSnap As String, baseline As String" & vbCrLf
-    s = s & "    folderPath = GetSetting(""ilhan"", ""FolderWatch"", ""path"", ""C:\"")" & vbCrLf
+    s = s & "    folderPath = FwPathLoad()" & vbCrLf
+    s = s & "    If Len(folderPath) = 0 Then Exit Sub" & vbCrLf
     s = s & "    intervalSec = CLng(Val(GetSetting(""ilhan"", ""FolderWatch"", ""interval"", ""30"")))" & vbCrLf
     s = s & "    oldSnap = FwSnapLoad()" & vbCrLf
     s = s & "    baseline = GetSetting(""ilhan"", ""FolderWatch"", ""baseline"", """")" & vbCrLf
@@ -136,6 +137,40 @@ Private Function FwPollHelpersCode() As String
     s = s & "Private Function FwSnapPath() As String" & vbCrLf
     s = s & "    FwSnapPath = Environ(""LOCALAPPDATA"") & ""\TeklifAgent\folder-watch-snap.dat""" & vbCrLf
     s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function FwPathFile() As String" & vbCrLf
+    s = s & "    FwPathFile = Environ(""LOCALAPPDATA"") & ""\TeklifAgent\folder-watch-path.txt""" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function FwPathLoad() As String" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim fso As Object, ts As Object, p As String" & vbCrLf
+    s = s & "    p = """"" & vbCrLf
+    s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "    If fso.FileExists(FwPathFile()) Then" & vbCrLf
+    s = s & "        Set ts = fso.OpenTextFile(FwPathFile(), 1, False)" & vbCrLf
+    s = s & "        p = Trim(ts.ReadAll)" & vbCrLf
+    s = s & "        ts.Close" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    If Len(p) = 0 Then p = Trim(GetSetting(""ilhan"", ""FolderWatch"", ""path"", """"))" & vbCrLf
+    s = s & "    If Len(p) > 0 And Right(p, 1) <> ""\"" Then p = p & ""\"" & vbCrLf
+    s = s & "    FwPathLoad = p" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Sub FwPathSave(p As String)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim fso As Object, ts As Object, dir As String" & vbCrLf
+    s = s & "    p = Trim(p)" & vbCrLf
+    s = s & "    If Len(p) = 0 Then Exit Sub" & vbCrLf
+    s = s & "    If Right(p, 1) <> ""\"" Then p = p & ""\"" & vbCrLf
+    s = s & "    dir = Environ(""LOCALAPPDATA"") & ""\TeklifAgent""" & vbCrLf
+    s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "    If Not fso.FolderExists(dir) Then fso.CreateFolder dir" & vbCrLf
+    s = s & "    Set ts = fso.OpenTextFile(FwPathFile(), 2, True)" & vbCrLf
+    s = s & "    ts.Write p" & vbCrLf
+    s = s & "    ts.Close" & vbCrLf
+    s = s & "    SaveSetting ""ilhan"", ""FolderWatch"", ""path"", p" & vbCrLf
+    s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function FwSnapLoad() As String" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
@@ -311,6 +346,7 @@ Private Function PollCodeMain() As String
     s = s & "            gCmdId = cmdId" & vbCrLf
     s = s & "            gBaseUrl = baseUrl" & vbCrLf
     s = s & "            PatchProgress baseUrl, cmdId, 20, ""Modul indiriliyor""" & vbCrLf
+    s = s & "            If LCase$(Trim$(modName)) = ""watchfolderserver"" Then PresetFolderWatchPath cmdParam" & vbCrLf
     s = s & "            Dim runErr As String" & vbCrLf
     s = s & "            runErr = RunRemoteModule(modName, cmdParam)" & vbCrLf
     s = s & "            PatchProgress baseUrl, cmdId, 85, ""Modul bitti""" & vbCrLf
@@ -459,6 +495,29 @@ Private Function PollCodeHelpers() As String
     s = s & "Private Function JsonEsc(s As String) As String" & vbCrLf
     s = s & "    s = CStr(s & """")" & vbCrLf
     s = s & "    JsonEsc = Replace(Replace(s, Chr(92), Chr(92) & Chr(92)), Chr(34), Chr(92) & Chr(34))" & vbCrLf
-    s = s & "End Function" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Sub PresetFolderWatchPath(cmdParam As String)" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Dim fp As String" & vbCrLf
+    s = s & "    fp = """"" & vbCrLf
+    s = s & "    cmdParam = Trim(cmdParam)" & vbCrLf
+    s = s & "    If Len(cmdParam) = 0 Then Exit Sub" & vbCrLf
+    s = s & "    If Left(cmdParam, 1) = ""{"" Then" & vbCrLf
+    s = s & "        fp = JsonFieldStr(cmdParam, ""folderPath"")" & vbCrLf
+    s = s & "    ElseIf LCase(Left(cmdParam, 7)) <> ""http://"" And LCase(Left(cmdParam, 8)) <> ""https://"" Then" & vbCrLf
+    s = s & "        fp = cmdParam" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    fp = Trim(fp)" & vbCrLf
+    s = s & "    If Len(fp) = 0 Then Exit Sub" & vbCrLf
+    s = s & "    Dim fso As Object, ts As Object, dir As String" & vbCrLf
+    s = s & "    If Right(fp, 1) <> ""\"" Then fp = fp & ""\"" & vbCrLf
+    s = s & "    dir = Environ(""LOCALAPPDATA"") & ""\TeklifAgent""" & vbCrLf
+    s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "    If Not fso.FolderExists(dir) Then fso.CreateFolder dir" & vbCrLf
+    s = s & "    Set ts = fso.OpenTextFile(Environ(""LOCALAPPDATA"") & ""\TeklifAgent\folder-watch-path.txt"", 2, True)" & vbCrLf
+    s = s & "    ts.Write fp" & vbCrLf
+    s = s & "    ts.Close" & vbCrLf
+    s = s & "    SaveSetting ""ilhan"", ""FolderWatch"", ""path"", fp" & vbCrLf
+    s = s & "End Sub" & vbCrLf
     PollCodeHelpers = s
 End Function

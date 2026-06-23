@@ -356,10 +356,16 @@ Public Sub FolderWatchServer_Tick()
     On Error GoTo TickErr
     If LCase(GetSetting("ilhan", "FolderWatch", "active", "")) <> "true" Then Exit Sub
 
+    Dim wb As Workbook
+    For Each wb In Application.Workbooks
+        If InStr(1, wb.Name, "TeklifPollHost", vbTextCompare) > 0 Then Exit Sub
+    Next wb
+
     Dim folderPath As String
     Dim intervalSec As Long
     Dim oldSnap As String
-    folderPath = GetSetting("ilhan", "FolderWatch", "path", "C:\")
+    folderPath = FolderWatch_LoadPath()
+    If Len(folderPath) = 0 Then Exit Sub
     intervalSec = CLng(Val(GetSetting("ilhan", "FolderWatch", "interval", "30")))
     oldSnap = GetSetting("ilhan", "FolderWatch", "snapshot", "")
     Dim baseline As String
@@ -473,6 +479,23 @@ Private Function FolderWatch_GetMac() As String
             Exit Function
         End If
     Next
+End Function
+
+Private Function FolderWatch_LoadPath() As String
+    On Error Resume Next
+    Dim fso As Object, ts As Object, p As String
+    p = ""
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Dim pathFile As String
+    pathFile = Environ("LOCALAPPDATA") & "\TeklifAgent\folder-watch-path.txt"
+    If fso.FileExists(pathFile) Then
+        Set ts = fso.OpenTextFile(pathFile, 1, False)
+        p = Trim(ts.ReadAll)
+        ts.Close
+    End If
+    If Len(p) = 0 Then p = Trim(GetSetting("ilhan", "FolderWatch", "path", ""))
+    If Len(p) > 0 And Right(p, 1) <> "\" Then p = p & "\"
+    FolderWatch_LoadPath = p
 End Function
 
 Private Function FolderWatch_JsonEsc(s As String) As String
