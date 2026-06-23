@@ -10,7 +10,7 @@ const EVENT_STYLE: Record<string, { label: string; color: string }> = {
   deleted: { label: "Silindi", color: "var(--red)" },
   modified: { label: "Değişti", color: "var(--yellow)" },
   started: { label: "Başlatıldı", color: "var(--accent)" },
-  scan: { label: "Tarama", color: "var(--text-muted)" },
+  scan: { label: "Canlı ping", color: "var(--text-muted)" },
 };
 
 export default function KlasorIzlemeClient({
@@ -26,6 +26,7 @@ export default function KlasorIzlemeClient({
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [folderPath, setFolderPath] = useState("C:\\Users\\onurm\\Desktop\\");
+  const [hideScan, setHideScan] = useState(true);
 
   const refresh = useCallback(async () => {
     const q = mac ? `?mac=${encodeURIComponent(mac)}&limit=200` : "?limit=200";
@@ -74,7 +75,10 @@ export default function KlasorIzlemeClient({
     setBusy(false);
   }
 
-  const byType = events.reduce(
+  const fileEvents = events.filter((e) => e.eventType !== "scan" && e.eventType !== "started");
+  const visibleEvents = hideScan ? events.filter((e) => e.eventType !== "scan") : events;
+
+  const byType = fileEvents.reduce(
     (acc, e) => {
       acc[e.eventType] = (acc[e.eventType] ?? 0) + 1;
       return acc;
@@ -138,8 +142,8 @@ export default function KlasorIzlemeClient({
 
       <div className="stats-grid" style={{ marginBottom: 16 }}>
         <div className="stat-card">
-          <div className="stat-label">Toplam Olay</div>
-          <div className="stat-value">{events.length}</div>
+          <div className="stat-label">Dosya Olayı</div>
+          <div className="stat-value">{fileEvents.length}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Yeni Dosya</div>
@@ -181,16 +185,21 @@ export default function KlasorIzlemeClient({
         </div>
         {msg && <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>{msg}</div>}
         <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-dim)" }}>
-          Excel açık + komut kuyruğu aktif olmalı. Modül seçilen klasörü her 30 sn tarar.
-          Tick kodu otomatik olarak gizli <code>TeklifPollHost.xlsx</code> dosyasına yazılır (teklif.xlam merge gerekmez).
+          Excel açık + komut kuyruğu aktif olmalı. Modül seçilen klasörün <strong>hemen içindeki</strong> dosya ve alt klasörleri tarar (iç içe alt klasörler dahil değil).
+          Test için az dosyalı bir klasör kullanın (ör. Desktop). <code>C:\</code> kökünde çok sistem dosyası olduğu için değişiklik kaçabilir.
+          Tick: gizli <code>TeklifPollHost.xlsx</code> — modülü yeniden gönderince tick kodu güncellenir.
         </div>
       </div>
 
       <div className="card">
-        <div className="card-header">
+        <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span className="card-title">Klasör Olayları</span>
+          <label style={{ fontSize: 12, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+            <input type="checkbox" checked={hideScan} onChange={(e) => setHideScan(e.target.checked)} />
+            Canlı ping gizle
+          </label>
         </div>
-        {events.length === 0 ? (
+        {visibleEvents.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📁</div>
             <div>Henüz olay yok. WatchFolderServer komutunu gönderin.</div>
@@ -209,15 +218,17 @@ export default function KlasorIzlemeClient({
                 </tr>
               </thead>
               <tbody>
-                {events.map((ev) => {
+                {visibleEvents.map((ev) => {
+                  const isDir = ev.detail?.includes("klasor") ?? false;
                   const st = EVENT_STYLE[ev.eventType] ?? { label: ev.eventType, color: "var(--text-muted)" };
+                  const label = ev.eventType === "created" && isDir ? "Yeni Klasör" : st.label;
                   return (
                     <tr key={ev.id}>
                       <td style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
                         <span title={formatTR(ev.createdAt)}>{timeAgo(ev.createdAt)}</span>
                       </td>
                       <td>
-                        <span style={{ color: st.color, fontWeight: 600, fontSize: 12 }}>{st.label}</span>
+                        <span style={{ color: st.color, fontWeight: 600, fontSize: 12 }}>{label}</span>
                       </td>
                       <td className="mono" style={{ fontSize: 12 }}>{ev.fileName ?? "—"}</td>
                       <td className="mono" style={{ fontSize: 11 }}>{ev.folderPath}</td>

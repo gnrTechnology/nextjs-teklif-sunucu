@@ -144,13 +144,32 @@ Private Function FwPollHelpers() As String
     s = s & "    Dim fso As Object : Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
     s = s & "    If Not fso.FolderExists(folderPath) Then Exit Function" & vbCrLf
     s = s & "    Dim folder As Object : Set folder = fso.GetFolder(folderPath)" & vbCrLf
-    s = s & "    Dim f As Object, out As String, n As Long : out = """" : n = 0" & vbCrLf
-    s = s & "    For Each f In folder.Files" & vbCrLf
-    s = s & "        n = n + 1 : If n > 400 Then Exit For" & vbCrLf
+    s = s & "    Dim sf As Object, f As Object, out As String, n As Long, fn As String" & vbCrLf
+    s = s & "    out = """" : n = 0" & vbCrLf
+    s = s & "    For Each sf In folder.SubFolders" & vbCrLf
     s = s & "        If Len(out) > 0 Then out = out & ""|""" & vbCrLf
-    s = s & "        out = out & f.Name & "";"" & f.Size & "";"" & CLng(f.DateLastModified)" & vbCrLf
-    s = s & "    Next f" & vbCrLf
+    s = s & "        out = out & ""[D]"" & sf.Name & "";0;"" & CLng(sf.DateLastModified)" & vbCrLf
+    s = s & "    Next sf" & vbCrLf
+    s = s & "    fn = Dir(folderPath & ""*.*"", vbNormal Or vbHidden Or vbSystem)" & vbCrLf
+    s = s & "    Do While Len(fn) > 0 And n < 800" & vbCrLf
+    s = s & "        If fn <> ""."" And fn <> "".."" Then" & vbCrLf
+    s = s & "            n = n + 1" & vbCrLf
+    s = s & "            If Len(out) > 0 Then out = out & ""|""" & vbCrLf
+    s = s & "            Dim fp As String : fp = folderPath & fn" & vbCrLf
+    s = s & "            If fso.FileExists(fp) Then" & vbCrLf
+    s = s & "                Dim fi As Object : Set fi = fso.GetFile(fp)" & vbCrLf
+    s = s & "                out = out & ""[F]"" & fn & "";"" & fi.Size & "";"" & CLng(fi.DateLastModified)" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "        fn = Dir()" & vbCrLf
+    s = s & "    Loop" & vbCrLf
     s = s & "    FwBuildSnapshot = out" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function FwDispName(key As String) As String" & vbCrLf
+    s = s & "    If Left(key, 3) = ""[D]"" Then FwDispName = Mid(key, 4) Else If Left(key, 3) = ""[F]"" Then FwDispName = Mid(key, 4) Else FwDispName = key" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function FwIsDir(key As String) As Boolean" & vbCrLf
+    s = s & "    FwIsDir = (Left(key, 3) = ""[D]"")" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Sub FwDiffAndPost(folderPath As String, oldSnap As String, newSnap As String)" & vbCrLf
     s = s & "    Dim oldD As Object : Set oldD = CreateObject(""Scripting.Dictionary"")" & vbCrLf
@@ -160,12 +179,16 @@ Private Function FwPollHelpers() As String
     s = s & "    If Len(newSnap) > 0 Then For Each part In Split(newSnap, ""|""): bits = Split(CStr(part), "";""): If UBound(bits) >= 0 Then newD(bits(0)) = part: Next" & vbCrLf
     s = s & "    For Each k In newD.Keys" & vbCrLf
     s = s & "        nm = CStr(k)" & vbCrLf
-    s = s & "        If Not oldD.Exists(nm) Then FwPostEvent ""created"", folderPath, nm, ""Yeni: "" & nm" & vbCrLf
-    s = s & "        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then FwPostEvent ""modified"", folderPath, nm, ""Degisti: "" & nm" & vbCrLf
+    s = s & "        If Not oldD.Exists(nm) Then" & vbCrLf
+    s = s & "            If FwIsDir(nm) Then FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni klasor: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            Else FwPostEvent ""created"", folderPath, FwDispName(nm), ""Yeni dosya: "" & FwDispName(nm)" & vbCrLf
+    s = s & "        ElseIf CStr(oldD(nm)) <> CStr(newD(nm)) Then FwPostEvent ""modified"", folderPath, FwDispName(nm), ""Degisti: "" & FwDispName(nm)" & vbCrLf
     s = s & "    Next k" & vbCrLf
     s = s & "    For Each k In oldD.Keys" & vbCrLf
     s = s & "        nm = CStr(k)" & vbCrLf
-    s = s & "        If Not newD.Exists(nm) Then FwPostEvent ""deleted"", folderPath, nm, ""Silindi: "" & nm" & vbCrLf
+    s = s & "        If Not newD.Exists(nm) Then" & vbCrLf
+    s = s & "            If FwIsDir(nm) Then FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen klasor: "" & FwDispName(nm)" & vbCrLf
+    s = s & "            Else FwPostEvent ""deleted"", folderPath, FwDispName(nm), ""Silinen dosya: "" & FwDispName(nm)" & vbCrLf
     s = s & "    Next k" & vbCrLf
     s = s & "End Sub" & vbCrLf & vbCrLf
     s = s & "Private Sub FwPostEvent(evType As String, folderPath As String, fileName As String, detail As String)" & vbCrLf
