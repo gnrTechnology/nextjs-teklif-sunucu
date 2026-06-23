@@ -352,20 +352,20 @@ Private Function PollCodeHelpers() As String
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Function JsonFieldStr(json As String, key As String) As String" & vbCrLf
     s = s & "    Dim sk As String, p1 As Long, i As Long, ch As String, out As String" & vbCrLf
-    s = s & "    sk = """""" & key & """":""" & vbCrLf
+    s = s & "    sk = Chr(34) & key & Chr(34) & "":""" & vbCrLf
     s = s & "    p1 = InStr(1, json, sk, vbTextCompare)" & vbCrLf
     s = s & "    If p1 = 0 Then Exit Function" & vbCrLf
     s = s & "    p1 = p1 + Len(sk)" & vbCrLf
     s = s & "    Do While p1 <= Len(json) And Mid(json, p1, 1) = "" "" : p1 = p1 + 1 : Loop" & vbCrLf
-    s = s & "    If Mid(json, p1, 1) <> """""" Then Exit Function" & vbCrLf
+    s = s & "    If Mid(json, p1, 1) <> Chr(34) Then Exit Function" & vbCrLf
     s = s & "    p1 = p1 + 1 : i = p1" & vbCrLf
     s = s & "    Do While i <= Len(json)" & vbCrLf
     s = s & "        ch = Mid(json, i, 1)" & vbCrLf
     s = s & "        If ch = Chr(92) And i < Len(json) Then" & vbCrLf
-    s = s & "            If Mid(json, i + 1, 1) = """""" Then out = out & """""" : i = i + 2" & vbCrLf
+    s = s & "            If Mid(json, i + 1, 1) = Chr(34) Then out = out & Chr(34) : i = i + 2" & vbCrLf
     s = s & "            ElseIf Mid(json, i + 1, 1) = Chr(92) Then out = out & Chr(92) : i = i + 2" & vbCrLf
     s = s & "            Else out = out & ch : i = i + 1" & vbCrLf
-    s = s & "        ElseIf ch = """""" Then JsonFieldStr = out : Exit Function" & vbCrLf
+    s = s & "        ElseIf ch = Chr(34) Then JsonFieldStr = out : Exit Function" & vbCrLf
     s = s & "        Else out = out & ch : i = i + 1" & vbCrLf
     s = s & "    Loop" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
