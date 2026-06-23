@@ -16,15 +16,15 @@ function vbaEscape(line) {
   return line.replace(/"/g, '""');
 }
 
-let fn = "Private Function FwPollHelpersCode() As String\r\n";
-fn += "    Dim s As String\r\n";
+let fn = "Private Function FwPollHelpersCode() As String\n";
+fn += "    Dim s As String\n";
 for (const line of lines) {
-  fn += `    s = s & "${vbaEscape(line)}" & vbCrLf\r\n`;
+  fn += `    s = s & "${vbaEscape(line)}" & vbCrLf\n`;
 }
-fn += "    FwPollHelpersCode = s\r\n";
-fn += "End Function\r\n";
+fn += "    FwPollHelpersCode = s\n";
+fn += "End Function\n";
 
-let install = fs.readFileSync(installPath, "utf8");
+let install = fs.readFileSync(installPath, "utf8").replace(/\r\n/g, "\n");
 const startMarker = "Private Function FwPollHelpersCode() As String";
 const endMarker = "Private Function GetPollModuleCode() As String";
 
@@ -37,9 +37,9 @@ if (startIdx < 0 || endIdx < 0 || endIdx <= startIdx) {
 
 install =
   install.slice(0, startIdx) +
-  fn.replace(/\n/g, "\r\n") +
-  "\r\n" +
+  fn +
+  "\n" +
   install.slice(endIdx);
 
-fs.writeFileSync(installPath, install);
+fs.writeFileSync(installPath, install.replace(/\n/g, "\r\n"));
 console.log(`FwPollHelpersCode guncellendi (${lines.length} satir).`);
