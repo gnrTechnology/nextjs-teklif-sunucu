@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { FolderWatchEvent } from "@/lib/types";
-import { formatTR, timeAgo } from "@/lib/date-utils";
+import type { FolderWatchEvent, FolderWatchHealth } from "@/lib/types";
+import { formatTR, timeAgo, formatDurationSec, elapsedSecSince } from "@/lib/date-utils";
 import Link from "next/link";
 
 const EVENT_STYLE: Record<string, { label: string; color: string }> = {
@@ -22,6 +22,7 @@ export default function KlasorIzlemeClient({
 }) {
   const [events, setEvents] = useState(initial);
   const [mac, setMac] = useState(heartbeats[0]?.mac ?? "");
+  const [health, setHealth] = useState<FolderWatchHealth | null>(null);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -30,6 +31,13 @@ export default function KlasorIzlemeClient({
     const r = await fetch(`/api/folder-watch${q}`);
     const j = await r.json();
     if (j.success) setEvents(j.data);
+    if (mac) {
+      const hr = await fetch(`/api/folder-watch/?health=1&mac=${encodeURIComponent(mac)}`);
+      const hj = await hr.json();
+      if (hj.success) setHealth(hj.data?.[0] ?? null);
+    } else {
+      setHealth(null);
+    }
   }, [mac]);
 
   useEffect(() => {
@@ -84,6 +92,48 @@ export default function KlasorIzlemeClient({
         </div>
         <Link href="/loglar" className="btn btn-ghost">Tüm loglar →</Link>
       </div>
+
+      {mac && (
+        <div className="card" style={{
+          marginBottom: 16, padding: "14px 18px",
+          borderColor: health?.isAlive ? "var(--green)" : health?.lastPingAt ? "#f59e0b" : "var(--border)",
+        }}>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>İzleme Durumu</div>
+          {!health?.lastPingAt ? (
+            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              Bu MAC için henüz klasör sinyali yok. WatchFolderServer komutu gönderin ve Excel açık olsun.
+            </div>
+          ) : (
+            <div style={{ fontSize: 13 }}>
+              <span style={{
+                color: health.isAlive ? "var(--green)" : "#f59e0b",
+                fontWeight: 600,
+              }}>
+                {health.isAlive ? "● Aktif" : "● Sessiz"}
+              </span>
+              <span style={{ color: "var(--text-muted)", marginLeft: 10 }}>
+                Son sinyal: {timeAgo(health.lastPingAt)} ({formatTR(health.lastPingAt)})
+              </span>
+              {health.lastPingAt && elapsedSecSince(health.lastPingAt) != null && (
+                <span style={{ color: "var(--text-dim)", marginLeft: 8 }}>
+                  — {formatDurationSec(elapsedSecSince(health.lastPingAt)!)} önce
+                </span>
+              )}
+              {health.folderPath && (
+                <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 4 }}>
+                  Klasör: <span className="mono">{health.folderPath}</span>
+                  {health.lastEventType && ` · son olay: ${health.lastEventType}`}
+                </div>
+              )}
+              {!health.isAlive && health.lastPingAt && (
+                <div style={{ fontSize: 12, color: "#f59e0b", marginTop: 6 }}>
+                  90 sn içinde yeni sinyal gelmediyse izleme durmuş olabilir (Excel kapalı, OnTime iptal, zInternet.FolderWatchServer_Tick eksik).
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="stats-grid" style={{ marginBottom: 16 }}>
         <div className="stat-card">

@@ -4,12 +4,17 @@ import {
   insertFolderWatchEvent,
   listFolderWatchEvents,
   deleteFolderWatchEvent,
+  getFolderWatchHealth,
 } from "@/lib/db";
 
-/** GET /api/folder-watch/?mac=&limit= */
+/** GET /api/folder-watch/?mac=&limit=  veya  ?health=1&mac= */
 export async function GET(request: NextRequest) {
   const sp = new URL(request.url).searchParams;
   const mac = sp.get("mac") ?? undefined;
+  if (sp.get("health") === "1") {
+    const health = await getFolderWatchHealth(mac);
+    return jsonResponse({ success: true, data: health });
+  }
   const limit = sp.get("limit") ? Number(sp.get("limit")) : 200;
   const data = await listFolderWatchEvents({ mac, limit });
   return jsonResponse({ success: true, data });

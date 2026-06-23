@@ -125,3 +125,12 @@ export interface FolderWatchEvent {
   detail?: string | null;
   createdAt: string;
 }
+
+export interface FolderWatchHealth {
+  mac: string;
+  folderPath: string | null;
+  lastPingAt: string | null;
+  lastEventType: string | null;
+  /** Son sinyal ~90 sn içindeyse aktif sayılır */
+  isAlive: boolean;
+}

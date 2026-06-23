@@ -371,6 +371,7 @@ Public Sub FolderWatchServer_Tick()
     End If
 
     SaveSetting "ilhan", "FolderWatch", "snapshot", newSnap
+    Call FolderWatch_PostEvent("scan", folderPath, "", "alive")
 
 Reschedule:
     Application.OnTime Now + TimeSerial(0, 0, intervalSec), "zInternet.FolderWatchServer_Tick"

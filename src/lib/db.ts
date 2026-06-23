@@ -501,6 +501,8 @@ export async function listClientCommands(options?: {
   limit?: number;
 }): Promise<ClientCommand[]> {
   await ensureClientCommandsTable();
+  await releaseStaleRunningCommands();
+  await reconcileWatchFolderCommands();
   const sql = getSql();
   let rows;
   if (options?.mac && options?.status) {
@@ -965,6 +967,132 @@ export async function ensureFolderWatchTable(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS idx_folder_watch_created ON folder_watch_events (created_at DESC)`;
 }
 
+export async function ensureFolderWatchStatusTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS folder_watch_status (
+      mac             TEXT PRIMARY KEY,
+      folder_path     TEXT,
+      last_ping_at    TIMESTAMPTZ NOT NULL,
+      last_event_type TEXT
+    )
+  `;
+}
+
+async function upsertFolderWatchStatus(params: {
+  mac: string;
+  folderPath: string;
+  eventType: string;
+}): Promise<void> {
+  await ensureFolderWatchStatusTable();
+  const sql = getSql();
+  const macNorm = normalizeMac(params.mac);
+  const now = new Date().toISOString();
+  await sql`
+    INSERT INTO folder_watch_status (mac, folder_path, last_ping_at, last_event_type)
+    VALUES (${macNorm}, ${params.folderPath}, ${now}, ${params.eventType})
+    ON CONFLICT (mac) DO UPDATE SET
+      folder_path = EXCLUDED.folder_path,
+      last_ping_at = EXCLUDED.last_ping_at,
+      last_event_type = EXCLUDED.last_event_type
+  `;
+}
+
+/** WatchFolderServer "started" gelince takili running komutu otomatik kapat */
+export async function completeRunningWatchFolderCommand(mac: string): Promise<number> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  const macNorm = normalizeMac(mac);
+  const rows = await sql`
+    UPDATE client_commands
+    SET status = 'done',
+        result = 'Izleme arka planda baslatildi (started olayi alindi)',
+        executed_at = NOW()
+    WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+      AND status = 'running'
+      AND module_name = 'WatchFolderServer'
+    RETURNING id
+  `;
+  return rows.length;
+}
+
+/** Dashboard yenilemede: started olayi var ama komut hala running ise kapat */
+async function reconcileWatchFolderCommands(): Promise<void> {
+  await ensureClientCommandsTable();
+  await ensureFolderWatchTable();
+  const sql = getSql();
+  const running = await sql`
+    SELECT id, mac, executed_at
+    FROM client_commands
+    WHERE status = 'running' AND module_name = 'WatchFolderServer'
+  `;
+  for (const r of running as Record<string, unknown>[]) {
+    const macNorm = normalizeMac(r.mac as string);
+    const execAt = r.executed_at as string | null;
+    if (!execAt) continue;
+    const ev = await sql`
+      SELECT id FROM folder_watch_events
+      WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+        AND event_type = 'started'
+        AND created_at >= ${execAt}
+      LIMIT 1
+    `;
+    if (ev[0]) await completeRunningWatchFolderCommand(macNorm);
+  }
+}
+
+export async function getFolderWatchHealth(mac?: string): Promise<import("./types").FolderWatchHealth[]> {
+  await ensureFolderWatchStatusTable();
+  const sql = getSql();
+  let rows;
+  if (mac) {
+    const macNorm = normalizeMac(mac);
+    rows = await sql`
+      SELECT mac, folder_path, last_ping_at, last_event_type
+      FROM folder_watch_status
+      WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+    `;
+    if (rows.length === 0) {
+      const evRows = await sql`
+        SELECT mac, folder_path, event_type, created_at
+        FROM folder_watch_events
+        WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+        ORDER BY created_at DESC LIMIT 1
+      `;
+      if (evRows[0]) {
+        rows = [{
+          mac: (evRows[0] as Record<string, unknown>).mac,
+          folder_path: (evRows[0] as Record<string, unknown>).folder_path,
+          last_ping_at: (evRows[0] as Record<string, unknown>).created_at,
+          last_event_type: (evRows[0] as Record<string, unknown>).event_type,
+        }];
+      }
+    }
+  } else {
+    rows = await sql`
+      SELECT mac, folder_path, last_ping_at, last_event_type
+      FROM folder_watch_status
+      ORDER BY last_ping_at DESC
+    `;
+  }
+  const aliveMs = 90_000;
+  return (rows as Record<string, unknown>[]).map((r) => {
+    const lastPingAt = r.last_ping_at
+      ? new Date(r.last_ping_at as string).toISOString()
+      : null;
+    const isAlive = lastPingAt
+      ? Date.now() - new Date(lastPingAt).getTime() < aliveMs
+      : false;
+    return {
+      mac: r.mac as string,
+      folderPath: (r.folder_path as string) ?? null,
+      lastPingAt,
+      lastEventType: (r.last_event_type as string) ?? null,
+      isAlive,
+    };
+  });
+}
+
 export async function insertFolderWatchEvent(params: {
   mac: string;
   hostname?: string | null;
@@ -976,11 +1104,12 @@ export async function insertFolderWatchEvent(params: {
 }): Promise<void> {
   await ensureFolderWatchTable();
   const sql = getSql();
+  const macNorm = normalizeMac(params.mac);
   await sql`
     INSERT INTO folder_watch_events
       (mac, hostname, folder_path, event_type, file_name, file_path, detail, created_at)
     VALUES (
-      ${normalizeMac(params.mac)},
+      ${macNorm},
       ${params.hostname ?? null},
       ${params.folderPath},
       ${params.eventType},
@@ -990,6 +1119,14 @@ export async function insertFolderWatchEvent(params: {
       ${new Date().toISOString()}
     )
   `;
+  await upsertFolderWatchStatus({
+    mac: macNorm,
+    folderPath: params.folderPath,
+    eventType: params.eventType,
+  });
+  if (params.eventType === "started") {
+    await completeRunningWatchFolderCommand(macNorm);
+  }
 }
 
 export async function listFolderWatchEvents(options?: {

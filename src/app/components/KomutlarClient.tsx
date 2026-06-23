@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { formatTR } from "@/lib/date-utils";
+import Link from "next/link";
+import { formatTR, formatDurationSec, elapsedSecSince, timeAgo } from "@/lib/date-utils";
 import type { ClientCommand } from "@/lib/db";
+import type { FolderWatchHealth } from "@/lib/types";
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: "Bekliyor",  color: "#f59e0b", bg: "#f59e0b20" },
@@ -41,6 +43,8 @@ export default function KomutlarClient({
   const [formParam, setFormParam]       = useState("");
   const [formCustomMac, setFormCustomMac] = useState("");
   const [sending, setSending]           = useState(false);
+  const [watchHealth, setWatchHealth]   = useState<Record<string, FolderWatchHealth>>({});
+  const [, setTick]                     = useState(0);
 
   const refresh = useCallback(() => {
     fetch("/api/commands/?limit=200")
@@ -48,11 +52,50 @@ export default function KomutlarClient({
       .then((j) => { if (j.success) setCommands(j.data); });
   }, []);
 
+  const refreshWatchHealth = useCallback(async (macs: string[]) => {
+    const unique = [...new Set(macs.filter(Boolean))];
+    if (unique.length === 0) return;
+    const entries = await Promise.all(
+      unique.map(async (m) => {
+        const r = await fetch(`/api/folder-watch/?health=1&mac=${encodeURIComponent(m)}`);
+        const j = await r.json();
+        const h = j.success && j.data?.[0] ? (j.data[0] as FolderWatchHealth) : null;
+        return [m, h] as const;
+      }),
+    );
+    setWatchHealth((prev) => {
+      const next = { ...prev };
+      for (const [m, h] of entries) {
+        if (h) next[m] = h;
+      }
+      return next;
+    });
+  }, []);
+
   /* 10sn'de bir yenile (pending/running görünür hale gelsin) */
   useEffect(() => {
     const id = setInterval(refresh, 10000);
     return () => clearInterval(id);
   }, [refresh]);
+
+  /* running süresi canlı güncellensin */
+  useEffect(() => {
+    const hasRunning = commands.some((c) => c.status === "running");
+    if (!hasRunning) return;
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [commands]);
+
+  /* WatchFolderServer running iken klasör sağlık durumu */
+  useEffect(() => {
+    const macs = commands
+      .filter((c) => c.status === "running" && c.moduleName === "WatchFolderServer")
+      .map((c) => c.mac);
+    if (macs.length === 0) return;
+    refreshWatchHealth(macs);
+    const id = setInterval(() => refreshWatchHealth(macs), 15000);
+    return () => clearInterval(id);
+  }, [commands, refreshWatchHealth]);
 
   async function sendCommand() {
     const mac = formMac === "__custom__" ? formCustomMac.trim() : formMac.trim();
@@ -254,6 +297,9 @@ export default function KomutlarClient({
         ) : (
           filtered.map((cmd) => {
             const isOpen = expanded.has(cmd.id);
+            const runSec = cmd.status === "running" ? elapsedSecSince(cmd.executedAt) : null;
+            const isWatch = cmd.moduleName === "WatchFolderServer";
+            const health = isWatch ? watchHealth[cmd.mac] : undefined;
             return (
               <div key={cmd.id} style={{ borderBottom: "1px solid var(--border)" }}>
                 <div style={{
@@ -277,16 +323,58 @@ export default function KomutlarClient({
                         {cmd.moduleName}
                       </span>
                       <StatusBadge status={cmd.status} />
+                      {runSec != null && runSec >= 30 && (
+                        <span style={{
+                          fontSize: 10, padding: "2px 8px", borderRadius: 8,
+                          background: runSec >= 120 ? "#ef444420" : "#f59e0b20",
+                          color: runSec >= 120 ? "#ef4444" : "#f59e0b",
+                          fontWeight: 600,
+                        }}>
+                          {formatDurationSec(runSec)} süredir
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
                       <span className="mono">{cmd.mac}</span>
                       {cmd.param && <span style={{ marginLeft: 8 }}>param: {cmd.param.slice(0, 40)}</span>}
                     </div>
+                    {isWatch && cmd.status === "running" && (
+                      <div style={{ fontSize: 11, marginTop: 4 }}>
+                        {health?.isAlive ? (
+                          <span style={{ color: "var(--green)" }}>
+                            ✓ Klasör izleme aktif — son sinyal {timeAgo(health.lastPingAt)}
+                          </span>
+                        ) : health?.lastPingAt ? (
+                          <span style={{ color: "#f59e0b" }}>
+                            ⚠ Son sinyal {timeAgo(health.lastPingAt)} —{" "}
+                            <Link href="/klasor-izleme" style={{ color: "var(--accent)" }}>Klasör İzleme</Link>
+                          </span>
+                        ) : (
+                          <span style={{ color: "var(--text-dim)" }}>
+                            Henüz sunucudan sinyal yok — modül hâlâ başlıyor veya takılı olabilir
+                          </span>
+                        )}
+                        {runSec != null && runSec >= 60 && (
+                          <span style={{ display: "block", color: "var(--text-dim)", marginTop: 2 }}>
+                            Not: WatchFolderServer saniyeler içinde biter; komut satırı takılı kalsa bile izleme arka planda çalışabilir.
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ fontSize: 11, color: "var(--text-dim)", textAlign: "right" }}>
-                    <div>{formatTR(cmd.createdAt)}</div>
-                    {cmd.executedAt && <div style={{ marginTop: 2 }}>∆ {formatTR(cmd.executedAt)}</div>}
+                    <div title="Oluşturulma">{formatTR(cmd.createdAt)}</div>
+                    {cmd.executedAt && (
+                      <div style={{ marginTop: 2 }} title="Çalıştırılma">
+                        {cmd.status === "running" ? "▶" : "∆"} {formatTR(cmd.executedAt)}
+                        {runSec != null && cmd.status === "running" && (
+                          <span style={{ marginLeft: 4, color: runSec >= 120 ? "#ef4444" : "inherit" }}>
+                            ({formatDurationSec(runSec)})
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -367,9 +455,13 @@ export default function KomutlarClient({
         <code style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11 }}>
           GET /api/commands/pending/&#123;mac&#125;
         </code>{" "}
-        sorgular. TeklifAgent.exe yalnızca heartbeat gönderir. Modül sonuçları{" "}
+        sorgular. TeklifAgent.exe yalnızca heartbeat gönderir.         Modül sonuçları{" "}
         <a href="/modul-ciktilari/" style={{ color: "var(--accent)" }}>Modül Çıktıları</a>{" "}
-        sayfasında listelenir (komut satırında değil). Eski hatalı komutlar yeni komutları bloklamaz — kuyruk FIFO çalışır, her satır ayrı bir komuttur (#id).
+        sayfasında listelenir (komut satırında değil).{" "}
+        <strong>WatchFolderServer</strong> gibi arka plan modülleri saniyeler içinde biter; komut satırı
+        &quot;Çalışıyor&quot; takılı kalırsa{" "}
+        <Link href="/klasor-izleme" style={{ color: "var(--accent)" }}>Klasör İzleme</Link>
+        {" "}sayfasında son sinyal zamanına bakın (90 sn içindeyse aktif). 5 dk sonra otomatik hata olur.
       </div>
     </div>
   );

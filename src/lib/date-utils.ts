@@ -25,6 +25,24 @@ export function parseDbTimestamp(isoString: string): Date {
   return d;
 }
 
+/** Saniyeyi "3 dk 12 sn" gibi okunabilir süreye çevirir */
+export function formatDurationSec(totalSec: number): string {
+  const sec = Math.max(0, Math.floor(totalSec));
+  if (sec < 60) return `${sec} sn`;
+  const min = Math.floor(sec / 60);
+  const rem = sec % 60;
+  if (min < 60) return rem > 0 ? `${min} dk ${rem} sn` : `${min} dk`;
+  const h = Math.floor(min / 60);
+  const remMin = min % 60;
+  return remMin > 0 ? `${h} sa ${remMin} dk` : `${h} sa`;
+}
+
+/** İki zaman damgası arasındaki süreyi saniye olarak döndürür */
+export function elapsedSecSince(isoString?: string | null): number | null {
+  if (!isoString) return null;
+  return Math.max(0, Math.floor((Date.now() - parseDbTimestamp(isoString).getTime()) / 1000));
+}
+
 /** "3 dk önce" gibi goreceli zaman metni */
 export function timeAgo(isoString?: string | null): string {
   if (!isoString) return "—";
