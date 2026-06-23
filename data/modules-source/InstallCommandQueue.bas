@@ -109,7 +109,7 @@ Private Function PollCodeMain() As String
     s = s & "        Dim resp As String : resp = http.responseText" & vbCrLf
     s = s & "        Dim cmdId As String : cmdId = JsonVal(resp, ""id"")" & vbCrLf
     s = s & "        Dim modName As String : modName = JsonStr(resp, ""moduleName"")" & vbCrLf
-    s = s & "        Dim cmdParam As String : cmdParam = JsonStr(resp, ""param"")" & vbCrLf
+    s = s & "        Dim cmdParam As String : cmdParam = JsonExtractParam(resp)" & vbCrLf
     s = s & "        If Len(cmdId) > 0 And Len(modName) > 0 And cmdId <> ""null"" Then" & vbCrLf
     s = s & "            gCmdId = cmdId" & vbCrLf
     s = s & "            gBaseUrl = baseUrl" & vbCrLf
@@ -171,6 +171,54 @@ Private Function PollCodeHelpers() As String
     s = s & "    p1 = InStr(p1 + Len(sk), s, """""""") + 1" & vbCrLf
     s = s & "    Dim p2 As Long : p2 = InStr(p1, s, """""""")" & vbCrLf
     s = s & "    If p2 > p1 Then JsonStr = Mid(s, p1, p2 - p1)" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function JsonExtractParam(s As String) As String" & vbCrLf
+    s = s & "    Dim sk As String : sk = """"""param"""":""" & vbCrLf
+    s = s & "    Dim p1 As Long : p1 = InStr(1, s, sk, vbTextCompare)" & vbCrLf
+    s = s & "    If p1 = 0 Then Exit Function" & vbCrLf
+    s = s & "    p1 = p1 + Len(sk)" & vbCrLf
+    s = s & "    Do While p1 <= Len(s) And Mid(s, p1, 1) = "" "" : p1 = p1 + 1 : Loop" & vbCrLf
+    s = s & "    If Mid(s, p1, 4) = ""null"" Then Exit Function" & vbCrLf
+    s = s & "    If Mid(s, p1, 1) = ""{"" Then JsonExtractParam = JsonSliceObject(s, p1) : Exit Function" & vbCrLf
+    s = s & "    If Mid(s, p1, 1) = """"""" Then JsonExtractParam = JsonSliceString(s, p1)" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function JsonSliceString(s As String, qPos As Long) As String" & vbCrLf
+    s = s & "    Dim i As Long : i = qPos + 1" & vbCrLf
+    s = s & "    Dim out As String : out = """"" & vbCrLf
+    s = s & "    Do While i <= Len(s)" & vbCrLf
+    s = s & "        Dim ch As String : ch = Mid(s, i, 1)" & vbCrLf
+    s = s & "        If ch = ""\"" Then" & vbCrLf
+    s = s & "            i = i + 1" & vbCrLf
+    s = s & "            If i <= Len(s) Then" & vbCrLf
+    s = s & "                ch = Mid(s, i, 1)" & vbCrLf
+    s = s & "                If ch = """"""" Then out = out & """"""""" & vbCrLf
+    s = s & "                ElseIf ch = ""\"" Then out = out & ""\"""" & vbCrLf
+    s = s & "                Else out = out & ch" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        ElseIf ch = """"""" Then JsonSliceString = out : Exit Function" & vbCrLf
+    s = s & "        Else out = out & ch" & vbCrLf
+    s = s & "        i = i + 1" & vbCrLf
+    s = s & "    Loop" & vbCrLf
+    s = s & "End Function" & vbCrLf & vbCrLf
+    s = s & "Private Function JsonSliceObject(s As String, startPos As Long) As String" & vbCrLf
+    s = s & "    Dim depth As Long : depth = 0" & vbCrLf
+    s = s & "    Dim i As Long : i = startPos" & vbCrLf
+    s = s & "    Dim inQ As Boolean : inQ = False" & vbCrLf
+    s = s & "    Do While i <= Len(s)" & vbCrLf
+    s = s & "        Dim ch As String : ch = Mid(s, i, 1)" & vbCrLf
+    s = s & "        If inQ Then" & vbCrLf
+    s = s & "            If ch = ""\"" Then i = i + 1" & vbCrLf
+    s = s & "            ElseIf ch = """"""" Then inQ = False" & vbCrLf
+    s = s & "        Else" & vbCrLf
+    s = s & "            If ch = """"""" Then inQ = True" & vbCrLf
+    s = s & "            ElseIf ch = ""{"" Then depth = depth + 1" & vbCrLf
+    s = s & "            ElseIf ch = ""}"" Then" & vbCrLf
+    s = s & "                depth = depth - 1" & vbCrLf
+    s = s & "                If depth = 0 Then JsonSliceObject = Mid(s, startPos, i - startPos + 1) : Exit Function" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "        i = i + 1" & vbCrLf
+    s = s & "    Loop" & vbCrLf
     s = s & "End Function" & vbCrLf & vbCrLf
     s = s & "Private Function RunRemoteModule(modName As String, cmdParam As String) As String" & vbCrLf
     s = s & "    Dim lastErr As String" & vbCrLf
