@@ -187,13 +187,13 @@ Private Function FwPollHelpersCode() As String
     s = s & "    baseUrl = GetSetting(""ilhan"", ""Settings"", ""apiBaseUrl"", ""https://nextjs-teklif-sunucu.vercel.app/api/"")" & vbCrLf
     s = s & "    If Right(baseUrl, 1) <> ""/"" Then baseUrl = baseUrl & ""/""" & vbCrLf
     s = s & "    Dim body As String, hostname As String : hostname = Environ(""COMPUTERNAME"")" & vbCrLf
-    s = s & "    body = ""{"" & Chr(34) & ""mac"" & Chr(34) & "":"" & Chr(34) & "" & FwJsonEsc(mac) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""hostname"" & Chr(34) & "":"" & Chr(34) & "" & FwJsonEsc(hostname) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""folderPath"" & Chr(34) & "":"" & Chr(34) & "" & FwJsonEsc(folderPath) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""eventType"" & Chr(34) & "":"" & Chr(34) & "" & FwJsonEsc(evType) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""fileName"" & Chr(34) & "":"" & Chr(34) & "" & FwJsonEsc(fileName) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""filePath"" & Chr(34) & "":"" & Chr(34) & "" & FwJsonEsc(folderPath & fileName) & Chr(34) & "","" & vbCrLf
-    s = s & "    body = body & Chr(34) & ""detail"" & Chr(34) & "":"" & Chr(34) & "" & FwJsonEsc(detail) & Chr(34) & ""}""" & vbCrLf
+    s = s & "    body = ""{"" & Chr(34) & ""mac"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(mac) & Chr(34) & "","" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""hostname"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(hostname) & Chr(34) & "","" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""folderPath"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(folderPath) & Chr(34) & "","" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""eventType"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(evType) & Chr(34) & "","" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""fileName"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(fileName) & Chr(34) & "","" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""filePath"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(folderPath & fileName) & Chr(34) & "","" & vbCrLf
+    s = s & "    body = body & Chr(34) & ""detail"" & Chr(34) & "":"" & Chr(34) & FwJsonEsc(detail) & Chr(34) & ""}""" & vbCrLf
     s = s & "    Dim http As Object : Set http = CreateObject(""MSXML2.ServerXMLHTTP.6.0"")" & vbCrLf
     s = s & "    http.Open ""POST"", baseUrl & ""folder-watch/"", False" & vbCrLf
     s = s & "    http.setRequestHeader ""Content-Type"", ""application/json""" & vbCrLf
