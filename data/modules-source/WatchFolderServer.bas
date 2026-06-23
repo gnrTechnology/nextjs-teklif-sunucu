@@ -122,7 +122,6 @@ Private Function IsUrlLike(s As String) As Boolean
 End Function
 
 Private Function JsonEsc(s As String) As String
-    s = Replace(s, "\", "\\")
-    s = Replace(s, """", "\""")
-    JsonEsc = s
+    s = CStr(s & "")
+    JsonEsc = Replace(Replace(s, Chr(92), Chr(92) & Chr(92)), Chr(34), Chr(92) & Chr(34))
 End Function

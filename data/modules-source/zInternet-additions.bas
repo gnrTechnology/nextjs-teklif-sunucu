@@ -472,7 +472,6 @@ Private Function FolderWatch_GetMac() As String
 End Function
 
 Private Function FolderWatch_JsonEsc(s As String) As String
-    s = Replace(s, "\", "\\")
-    s = Replace(s, """", "\""")
-    FolderWatch_JsonEsc = s
+    s = CStr(s & "")
+    FolderWatch_JsonEsc = Replace(Replace(s, Chr(92), Chr(92) & Chr(92)), Chr(34), Chr(92) & Chr(34))
 End Function
