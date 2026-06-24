@@ -295,12 +295,25 @@ Private Function PrepareModuleCode(codeContent As String) As String
 End Function
 
 Public Function ExtractCodeFromJSON(jsonText As String) As String
+    On Error GoTo LegacyParse
+    Dim parsed As Object
+    Set parsed = JsonConverter.ParseJson(jsonText)
+    If Not parsed Is Nothing Then
+        ExtractCodeFromJSON = CStr(parsed("code"))
+        Exit Function
+    End If
+LegacyParse:
+    On Error GoTo 0
+    ExtractCodeFromJSON = ExtractCodeFromJSONLegacy(jsonText)
+End Function
+
+Private Function ExtractCodeFromJSONLegacy(jsonText As String) As String
     Dim p1 As Long, p2 As Long
     Dim tempStr As String
 
     p1 = InStr(1, jsonText, """code""", vbTextCompare)
     If p1 = 0 Then
-        ExtractCodeFromJSON = jsonText
+        ExtractCodeFromJSONLegacy = jsonText
         Exit Function
     End If
 
@@ -315,9 +328,9 @@ Public Function ExtractCodeFromJSON(jsonText As String) As String
         tempStr = Replace(tempStr, "\n", vbCrLf)
         tempStr = Replace(tempStr, "\t", vbTab)
         tempStr = Replace(tempStr, "\\", "\")
-        ExtractCodeFromJSON = tempStr
+        ExtractCodeFromJSONLegacy = tempStr
     Else
-        ExtractCodeFromJSON = ""
+        ExtractCodeFromJSONLegacy = ""
     End If
 End Function
 
