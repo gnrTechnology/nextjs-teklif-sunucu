@@ -15,7 +15,7 @@ const CATEGORIES = [
 /* ── Feasibility: hangi modüller tam çalışmaz ─────────── */
 type FeasLevel = "ok" | "partial" | "infra";
 const FEASIBILITY: Record<string, { level: FeasLevel; note: string }> = {
-  CaptureScreenshot:        { level:"infra",   note:"PNG %TEMP%'de kalır — cloud storage olmadan sunucuya gönderilemez" },
+  CaptureScreenshot:        { level:"ok",      note:"JPEG base64 olarak Modül Çıktıları > Ekran Görüntüleri sekmesine düşer" },
   UploadFileToBlobStorage:  { level:"infra",   note:"Azure/S3 credentials + bucket yapılandırması gerekli" },
   EmbedImageInCell:         { level:"partial", note:"Sadece public URL'ler çalışır, local dosyalar için storage gerekli" },
   ConnectToSqlServer:       { level:"partial", note:"VBA istemcisinden DB sunucusuna ağ erişimi olmalı" },

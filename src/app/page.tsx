@@ -13,6 +13,7 @@ import { getHeartbeatStatus } from "@/lib/date-utils";
 import { listFirmAutoModules } from "@/lib/firm-auto-modules";
 import { getApiCatalogStats } from "@/lib/api-catalog";
 import { isLicenseActive } from "@/lib/status-badges";
+import { lookupGeo } from "@/lib/geoip";
 import type { AlertItem } from "./components/ui/AlertBanner";
 import DashboardClient from "./components/DashboardClient";
 
@@ -95,6 +96,29 @@ export default async function Dashboard() {
       .map((m) => m.methodName + (m.runOnce ? " (1×)" : ""))
       .join(" → ") || "";
 
+  const allMacs = heartbeats.map((h) => h.mac);
+  const allModuleNames = modules.filter((m) => m.active !== false).map((m) => m.methodName);
+
+  const geoLocations = (
+    await Promise.all(
+      snapshots
+        .filter((s) => s.data.publicIp)
+        .slice(0, 15)
+        .map(async (s) => {
+          const ip = String(s.data.publicIp);
+          const geo = await lookupGeo(ip);
+          if (!geo) return null;
+          return {
+            mac: s.mac,
+            hostname: s.hostname,
+            ip,
+            country: geo.country,
+            city: geo.city,
+          };
+        }),
+    )
+  ).filter((g): g is NonNullable<typeof g> => g != null);
+
   return (
     <DashboardClient
       apiEndpointCount={apiStats.total}
@@ -118,6 +142,9 @@ export default async function Dashboard() {
       firmAutoModuleCount={firmAutoModules.length}
       globalChain={globalChain}
       cmdErrorRecent={cmdErrorRecent}
+      allMacs={allMacs}
+      allModuleNames={allModuleNames}
+      geoLocations={geoLocations}
     />
   );
 }

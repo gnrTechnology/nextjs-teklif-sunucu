@@ -11,7 +11,7 @@ import {
   Download,
 } from "lucide-react";
 import { formatTR } from "@/lib/date-utils";
-import type { DeviceSnapshot } from "@/lib/db";
+import type { DeviceSnapshot, DeviceSnapshotHistory } from "@/lib/db";
 import { useMacFilter } from "@/lib/mac-filter";
 import PageHeader from "./ui/PageHeader";
 import EmptyState from "./ui/EmptyState";
@@ -66,6 +66,75 @@ function DataValue({ v }: { v: unknown }) {
     );
   }
   return <span>{String(v)}</span>;
+}
+
+function diffSnapshots(
+  current: Record<string, unknown>,
+  previous: Record<string, unknown>,
+): { key: string; oldVal: string; newVal: string }[] {
+  const keys = new Set([...Object.keys(current), ...Object.keys(previous)]);
+  const changes: { key: string; oldVal: string; newVal: string }[] = [];
+  for (const k of keys) {
+    if (k.startsWith("_")) continue;
+    const a = current[k];
+    const b = previous[k];
+    const sa = a == null ? "" : typeof a === "object" ? JSON.stringify(a) : String(a);
+    const sb = b == null ? "" : typeof b === "object" ? JSON.stringify(b) : String(b);
+    if (sa !== sb) changes.push({ key: k, oldVal: sb || "—", newVal: sa || "—" });
+  }
+  return changes;
+}
+
+function DeviceHistory({ mac }: { mac: string }) {
+  const [history, setHistory] = useState<DeviceSnapshotHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/device-info/history/?mac=${encodeURIComponent(mac)}&limit=10`)
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.success) setHistory(j.data);
+        setLoading(false);
+      });
+  }, [mac]);
+
+  if (loading) return <p className="text-dim" style={{ fontSize: 12 }}>Geçmiş yükleniyor…</p>;
+  if (history.length < 2) {
+    return <p className="text-dim" style={{ fontSize: 12 }}>Karşılaştırma için en az 2 snapshot gerekli.</p>;
+  }
+
+  const latest = history[0];
+  const prev = history[1];
+  const changes = diffSnapshots(latest.data, prev.data);
+
+  return (
+    <div className="device-detail-section" style={{ marginTop: 16 }}>
+      <div className="device-detail-section-title">Geçmiş & Değişiklikler</div>
+      <p className="text-dim" style={{ fontSize: 11, marginBottom: 8 }}>
+        Son güncelleme ile önceki kayıt karşılaştırması ({formatTR(prev.collectedAt)} → {formatTR(latest.collectedAt)})
+      </p>
+      {changes.length === 0 ? (
+        <p className="text-dim" style={{ fontSize: 12 }}>Donanım verisinde değişiklik yok.</p>
+      ) : (
+        <div className="device-detail-table">
+          {changes.map((c) => (
+            <div key={c.key} className="device-detail-row">
+              <span className="device-detail-key">{KEY_LABELS[c.key] ?? c.key}</span>
+              <span style={{ fontSize: 12 }}>
+                <span style={{ color: "var(--red)", textDecoration: "line-through" }}>{c.oldVal.slice(0, 80)}</span>
+                {" → "}
+                <span style={{ color: "var(--green)" }}>{c.newVal.slice(0, 80)}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ marginTop: 10, fontSize: 11, color: "var(--text-dim)" }}>
+        {history.length} geçmiş kayıt
+      </div>
+    </div>
+  );
 }
 
 function DeviceDetail({ snap }: { snap: DeviceSnapshot }) {
@@ -124,6 +193,7 @@ function DeviceDetail({ snap }: { snap: DeviceSnapshot }) {
         <Download size={14} />
         JSON indir
       </button>
+      <DeviceHistory mac={snap.mac} />
       <p className="text-dim" style={{ fontSize: 11, marginTop: 12 }}>
         {dataKeys.length} alan · {formatTR(snap.collectedAt)}
       </p>

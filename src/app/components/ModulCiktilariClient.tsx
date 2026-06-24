@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { formatTR } from "@/lib/date-utils";
 import type { ModuleOutput, ModuleOutputSummary } from "@/lib/db";
 
@@ -22,7 +22,59 @@ function ago(iso: string) {
   return `${Math.floor(h / 24)}g önce`;
 }
 
+function isScreenshotOutput(output: Record<string, unknown>): boolean {
+  return output.type === "screenshot" && typeof output.imageBase64 === "string";
+}
+
+function ScreenshotPreview({ output }: { output: Record<string, unknown> }) {
+  const [expanded, setExpanded] = useState(false);
+  const mime = typeof output.mimeType === "string" ? output.mimeType : "image/jpeg";
+  const src = `data:${mime};base64,${output.imageBase64}`;
+  const w = typeof output.width === "number" ? output.width : undefined;
+  const h = typeof output.height === "number" ? output.height : undefined;
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <img
+        src={src}
+        alt="Ekran görüntüsü"
+        onClick={() => setExpanded(true)}
+        style={{
+          maxWidth: "100%",
+          maxHeight: expanded ? "none" : 220,
+          borderRadius: 8,
+          border: "1px solid var(--border)",
+          cursor: "zoom-in",
+          display: "block",
+        }}
+      />
+      {w && h && (
+        <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>
+          {w}×{h} px · JPEG
+        </div>
+      )}
+      {expanded && (
+        <div
+          role="presentation"
+          onClick={() => setExpanded(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(0,0,0,0.85)", display: "flex",
+            alignItems: "center", justifyContent: "center", padding: 24,
+            cursor: "zoom-out",
+          }}
+        >
+          <img src={src} alt="Tam ekran" style={{ maxWidth: "95vw", maxHeight: "95vh", borderRadius: 8 }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function JsonViewer({ data }: { data: Record<string, unknown> }) {
+  if (isScreenshotOutput(data)) {
+    return <ScreenshotPreview output={data} />;
+  }
   const [expanded, setExpanded] = useState(false);
   const entries = Object.entries(data);
   const preview = entries.slice(0, 3);
@@ -62,7 +114,7 @@ export default function ModulCiktilariClient({
   const [filterMod, setFilterMod]     = useState("");
   const [filterText, setFilterText]   = useState("");
   const [loading, setLoading]         = useState(false);
-  const [activeTab, setActiveTab]     = useState<"list" | "summary">("list");
+  const [activeTab, setActiveTab]     = useState<"list" | "summary" | "screenshots">("list");
   const [deleting, setDeleting]       = useState<number | null>(null);
 
   const hostnameMap = Object.fromEntries(allHostnames.map((h) => [h.mac, h.hostname]));
@@ -83,7 +135,30 @@ export default function ModulCiktilariClient({
     fetchOutputs();
   }, [fetchOutputs]);
 
-  const filtered = outputs.filter((o) => {
+  const screenshots = useMemo(
+    () => outputs.filter((o) => isScreenshotOutput(o.output)),
+    [outputs],
+  );
+
+  const filteredScreenshots = screenshots.filter((o) => {
+    if (filterMac && o.mac !== filterMac) return false;
+    if (filterText) {
+      const q = filterText.toLowerCase();
+      return (
+        o.mac.toLowerCase().includes(q) ||
+        (o.hostname ?? "").toLowerCase().includes(q) ||
+        (o.firmaAdi ?? "").toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  const listOutputs = useMemo(
+    () => outputs.filter((o) => !isScreenshotOutput(o.output)),
+    [outputs],
+  );
+
+  const filtered = listOutputs.filter((o) => {
     if (!filterText) return true;
     const q = filterText.toLowerCase();
     return (
@@ -164,7 +239,7 @@ export default function ModulCiktilariClient({
 
       {/* Sekmeler */}
       <div style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "1px solid var(--border)" }}>
-        {(["list", "summary"] as const).map((tab) => (
+        {(["list", "screenshots", "summary"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -176,7 +251,7 @@ export default function ModulCiktilariClient({
               marginBottom: -1,
             }}
           >
-            {tab === "list" ? "📋 Kayıt Listesi" : "📊 Modül Özeti"}
+            {tab === "list" ? "📋 Kayıt Listesi" : tab === "screenshots" ? `🖼 Ekran Görüntüleri (${screenshots.length})` : "📊 Modül Özeti"}
           </button>
         ))}
       </div>
@@ -230,6 +305,76 @@ export default function ModulCiktilariClient({
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* EKRAN GÖRÜNTÜLERİ */}
+      {activeTab === "screenshots" && (
+        <>
+          <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+            <select
+              value={filterMac}
+              onChange={(e) => setFilterMac(e.target.value)}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--text)", fontSize: 13, minWidth: 160 }}
+            >
+              <option value="">Tüm Cihazlar</option>
+              {allMacs.map((m) => (
+                <option key={m} value={m}>
+                  {hostnameMap[m] ? `${hostnameMap[m]} (${m})` : m}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="🔍 Ara..."
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", color: "var(--text)", fontSize: 13, minWidth: 200 }}
+            />
+            <span style={{ marginLeft: "auto", color: "var(--text-dim)", fontSize: 13, alignSelf: "center" }}>
+              {filteredScreenshots.length} görüntü
+            </span>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 16 }}>
+            Uzak komut: <code>CaptureScreenshot</code> — Excel&apos;de çalıştırıldığında birincil ekranın JPEG görüntüsü buraya düşer.
+          </p>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 40, color: "var(--text-dim)" }}>Yükleniyor…</div>
+          ) : filteredScreenshots.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 40, color: "var(--text-dim)" }}>
+              Henüz ekran görüntüsü yok.
+              <br /><br />
+              <span style={{ fontSize: 13 }}>
+                Komutlar sayfasından <code>CaptureScreenshot</code> modülünü hedef MAC&apos;e gönderin.
+              </span>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+              {filteredScreenshots.map((output) => (
+                <div key={output.id} className="card" style={{ padding: 12, overflow: "hidden" }}>
+                  <ScreenshotPreview output={output.output} />
+                  <div style={{ marginTop: 10, fontSize: 12 }}>
+                    <div style={{ fontWeight: 600 }}>{output.hostname ?? hostnameMap[output.mac] ?? output.mac}</div>
+                    <div className="mono text-dim" style={{ fontSize: 10 }}>{output.mac}</div>
+                    <div style={{ color: "var(--text-dim)", fontSize: 11, marginTop: 4 }}>
+                      {ago(output.createdAt)} · {formatTR(output.createdAt)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(output.id)}
+                    disabled={deleting === output.id}
+                    style={{
+                      marginTop: 8, background: "none", border: "1px solid #ef444440",
+                      color: "#ef4444", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11,
+                    }}
+                  >
+                    {deleting === output.id ? "⏳" : "🗑 Sil"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* KAYIT LİSTESİ */}

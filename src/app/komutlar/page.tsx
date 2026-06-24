@@ -1,16 +1,17 @@
 export const dynamic = "force-dynamic";
 
 import { Suspense } from "react";
-import { listClientCommands } from "@/lib/db";
+import { listClientCommands, listCommandTemplates } from "@/lib/db";
 import { listHeartbeats } from "@/lib/db";
 import { listDbModules } from "@/lib/db";
 import KomutlarClient from "@/app/components/KomutlarClient";
 
 export default async function KomutlarPage() {
-  const [commands, heartbeats, modules] = await Promise.all([
+  const [commands, heartbeats, modules, templates] = await Promise.all([
     listClientCommands({ limit: 200 }),
     listHeartbeats(),
     listDbModules(),
+    listCommandTemplates(),
   ]);
 
   const allMacs = heartbeats.map((h) => h.mac);
@@ -22,6 +23,7 @@ export default async function KomutlarPage() {
         initial={commands}
         allModuleNames={allModuleNames}
         allMacs={allMacs}
+        initialTemplates={templates}
       />
     </Suspense>
   );

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonResponse, errorResponse } from "@/lib/api-response";
-import { updateClientCommand, updateCommandProgress } from "@/lib/db";
+import { updateClientCommand, updateCommandProgress, getClientCommandById } from "@/lib/db";
+import { sendWebhook } from "@/lib/webhook";
 
 /**
  * PATCH /api/commands/[id]
@@ -34,6 +35,19 @@ export async function PATCH(
       result: body.result ?? null,
       errorMsg: body.errorMsg ?? null,
     });
+    if (body.status === "error") {
+      const cmd = await getClientCommandById(cmdId);
+      void sendWebhook({
+        event: "command_error",
+        message: `Komut hatası: ${cmd?.moduleName ?? "?"} → ${cmd?.mac ?? "?"}`,
+        data: {
+          id: cmdId,
+          moduleName: cmd?.moduleName,
+          mac: cmd?.mac,
+          errorMsg: body.errorMsg ?? null,
+        },
+      });
+    }
     return jsonResponse({ success: true });
   }
 

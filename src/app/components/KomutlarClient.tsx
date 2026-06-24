@@ -10,7 +10,7 @@ import {
   stuckStateHint,
   type StuckState,
 } from "@/lib/command-progress";
-import type { ClientCommand } from "@/lib/db";
+import type { ClientCommand, CommandTemplate } from "@/lib/db";
 import type { FolderWatchHealth } from "@/lib/types";
 import { CommandStatusBadge } from "@/lib/status-badges";
 import PageHeader from "./ui/PageHeader";
@@ -78,10 +78,12 @@ export default function KomutlarClient({
   initial,
   allModuleNames,
   allMacs,
+  initialTemplates = [],
 }: {
   initial: ClientCommand[];
   allModuleNames: string[];
   allMacs: string[];
+  initialTemplates?: CommandTemplate[];
 }) {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") ?? "tümü";
@@ -99,6 +101,8 @@ export default function KomutlarClient({
   const [formParam, setFormParam]       = useState("");
   const [formCustomMac, setFormCustomMac] = useState("");
   const [sending, setSending]           = useState(false);
+  const [templates, setTemplates]       = useState<CommandTemplate[]>(initialTemplates);
+  const [templateLabel, setTemplateLabel] = useState("");
   const [watchHealth, setWatchHealth]   = useState<Record<string, FolderWatchHealth>>({});
   const [, setTick]                     = useState(0);
 
@@ -158,6 +162,33 @@ export default function KomutlarClient({
     const id = setInterval(() => refreshWatchHealth(macs), 10000);
     return () => clearInterval(id);
   }, [commands, refreshWatchHealth]);
+
+  async function saveTemplate() {
+    if (!formModule.trim()) { alert("Önce modül seçin."); return; }
+    const label = templateLabel.trim() || formModule.trim();
+    const r = await fetch("/api/command-templates/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label, moduleName: formModule.trim(), param: formParam || null }),
+    });
+    const j = await r.json();
+    if (j.success) {
+      setTemplates((prev) => [...prev, j.data]);
+      setTemplateLabel("");
+    } else {
+      alert(j.error ?? "Şablon kaydedilemedi.");
+    }
+  }
+
+  async function deleteTemplate(id: number) {
+    await fetch(`/api/command-templates/?id=${id}`, { method: "DELETE" });
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
+  }
+
+  function applyTemplate(t: CommandTemplate) {
+    setFormModule(t.moduleName);
+    setFormParam(t.param ?? "");
+  }
 
   async function sendCommand() {
     const mac = formMac === "__custom__" ? formCustomMac.trim() : formMac.trim();
@@ -465,11 +496,46 @@ export default function KomutlarClient({
               onChange={(e) => setFormParam(e.target.value)}
             />
           </label>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
+            <input
+              className="form-input"
+              placeholder="Şablon adı (isteğe bağlı)"
+              value={templateLabel}
+              onChange={(e) => setTemplateLabel(e.target.value)}
+              style={{ maxWidth: 200 }}
+            />
+            <button type="button" className="btn btn-ghost" onClick={saveTemplate} disabled={!formModule.trim()}>
+              💾 Şablon Kaydet
+            </button>
             <button className="btn btn-primary" onClick={sendCommand} disabled={sending}>
               {sending ? "Gönderiliyor…" : "📤 Komutu Kuyruğa Ekle"}
             </button>
           </div>
+          {templates.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+              <span style={{ fontSize: 11, color: "var(--text-dim)", alignSelf: "center" }}>Şablonlar:</span>
+              {templates.map((t) => (
+                <span key={t.id} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <button
+                    type="button"
+                    className="badge badge-accent"
+                    style={{ cursor: "pointer", border: "none" }}
+                    onClick={() => applyTemplate(t)}
+                  >
+                    {t.label}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteTemplate(t.id)}
+                    style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: 10 }}
+                    title="Sil"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -278,6 +278,91 @@ export async function listDbModules(): Promise<ModuleRecord[]> {
   return (rows as ModuleRow[]).map(rowToModule);
 }
 
+export type ModuleListResult = {
+  items: ModuleRecord[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
+export async function listDbModulesPaginated(options: {
+  search?: string;
+  category?: string;
+  offset?: number;
+  limit?: number;
+}): Promise<ModuleListResult> {
+  await ensureModulesTable();
+  const sql = getSql();
+  const offset = options.offset ?? 0;
+  const limit = Math.min(options.limit ?? 50, 200);
+  const search = options.search?.trim() ?? "";
+  const category = options.category?.trim() ?? "";
+
+  let rows;
+  let countRows;
+
+  if (search && category) {
+    const pattern = `%${search}%`;
+    countRows = await sql`
+      SELECT COUNT(*) AS cnt FROM modules
+      WHERE category = ${category}
+        AND (method_name ILIKE ${pattern} OR description ILIKE ${pattern})
+    `;
+    rows = await sql`
+      SELECT id, method_name, description, category, active, code,
+             run_count, last_run_at, created_at, updated_at
+      FROM modules
+      WHERE category = ${category}
+        AND (method_name ILIKE ${pattern} OR description ILIKE ${pattern})
+      ORDER BY method_name
+      OFFSET ${offset} LIMIT ${limit}
+    `;
+  } else if (search) {
+    const pattern = `%${search}%`;
+    countRows = await sql`
+      SELECT COUNT(*) AS cnt FROM modules
+      WHERE method_name ILIKE ${pattern} OR description ILIKE ${pattern}
+    `;
+    rows = await sql`
+      SELECT id, method_name, description, category, active, code,
+             run_count, last_run_at, created_at, updated_at
+      FROM modules
+      WHERE method_name ILIKE ${pattern} OR description ILIKE ${pattern}
+      ORDER BY category, method_name
+      OFFSET ${offset} LIMIT ${limit}
+    `;
+  } else if (category) {
+    countRows = await sql`
+      SELECT COUNT(*) AS cnt FROM modules WHERE category = ${category}
+    `;
+    rows = await sql`
+      SELECT id, method_name, description, category, active, code,
+             run_count, last_run_at, created_at, updated_at
+      FROM modules
+      WHERE category = ${category}
+      ORDER BY method_name
+      OFFSET ${offset} LIMIT ${limit}
+    `;
+  } else {
+    countRows = await sql`SELECT COUNT(*) AS cnt FROM modules`;
+    rows = await sql`
+      SELECT id, method_name, description, category, active, code,
+             run_count, last_run_at, created_at, updated_at
+      FROM modules
+      ORDER BY category, method_name
+      OFFSET ${offset} LIMIT ${limit}
+    `;
+  }
+
+  const total = Number((countRows[0] as Record<string, unknown>).cnt);
+  return {
+    items: (rows as ModuleRow[]).map(rowToModule),
+    total,
+    offset,
+    limit,
+  };
+}
+
 export async function getDbModuleByMethodName(
   methodName: string,
 ): Promise<ModuleRecord | undefined> {
@@ -543,6 +628,17 @@ export async function listClientCommands(options?: {
     `;
   }
   return (rows as Record<string, unknown>[]).map(rowToCommand);
+}
+
+export async function getClientCommandById(id: number): Promise<ClientCommand | undefined> {
+  await ensureClientCommandsTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, mac, module_name, param, status, result, error_msg, created_at, executed_at, created_by, progress_pct, progress_label, progress_at
+    FROM client_commands WHERE id = ${id} LIMIT 1
+  `;
+  const row = rows[0] as Record<string, unknown> | undefined;
+  return row ? rowToCommand(row) : undefined;
 }
 
 export async function claimPendingCommand(mac: string): Promise<ClientCommand | null> {
@@ -852,10 +948,23 @@ export async function upsertDeviceSnapshot(params: {
   await ensureDeviceSnapshotsTable();
   const sql = getSql();
   const now = nowTR();
+  const macNorm = normalizeMac(params.mac);
+
+  const existing = await getDeviceSnapshot(macNorm);
+  if (existing) {
+    await insertDeviceSnapshotHistory({
+      mac: macNorm,
+      hostname: existing.hostname,
+      firmaAdi: existing.firmaAdi,
+      data: existing.data,
+      collectedAt: existing.collectedAt,
+    });
+  }
+
   await sql`
     INSERT INTO device_snapshots (mac, hostname, firma_adi, data, collected_at)
     VALUES (
-      ${params.mac},
+      ${macNorm},
       ${params.hostname ?? null},
       ${params.firmaAdi ?? null},
       ${JSON.stringify(params.data)}::jsonb,
@@ -904,6 +1013,145 @@ export async function getDeviceSnapshot(mac: string): Promise<DeviceSnapshot | u
     data: r.data as Record<string, unknown>,
     collectedAt: new Date(r.collected_at as string).toISOString(),
   };
+}
+
+// ─────────────────── DEVICE SNAPSHOT HISTORY ────────────────────────────
+
+export type DeviceSnapshotHistory = {
+  id: number;
+  mac: string;
+  hostname?: string | null;
+  firmaAdi?: string | null;
+  data: Record<string, unknown>;
+  collectedAt: string;
+};
+
+export async function ensureDeviceSnapshotHistoryTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS device_snapshot_history (
+      id           SERIAL PRIMARY KEY,
+      mac          TEXT NOT NULL,
+      hostname     TEXT,
+      firma_adi    TEXT,
+      data         JSONB NOT NULL DEFAULT '{}',
+      collected_at TIMESTAMPTZ NOT NULL
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_device_snapshot_history_mac ON device_snapshot_history (mac, collected_at DESC)`;
+}
+
+export async function insertDeviceSnapshotHistory(params: {
+  mac: string;
+  hostname?: string | null;
+  firmaAdi?: string | null;
+  data: Record<string, unknown>;
+  collectedAt: string;
+}): Promise<void> {
+  await ensureDeviceSnapshotHistoryTable();
+  const sql = getSql();
+  await sql`
+    INSERT INTO device_snapshot_history (mac, hostname, firma_adi, data, collected_at)
+    VALUES (
+      ${normalizeMac(params.mac)},
+      ${params.hostname ?? null},
+      ${params.firmaAdi ?? null},
+      ${JSON.stringify(params.data)}::jsonb,
+      ${params.collectedAt}
+    )
+  `;
+}
+
+export async function listDeviceSnapshotHistory(
+  mac: string,
+  limit = 20,
+): Promise<DeviceSnapshotHistory[]> {
+  await ensureDeviceSnapshotHistoryTable();
+  const sql = getSql();
+  const macNorm = normalizeMac(mac);
+  const rows = await sql`
+    SELECT id, mac, hostname, firma_adi, data, collected_at
+    FROM device_snapshot_history
+    WHERE UPPER(REPLACE(mac, '-', ':')) = ${macNorm}
+    ORDER BY collected_at DESC
+    LIMIT ${limit}
+  `;
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    mac: r.mac as string,
+    hostname: r.hostname as string | null,
+    firmaAdi: r.firma_adi as string | null,
+    data: r.data as Record<string, unknown>,
+    collectedAt: new Date(r.collected_at as string).toISOString(),
+  }));
+}
+
+// ─────────────────── COMMAND TEMPLATES ────────────────────────────────────
+
+export type CommandTemplate = {
+  id: number;
+  label: string;
+  moduleName: string;
+  param: string | null;
+  createdAt: string;
+};
+
+export async function ensureCommandTemplatesTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS command_templates (
+      id          SERIAL PRIMARY KEY,
+      label       TEXT NOT NULL,
+      module_name TEXT NOT NULL,
+      param       TEXT,
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
+export async function listCommandTemplates(): Promise<CommandTemplate[]> {
+  await ensureCommandTemplatesTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT id, label, module_name, param, created_at
+    FROM command_templates
+    ORDER BY label
+  `;
+  return (rows as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    label: r.label as string,
+    moduleName: r.module_name as string,
+    param: r.param as string | null,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
+}
+
+export async function insertCommandTemplate(params: {
+  label: string;
+  moduleName: string;
+  param?: string | null;
+}): Promise<CommandTemplate> {
+  await ensureCommandTemplatesTable();
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO command_templates (label, module_name, param)
+    VALUES (${params.label}, ${params.moduleName}, ${params.param ?? null})
+    RETURNING id, label, module_name, param, created_at
+  `;
+  const r = rows[0] as Record<string, unknown>;
+  return {
+    id: r.id as number,
+    label: r.label as string,
+    moduleName: r.module_name as string,
+    param: r.param as string | null,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  };
+}
+
+export async function deleteCommandTemplate(id: number): Promise<void> {
+  await ensureCommandTemplatesTable();
+  const sql = getSql();
+  await sql`DELETE FROM command_templates WHERE id = ${id}`;
 }
 
 // ─────────────────── FIRM AUTO MODULES ────────────────────────────────────

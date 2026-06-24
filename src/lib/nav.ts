@@ -23,48 +23,96 @@ export type NavItem = {
   keywords?: string[];
 };
 
-export type NavGroup = {
+export type NavSection = {
   id: string;
   label: string;
   items: NavItem[];
+};
+
+export type NavGroup = {
+  id: string;
+  label: string;
+  sections: NavSection[];
 };
 
 export const NAV_GROUPS: NavGroup[] = [
   {
     id: "ops",
     label: "Operasyon",
-    items: [
-      { href: "/", label: "Dashboard", icon: LayoutDashboard, keywords: ["ana", "özet"] },
-      { href: "/heartbeats", label: "Nabız İzleme", icon: Radio, keywords: ["heartbeat", "mac"] },
-      { href: "/komutlar", label: "Uzak Komutlar", icon: Terminal, keywords: ["komut", "kuyruk"] },
-      { href: "/modul-ciktilari", label: "Modül Çıktıları", icon: Upload, keywords: ["output"] },
-      { href: "/cihazlar", label: "Cihaz Bilgileri", icon: Monitor, keywords: ["donanım", "snapshot"] },
-      { href: "/loglar", label: "Loglar", icon: ScrollText, keywords: ["aktivite", "denetim"] },
-      { href: "/analitik", label: "Analitik", icon: BarChart3, keywords: ["istatistik"] },
+    sections: [
+      {
+        id: "ops-overview",
+        label: "Genel Bakış",
+        items: [
+          { href: "/", label: "Dashboard", icon: LayoutDashboard, keywords: ["ana", "özet"] },
+          { href: "/analitik", label: "Analitik", icon: BarChart3, keywords: ["istatistik", "grafik"] },
+        ],
+      },
+      {
+        id: "ops-live",
+        label: "Canlı İzleme",
+        items: [
+          { href: "/heartbeats", label: "Nabız İzleme", icon: Radio, keywords: ["heartbeat", "mac"] },
+          { href: "/loglar", label: "Loglar", icon: ScrollText, keywords: ["aktivite", "denetim"] },
+        ],
+      },
+      {
+        id: "ops-device",
+        label: "Cihaz & Komut",
+        items: [
+          { href: "/cihazlar", label: "Cihaz Bilgileri", icon: Monitor, keywords: ["donanım", "snapshot"] },
+          { href: "/komutlar", label: "Uzak Komutlar", icon: Terminal, keywords: ["komut", "kuyruk"] },
+          { href: "/modul-ciktilari", label: "Modül Çıktıları", icon: Upload, keywords: ["output", "screenshot"] },
+        ],
+      },
     ],
   },
   {
     id: "config",
     label: "Yapılandırma",
-    items: [
-      { href: "/lisanslar", label: "Lisanslar", icon: KeyRound, keywords: ["license", "mac"] },
-      { href: "/firma-modulleri", label: "Oto. Modüller", icon: Zap, keywords: ["firma", "auto-start"] },
-      { href: "/klasor-izleme", label: "Klasör İzleme", icon: FolderSearch, keywords: ["watch", "folder"] },
+    sections: [
+      {
+        id: "cfg-license",
+        label: "Lisans & Erişim",
+        items: [
+          { href: "/lisanslar", label: "Lisanslar", icon: KeyRound, keywords: ["license", "mac"] },
+        ],
+      },
+      {
+        id: "cfg-auto",
+        label: "Otomasyon",
+        items: [
+          { href: "/firma-modulleri", label: "Oto. Modüller", icon: Zap, keywords: ["firma", "auto-start"] },
+          { href: "/klasor-izleme", label: "Klasör İzleme", icon: FolderSearch, keywords: ["watch", "folder"] },
+        ],
+      },
     ],
   },
   {
     id: "dev",
     label: "Geliştirici",
-    items: [
-      { href: "/moduller", label: "Uzak Modüller", icon: Package, keywords: ["vba", "modül"] },
-      { href: "/oneriler", label: "Modül Önerileri", icon: Lightbulb, keywords: ["proposal"] },
-      { href: "/api-referans", label: "API Referans", icon: Plug, keywords: ["endpoint", "rest"] },
-      { href: "/kurulum", label: "Kurulum Rehberi", icon: BookOpen, keywords: ["setup", "xlam", "agent"] },
+    sections: [
+      {
+        id: "dev-modules",
+        label: "Modül Yönetimi",
+        items: [
+          { href: "/moduller", label: "Uzak Modüller", icon: Package, keywords: ["vba", "modül"] },
+          { href: "/oneriler", label: "Modül Önerileri", icon: Lightbulb, keywords: ["proposal"] },
+        ],
+      },
+      {
+        id: "dev-docs",
+        label: "Kaynaklar",
+        items: [
+          { href: "/api-referans", label: "API Referans", icon: Plug, keywords: ["endpoint", "rest"] },
+          { href: "/kurulum", label: "Kurulum Rehberi", icon: BookOpen, keywords: ["setup", "xlam", "agent"] },
+        ],
+      },
     ],
   },
 ];
 
-export const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+export const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.sections.flatMap((s) => s.items));
 
 export function findNavItem(pathname: string): NavItem | undefined {
   if (pathname === "/") return ALL_NAV_ITEMS.find((i) => i.href === "/");
