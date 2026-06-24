@@ -9,7 +9,10 @@
     "start": "next start",
     "start:prod": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint",
-    "create-poll-host": "powershell -ExecutionPolicy Bypass -File scripts/create-poll-host.ps1"
+    "create-poll-host": "powershell -ExecutionPolicy Bypass -File scripts/create-poll-host.ps1",
+    "modules:generate": "node scripts/generate-planned-modules.mjs",
+    "modules:upsert": "node scripts/upsert-modules-new.mjs",
+    "modules:sync": "node scripts/generate-planned-modules.mjs && node scripts/generate-planned-batch4.mjs && node scripts/upsert-modules-new.mjs && node scripts/mark-proposals-done.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

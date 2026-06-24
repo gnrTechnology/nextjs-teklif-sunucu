@@ -55,17 +55,17 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 35 | ExportRegistrySection | Seçili bölümü `.reg` dosyasına aktarır | ✅ |
 | 36 | ImportRegistryFile | `.reg` dosyasını sessizce içe aktarır | ✅ |
 | 37 | CheckRegistryKeyExists | Anahtarın varlığını true/false döndürür | ✅ |
-| 38 | BackupVbaSettings | VBA GetSetting değerlerini JSON dosyasına yedekler | ⬜ |
-| 39 | RestoreVbaSettings | JSON yedeği VBA SaveSetting ile geri yükler | ⬜ |
+| 38 | BackupVbaSettings | VBA GetSetting değerlerini JSON dosyasına yedekler | ✅ |
+| 39 | RestoreVbaSettings | JSON yedeği VBA SaveSetting ile geri yükler | ✅ |
 | 40 | GetAllVbaSettings | ilhan/scngnr/sercan bölümlerini sayfaya döker | ✅ |
 | 41 | SetRunOnceCommand | HKCU RunOnce'a komut ekler | ✅ |
 | 42 | RemoveRunOnceCommand | RunOnce kaydını siler | ✅ |
 | 43 | GetStartupPrograms | HKCU/HKLM Run anahtarlarındaki başlangıç programları | ✅ |
 | 44 | AddStartupProgram | Başlangıca program ekler (HKCU Run) | ✅ |
 | 45 | RemoveStartupProgram | Başlangıç programı kaydını kaldırır | ✅ |
-| 46 | MonitorRegistryChange | Belirli bir registry anahtarını değişiklik için izler | ⬜ |
+| 46 | MonitorRegistryChange | Belirli bir registry anahtarını değişiklik için izler | ✅ |
 | 47 | GetInstalledAppPaths | HKLM App Paths'tan uygulama exe yollarını listeler | ✅ |
-| 48 | CompareRegistrySnapshot | İki farklı zamandaki registry farkını raporlar | ⬜ |
+| 48 | CompareRegistrySnapshot | İki farklı zamandaki registry farkını raporlar | ✅ |
 
 ---
 
@@ -97,15 +97,15 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 70 | OpenFileWithDefaultApp | Varsayılan uygulamada açar (Shell)| ✅ |
 | 71 | CleanTempFolder | `%TEMP%` klasörünü temizler| ✅ |
 | 72 | BackupFileWithTimestamp | Dosyayı `ad_YYYYMMDD_HHMMSS.bak` olarak kopyalar| ✅ |
-| 73 | WatchFolderForNewFile | Klasöre yeni dosya düşene kadar bekler | ⬜ |
+| 73 | WatchFolderForNewFile | Klasöre yeni dosya düşene kadar bekler | ✅ |
 | 73b | WatchFolderServer | C:\ kök izleme — değişiklikleri sunucuya POST eder | ✅ |
 | 74 | CompareFilesIdentical | İki dosyanın byte-by-byte aynı olup olmadığını kontrol eder| ✅ |
 | 75 | ReplaceTextInFile | Metin dosyasında bul-değiştir işlemi yapar| ✅ |
 | 76 | GetNewestFileInFolder | Son değiştirilen dosyayı bulur ve tam yolunu döndürür| ✅ |
 | 77 | GetFileAttributes | Gizli/Salt-okunur/Sistem özniteliklerini okur| ✅ |
 | 78 | SetFileAttribute | Dosya özniteliğini (Gizli vb.) değiştirir| ✅ |
-| 79 | SyncFolderToServer | Yerel klasörü REST API ile uzak sunucuya senkronize eder | ⬜ |
-| 80 | ConvertPdfToText | COM ile PDF metnini çıkartır, sayfaya yazar | ⬜ |
+| 79 | SyncFolderToServer | Yerel klasörü REST API ile uzak sunucuya senkronize eder | ✅ |
+| 80 | ConvertPdfToText | COM ile PDF metnini çıkartır, sayfaya yazar | ✅ |
 
 ---
 
@@ -121,27 +121,27 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 86 | HttpDeleteRequest | DELETE isteği gönderir | ✅ |
 | 87 | CheckUrlReachable | URL'ye HEAD isteği atarak erişilebilirliği test eder | ✅ |
 | 88 | GetExchangeRate | TCMB/fixer.io'dan anlık döviz kuru çeker | ✅ |
-| 89 | GetGoldPrice | Altın fiyatı API'sinden güncel fiyat alır | ⬜ |
-| 90 | SendSlackMessage | Slack Incoming Webhook'a mesaj gönderir | ⬜ |
-| 91 | SendTeamsMessage | Teams Adaptive Card webhook gönderir | ⬜ |
+| 89 | GetGoldPrice | Altın fiyatı API'sinden güncel fiyat alır | ✅ |
+| 90 | SendSlackMessage | Slack Incoming Webhook'a mesaj gönderir | ✅ |
+| 91 | SendTeamsMessage | Teams Adaptive Card webhook gönderir | ✅ |
 | 92 | SendTelegramMessage | Telegram Bot API ile mesaj gönderir | ✅ |
-| 93 | UploadFileToBlobStorage | Azure Blob / S3 uyumlu REST API'ye dosya yükler | ⬜ |
+| 93 | UploadFileToBlobStorage | Azure Blob / S3 uyumlu REST API'ye dosya yükler | ✅ |
 | 94 | CheckInternetConnection | connectivity-check üzerinden bağlantı testi | ✅ |
 | 95 | PingHost | WMI Win32_PingStatus ile ping, ms cinsinden | ✅ |
-| 96 | GetLatestModuleVersion | Sunucudan modül versiyon numarası sorgular | ⬜ |
-| 97 | CheckForUpdate | Mevcut versiyon < sunucu versiyonu ise güncelleme önerir | ⬜ |
+| 96 | GetLatestModuleVersion | Sunucudan modül versiyon numarası sorgular | ✅ |
+| 97 | CheckForUpdate | Mevcut versiyon < sunucu versiyonu ise güncelleme önerir | ✅ |
 | 98 | DownloadAndOpenExcel | Excel dosyasını indirir, açar, değişken sayfa adına gider | ✅ |
 | 99 | SendErrorReportToServer | Hata stack trace'ini JSON ile sunucuya gönderir | ✅ |
-| 100 | FetchAndFillForm | API'den gelen JSON'u Excel UserForm alanlarına doldurur | ⬜ |
-| 101 | WebScrapeSimple | MSXML2 ile sayfa HTML'ini indirir, belirli etiket içeriğini döndürür | ⬜ |
-| 102 | SubmitFormData | HTML form gibi application/x-www-form-urlencoded gönderir | ⬜ |
-| 103 | GetRedirectedUrl | Yönlendirme zincirinin son URL'sini bulur | ⬜ |
-| 104 | BasicAuthGet | Basic Auth başlıklı GET isteği yapar | ⬜ |
-| 105 | BearerTokenGet | Bearer token ile korumalı endpoint'ten veri alır | ⬜ |
+| 100 | FetchAndFillForm | API'den gelen JSON'u Excel UserForm alanlarına doldurur | ✅ |
+| 101 | WebScrapeSimple | MSXML2 ile sayfa HTML'ini indirir, belirli etiket içeriğini döndürür | ✅ |
+| 102 | SubmitFormData | HTML form gibi application/x-www-form-urlencoded gönderir | ✅ |
+| 103 | GetRedirectedUrl | Yönlendirme zincirinin son URL'sini bulur | ✅ |
+| 104 | BasicAuthGet | Basic Auth başlıklı GET isteği yapar | ✅ |
+| 105 | BearerTokenGet | Bearer token ile korumalı endpoint'ten veri alır | ✅ |
 | 106 | UploadExcelToSharePoint | SharePoint REST API ile Excel dosyasını yükler | ⬜ |
 | 107 | GetWeatherData | OpenWeatherMap API ile hava durumu bilgisi çeker | ✅ |
-| 108 | FetchCurrencyHistory | Son 30 günlük döviz kuru tarihçesini sayfaya yazar | ⬜ |
-| 109 | OAuthGetToken | OAuth 2.0 Client Credentials ile access token alır | ⬜ |
+| 108 | FetchCurrencyHistory | Son 30 günlük döviz kuru tarihçesini sayfaya yazar | ✅ |
+| 109 | OAuthGetToken | OAuth 2.0 Client Credentials ile access token alır | ✅ |
 | 110 | WebhookListener | Belirli endpoint'i dinleyip gelen veriyi sayfaya yazar | ⬜ |
 
 ---
@@ -156,7 +156,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 114 | GetPsOutputToSheet | PS çıktısını satır satır sayfaya yazar | ✅ |
 | 115 | SetPsExecutionPolicy | ExecutionPolicy ayarlar (RemoteSigned vb.) | ✅ |
 | 116 | GetWindowsUpdateList | Bekleyen Windows güncellemelerini listeler | ✅ |
-| 117 | InstallWindowsUpdates | PS ile güncelleme başlatır (PSWindowsUpdate modülü) | ⬜ |
+| 117 | InstallWindowsUpdates | PS ile güncelleme başlatır (PSWindowsUpdate modülü) | ✅ |
 | 118 | GetEventLogErrors | Son N Application/System hatasını çeker| ✅ |
 | 119 | FlushDnsCache | `ipconfig /flushdns` çalıştırır| ✅ |
 | 120 | ResetNetworkAdapter | Bağdaştırıcıyı devre dışı bırakıp tekrar etkinleştirir | ✅ |
@@ -170,7 +170,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 128 | GetServiceStatus | Servis durumunu (Running/Stopped) döndürür| ✅ |
 | 129 | KillProcessByName | İsme göre process sonlandırır| ✅ |
 | 130 | GetDiskHealthStatus | SMART verisini PS üzerinden alır | ✅ |
-| 131 | RunAsAdmin | Komutu yükseltilmiş (admin) PS ile çalıştırır | ⬜ |
+| 131 | RunAsAdmin | Komutu yükseltilmiş (admin) PS ile çalıştırır | ✅ |
 | 132 | GetEnvironmentVariables | Tüm env değişkenlerini sayfaya yazar| ✅ |
 | 133 | SetEnvironmentVariable | Kullanıcı env değişkeni atar| ✅ |
 | 134 | GetHostsFile | `C:\Windows\System32\drivers\etc\hosts` içeriğini okur| ✅ |
@@ -179,7 +179,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 137 | ConnectWifi | Belirtilen SSID'ye bağlan | ✅ |
 | 138 | GetBitLockerStatus | Sürücülerin BitLocker durumunu kontrol eder| ✅ |
 | 139 | GetShadowCopies | Volume Shadow Copy listesini döndürür | ✅ |
-| 140 | CreateShadowCopy | Belirtilen sürücü için shadow copy oluşturur | ⬜ |
+| 140 | CreateShadowCopy | Belirtilen sürücü için shadow copy oluşturur | ✅ |
 
 ---
 
@@ -187,36 +187,36 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 141 | SaveAllWorkbooks | Tüm açık dosyaları kaydeder | ⬜ |
-| 142 | ExportSheetAsPdf | Aktif sayfayı PDF olarak dışa aktarır | ⬜ |
-| 143 | ExportAllSheetsAsPdf | Her sayfayı ayrı PDF'e aktarır, isimleri sayfa adı | ⬜ |
-| 144 | ImportSheetFromFile | Başka dosyadan sayfa kopyalar | ⬜ |
-| 145 | ProtectAllSheets | Tüm sayfaları parola ile korur | ⬜ |
-| 146 | UnprotectAllSheets | Tüm sayfa korumalarını kaldırır | ⬜ |
-| 147 | RefreshAllPivotTables | Tüm pivot tabloları yeniler | ⬜ |
-| 148 | RefreshAllConnections | Dış veri bağlantılarını yeniler | ⬜ |
-| 149 | ConvertFormulasToValues | Seçilen aralıktaki formülleri değerle değiştirir | ⬜ |
-| 150 | RemoveDuplicateRows | Yinelenen satırları siler, kaç adet silindiğini raporlar | ⬜ |
-| 151 | SortSheetsByName | Sayfaları alfabetik sıralar | ⬜ |
-| 152 | BatchRenameSheets | JSON parametresindeki ad eşleştirmesiyle toplu yeniden adlandırır | ⬜ |
-| 153 | MergeMultipleFiles | Birden fazla Excel dosyasını tek sayfada birleştirir | ⬜ |
-| 154 | SplitSheetByColumn | Sayfayı sütun değerine göre ayrı dosyalara böler | ⬜ |
-| 155 | AutoFitAllColumns | Tüm sütun genişliklerini içeriğe göre ayarlar | ⬜ |
-| 156 | AddWatermarkToSheet | Sayfa arka planına metin filigran ekler | ⬜ |
-| 157 | SendWorkbookByEmail | MAPI / Outlook COM ile dosyayı e-posta ekine ekler | ⬜ |
-| 158 | CreateSummarySheet | Tüm sayfaların A1 değerlerini özet sayfada toplar | ⬜ |
+| 141 | SaveAllWorkbooks | Tüm açık dosyaları kaydeder | ✅ |
+| 142 | ExportSheetAsPdf | Aktif sayfayı PDF olarak dışa aktarır | ✅ |
+| 143 | ExportAllSheetsAsPdf | Her sayfayı ayrı PDF'e aktarır, isimleri sayfa adı | ✅ |
+| 144 | ImportSheetFromFile | Başka dosyadan sayfa kopyalar | ✅ |
+| 145 | ProtectAllSheets | Tüm sayfaları parola ile korur | ✅ |
+| 146 | UnprotectAllSheets | Tüm sayfa korumalarını kaldırır | ✅ |
+| 147 | RefreshAllPivotTables | Tüm pivot tabloları yeniler | ✅ |
+| 148 | RefreshAllConnections | Dış veri bağlantılarını yeniler | ✅ |
+| 149 | ConvertFormulasToValues | Seçilen aralıktaki formülleri değerle değiştirir | ✅ |
+| 150 | RemoveDuplicateRows | Yinelenen satırları siler, kaç adet silindiğini raporlar | ✅ |
+| 151 | SortSheetsByName | Sayfaları alfabetik sıralar | ✅ |
+| 152 | BatchRenameSheets | JSON parametresindeki ad eşleştirmesiyle toplu yeniden adlandırır | ✅ |
+| 153 | MergeMultipleFiles | Birden fazla Excel dosyasını tek sayfada birleştirir | ✅ |
+| 154 | SplitSheetByColumn | Sayfayı sütun değerine göre ayrı dosyalara böler | ✅ |
+| 155 | AutoFitAllColumns | Tüm sütun genişliklerini içeriğe göre ayarlar | ✅ |
+| 156 | AddWatermarkToSheet | Sayfa arka planına metin filigran ekler | ✅ |
+| 157 | SendWorkbookByEmail | MAPI / Outlook COM ile dosyayı e-posta ekine ekler | ✅ |
+| 158 | CreateSummarySheet | Tüm sayfaların A1 değerlerini özet sayfada toplar | ✅ |
 | 159 | CompressAllImages | Sayfadaki resimlerin sıkıştırma kalitesini düşürür | ⬜ |
-| 160 | TableToJsonAndPost | Seçili tabloyu JSON'a çevirip API'ye gönderir | ⬜ |
-| 161 | CreateNamedRangeFromSelection | Seçimi adlandırılmış bölge olarak tanımlar | ⬜ |
-| 162 | GeneratePivotFromData | Parametre ile belirtilen aralıktan otomatik pivot oluşturur | ⬜ |
-| 163 | ApplyConditionalFormatting | JSON kurallarına göre koşullu biçimlendirme ekler | ⬜ |
-| 164 | InsertChartFromData | Belirtilen veri aralığından grafik ekler | ⬜ |
-| 165 | ConvertSheetToHtmlTable | Sayfayı HTML tablo formatında dışa aktarır | ⬜ |
-| 166 | BulkFindAndReplace | Tüm çalışma kitabında toplu bul-değiştir | ⬜ |
-| 167 | CopySheetToNewWorkbook | Sayfayı yeni bir çalışma kitabına kopyalar | ⬜ |
-| 168 | AutoNumberRows | Seçili sütunda otomatik numara verir | ⬜ |
-| 169 | InsertRowAboveSelected | Seçili satırın üstüne N adet satır ekler | ⬜ |
-| 170 | FreezeFirstRowAndColumn | İlk satır ve sütunu dondurur | ⬜ |
+| 160 | TableToJsonAndPost | Seçili tabloyu JSON'a çevirip API'ye gönderir | ✅ |
+| 161 | CreateNamedRangeFromSelection | Seçimi adlandırılmış bölge olarak tanımlar | ✅ |
+| 162 | GeneratePivotFromData | Parametre ile belirtilen aralıktan otomatik pivot oluşturur | ✅ |
+| 163 | ApplyConditionalFormatting | JSON kurallarına göre koşullu biçimlendirme ekler | ✅ |
+| 164 | InsertChartFromData | Belirtilen veri aralığından grafik ekler | ✅ |
+| 165 | ConvertSheetToHtmlTable | Sayfayı HTML tablo formatında dışa aktarır | ✅ |
+| 166 | BulkFindAndReplace | Tüm çalışma kitabında toplu bul-değiştir | ✅ |
+| 167 | CopySheetToNewWorkbook | Sayfayı yeni bir çalışma kitabına kopyalar | ✅ |
+| 168 | AutoNumberRows | Seçili sütunda otomatik numara verir | ✅ |
+| 169 | InsertRowAboveSelected | Seçili satırın üstüne N adet satır ekler | ✅ |
+| 170 | FreezeFirstRowAndColumn | İlk satır ve sütunu dondurur | ✅ |
 
 ---
 
@@ -224,26 +224,26 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 171 | CheckLicenseStatus | Registry'den lisans okur; tab'ı gösterir/gizler | ⬜ |
-| 172 | ValidateMacWithServer | MAC + HWID'yi sunucuya doğrulatır | ⬜ |
-| 173 | CheckFileIntegrity | Dosya MD5 hash'ini beklenen değerle karşılaştırır | ⬜ |
-| 174 | DetectVirtualMachine | VM ortamında çalışılıp çalışılmadığını tespit eder | ⬜ |
-| 175 | GenerateHardwareId | CPU SerialNumber + MAC → benzersiz 32 hex ID | ⬜ |
-| 176 | EncryptTextXor | XOR + Base64 ile metin şifreleme | ⬜ |
-| 177 | DecryptTextXor | XOR + Base64 ile metin çözme | ⬜ |
-| 178 | CheckAdminRights | Yönetici haklarıyla çalışılıp çalışılmadığını kontrol eder | ⬜ |
-| 179 | LockWorkbookOnExpiry | Lisans süresi dolduysa dosyayı kilitler + sunucuya bildirir | ⬜ |
+| 171 | CheckLicenseStatus | Registry'den lisans okur; tab'ı gösterir/gizler | ✅ |
+| 172 | ValidateMacWithServer | MAC + HWID'yi sunucuya doğrulatır | ✅ |
+| 173 | CheckFileIntegrity | Dosya MD5 hash'ini beklenen değerle karşılaştırır | ✅ |
+| 174 | DetectVirtualMachine | VM ortamında çalışılıp çalışılmadığını tespit eder | ✅ |
+| 175 | GenerateHardwareId | CPU SerialNumber + MAC → benzersiz 32 hex ID | ✅ |
+| 176 | EncryptTextXor | XOR + Base64 ile metin şifreleme | ✅ |
+| 177 | DecryptTextXor | XOR + Base64 ile metin çözme | ✅ |
+| 178 | CheckAdminRights | Yönetici haklarıyla çalışılıp çalışılmadığını kontrol eder | ✅ |
+| 179 | LockWorkbookOnExpiry | Lisans süresi dolduysa dosyayı kilitler + sunucuya bildirir | ✅ |
 | 180 | DetectCopyAndSelfDestruct | startingAddin kontrolü; ihlal varsa cleanup tetikler | ⬜ |
-| 181 | AuditLogAction | Kullanıcı eylemini timestamp + mac + detail ile sunucuya loglar | ⬜ |
+| 181 | AuditLogAction | Kullanıcı eylemini timestamp + mac + detail ile sunucuya loglar | ✅ |
 | 182 | ObfuscateSheetFormulas | Formülleri xlVeryHidden sayfalara taşıyarak gizler | ⬜ |
-| 183 | CheckDebuggerAttached | VBA debugger'ın çalışıp çalışmadığını tespit eder | ⬜ |
+| 183 | CheckDebuggerAttached | VBA debugger'ın çalışıp çalışmadığını tespit eder | ✅ |
 | 184 | EncryptCellRange | Seçili hücreleri RC4 algoritmasıyla şifreler | ⬜ |
 | 185 | DecryptCellRange | RC4 ile şifrelenmiş hücreleri çözer | ⬜ |
-| 186 | BlacklistMacAddress | Kara listedeki MAC'leri sunucudan çekip erişimi engeller | ⬜ |
-| 187 | TimeLimitedAccess | Belirli saat aralığı dışında dosyayı kilitler | ⬜ |
-| 188 | IpWhitelistCheck | İzin verilen IP aralığında olup olmadığını kontrol eder | ⬜ |
+| 186 | BlacklistMacAddress | Kara listedeki MAC'leri sunucudan çekip erişimi engeller | ✅ |
+| 187 | TimeLimitedAccess | Belirli saat aralığı dışında dosyayı kilitler | ✅ |
+| 188 | IpWhitelistCheck | İzin verilen IP aralığında olup olmadığını kontrol eder | ✅ |
 | 189 | AntiScreenCapture | PrintScreen ve Snipping Tool'u geçici olarak engeller | ⬜ |
-| 190 | WatermarkVisibleOnPrint | Baskı önizlemesinde görünür filigran ekler | ⬜ |
+| 190 | WatermarkVisibleOnPrint | Baskı önizlemesinde görünür filigran ekler | ✅ |
 
 ---
 
@@ -254,7 +254,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 191 | ShowToastNotification | Windows 10/11 baloncuk bildirimi (PS BurntToast) | ✅ |
 | 192 | ShowProgressBar | Özel UserForm ile %0→%100 ilerleme çubuğu | ⬜ |
 | 193 | ShowCustomInputForm | Çok alanlı giriş formu; sonuçları JSON döndürür | ⬜ |
-| 194 | ShowYesNoCancelDialog | Üç seçenekli dialog, seçimi string döndürür | ⬜ |
+| 194 | ShowYesNoCancelDialog | Üç seçenekli dialog, seçimi string döndürür | ✅ |
 | 195 | PlaySystemSound | Windows ses teması çalar (Asterisk, Critical vb.) | ✅ |
 | 196 | OpenUrlInBrowser | Varsayılan tarayıcıda URL açar | ✅ |
 | 197 | ShowSystemTrayBalloon | WScript.Shell PopUp baloncuğu | ✅ |
@@ -276,19 +276,19 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 209 | ConvertSheetToJson | Aktif sayfayı JSON array string'e çevirir | ⬜ |
-| 210 | ImportJsonToSheet | JSON array'i başlık + satırlarıyla sayfaya aktarır | ⬜ |
-| 211 | ConvertXmlToSheet | XML dökümanını sayfaya çevirir (MSXML2.DOMDocument) | ⬜ |
+| 209 | ConvertSheetToJson | Aktif sayfayı JSON array string'e çevirir | ✅ |
+| 210 | ImportJsonToSheet | JSON array'i başlık + satırlarıyla sayfaya aktarır | ✅ |
+| 211 | ConvertXmlToSheet | XML dökümanını sayfaya çevirir (MSXML2.DOMDocument) | ✅ |
 | 212 | ExportSheetToServer | Sayfayı JSON olarak sunucu API'sine POST eder | ⬜ |
-| 213 | NormalizePhoneNumbers | TR format telefon numaralarını `+90 5xx xxx xx xx`'e çevirir | ⬜ |
-| 214 | ValidateTCKimlik | TC kimlik algoritma doğrulaması | ⬜ |
-| 215 | FormatCurrencyColumn | Para birimi sütununu `₺ 1.234,56` formatına çevirir | ⬜ |
-| 216 | MergeJsonFiles | Birden fazla JSON dosyasını tek array'de birleştirir | ⬜ |
-| 217 | SplitCsvByColumn | CSV dosyasını sütun değerine göre ayrı dosyalara böler | ⬜ |
+| 213 | NormalizePhoneNumbers | TR format telefon numaralarını `+90 5xx xxx xx xx`'e çevirir | ✅ |
+| 214 | ValidateTCKimlik | TC kimlik algoritma doğrulaması | ✅ |
+| 215 | FormatCurrencyColumn | Para birimi sütununu `₺ 1.234,56` formatına çevirir | ✅ |
+| 216 | MergeJsonFiles | Birden fazla JSON dosyasını tek array'de birleştirir | ✅ |
+| 217 | SplitCsvByColumn | CSV dosyasını sütun değerine göre ayrı dosyalara böler | ✅ |
 | 218 | SqliteQueryToSheet | SQLite dosyasını ADO üzerinden sorgular, sonucu sayfaya yazar | ⬜ |
-| 219 | ConvertBase64ToFile | Base64 string'i dosyaya çözer (ADODB.Stream) | ⬜ |
-| 220 | ConvertFileToBase64 | Dosyayı Base64 string'e kodlar | ⬜ |
-| 221 | CleanHtmlToText | HTML içeriğinden etiketleri temizler, düz metin döndürür | ⬜ |
+| 219 | ConvertBase64ToFile | Base64 string'i dosyaya çözer (ADODB.Stream) | ✅ |
+| 220 | ConvertFileToBase64 | Dosyayı Base64 string'e kodlar | ✅ |
+| 221 | CleanHtmlToText | HTML içeriğinden etiketleri temizler, düz metin döndürür | ✅ |
 | 222 | SheetToPivotJson | Sayfa verisini pivot-ready JSON formatına dönüştürür | ⬜ |
 | 223 | CsvToJsonApi | CSV dosyasını okuyup her satırı API'ye POST eder | ⬜ |
 | 224 | NormalizeIbanFormat | IBAN numarasını formatlı ve doğrulamalı yazar | ⬜ |

@@ -6,15 +6,8 @@ const env = fs.readFileSync(".env.local", "utf8");
 const url = env.match(/^DATABASE_URL=(.+)$/m)[1].trim();
 const sql = neon(url);
 
-const META = {
-  GetWindowsProductKey: { description: "Windows urun anahtarini registry'den okur", category: "registry" },
-  HttpPatchJson: { description: "PATCH JSON istegi gonderir (url|body)", category: "http" },
-  HttpDeleteRequest: { description: "DELETE HTTP istegi gonderir", category: "http" },
-  ListRegistryKeys: { description: "Registry alt anahtar ve degerlerini listeler", category: "registry" },
-  ExportRegistrySection: { description: "Registry bolumunu .reg dosyasina aktarir", category: "registry" },
-  ImportRegistryFile: { description: ".reg dosyasini sessizce ice aktarir", category: "registry" },
-  RemoveRunOnceCommand: { description: "RunOnce kaydini siler", category: "registry" },
-};
+const metaPath = path.join(process.cwd(), "data", "modules-meta.json");
+const META = JSON.parse(fs.readFileSync(metaPath, "utf8"));
 
 const dir = path.join(process.cwd(), "data", "modules-new");
 const files = fs.readdirSync(dir).filter((f) => f.endsWith(".bas"));
