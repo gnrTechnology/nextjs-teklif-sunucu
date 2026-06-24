@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listDbModules, listHeartbeats, listClientCommands, listModuleOutputs, listLicenses } from "@/lib/db";
 import { formatTR, getHeartbeatStatus } from "@/lib/date-utils";
 

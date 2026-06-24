@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listHeartbeats } from "@/lib/db";
 import HeartbeatsClient from "@/app/components/HeartbeatsClient";
 import { Suspense } from "react";

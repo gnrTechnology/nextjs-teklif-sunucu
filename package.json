@@ -11,6 +11,8 @@
     "modules:generate": "node scripts/generate-planned-remaining.mjs",
     "modules:upsert": "node scripts/upsert-modules-new.mjs",
     "modules:sync": "node scripts/generate-planned-remaining.mjs && node scripts/upsert-modules-new.mjs && node scripts/mark-proposals-done.mjs",
+    "modules:audit": "node scripts/audit-modules.mjs",
+    "modules:fix": "node scripts/fix-modules-neon.mjs",
     "cleanup:local": "node scripts/cleanup-local-artifacts.mjs"
   },
   "dependencies": {

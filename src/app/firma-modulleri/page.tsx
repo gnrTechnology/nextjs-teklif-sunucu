@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listFirmAutoModules } from "@/lib/firm-auto-modules";
 import { listDbModules } from "@/lib/db";
 import FirmaModulleriClient from "@/app/components/FirmaModulleriClient";
