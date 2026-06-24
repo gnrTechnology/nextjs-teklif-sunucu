@@ -13,6 +13,7 @@
     "modules:sync": "node scripts/generate-planned-remaining.mjs && node scripts/upsert-modules-new.mjs && node scripts/mark-proposals-done.mjs",
     "modules:audit": "node scripts/audit-modules.mjs",
     "modules:fix": "node scripts/fix-modules-neon.mjs",
+    "xlam:backup": "node scripts/xlam-backup.mjs",
     "cleanup:local": "node scripts/cleanup-local-artifacts.mjs"
   },
   "dependencies": {

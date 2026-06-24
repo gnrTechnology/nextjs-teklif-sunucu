@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="ribbonLoaded">
+  <ribbon startFromScratch="false">
+    <tabs>
+      <tab id="teklif" insertBeforeMso="TabHome" label="C-prop"  getVisible="GetTabVisibility">
+        <group id="Teklif" label="Bölüm-1">
+          <splitButton id="sbt12" size="large">
+            <button id="BY11" label="Teklif Seç Oluştur" onAction="Macro32" imageMso="ImportSavedImports" description="Teklif Seç Oluştur"/>
+            <menu id="mnu_sbt12" itemSize="large">
+              <button id="BY12" label="Teklif Seç/Oluştur" onAction="Macro32" imageMso="FileManageMenu" description="Teklif Seç"/>
+              <button id="Button32" label="Yeni Pano Teklifi" onAction="MY1" imageMso="DatasheetNewField" description="Boş teklif sayfası"/>
+	            <button id="TeklifOlustur01" label="Yeni Pano Teklif Dosyası" onAction="teklifDosyaOlustur" description="Teklifi sunucuya yükle" imageMso="CreateMailRule"/>
+	            <button id="TeklifOlustur02" label="Teklifi Sunucuya Gönder" onAction="mrpiSend" description="Boş teklif Dosyası oluştur" imageMso="CreateMailRule"/>
+              <menuSeparator id="separator100"/>
+              <button id="Button2" label="Dosya Aç" onAction="Macro2" imageMso="FileOpen"/>
+            </menu>
+          </splitButton>
+          <separator id="Separator0"/>
+          <menu id="menü5" label="Para Birimi ve Kurlar" imageMso="InternationalCurrency">
+            <button id="kurlar" label="Teklif Kur Girişi" onAction="teklifkur" imageMso="InternationalCurrency"/>
+            <menu id="menü51" label="Teklif Para Birimi" imageMso="InternationalCurrency">
+              <button id="Button23" label="Teklif Para Birimi (TL)" onAction="Macro23"/>
+              <button id="Button24" label="Teklif Para Birimi (USD)" onAction="Macro24"/>
+              <button id="Button25" label="Teklif Para Birimi (EUR)" onAction="Macro25"/>
+            </menu>
+            <button id="Button26" label="T.C.M.B. Kur Bilgileri" onAction="Macro26" imageMso="HyperlinkInsert"/>
+          </menu>
+          <button id="Button4" label="Hata Denetimi" onAction="Macro4" imageMso="ErrorChecking" size="normal"/>
+          <button id="Button5" label="Teklif Bilgileri" onAction="Macro5" imageMso="SaveAttachments" size="normal"/>
+        </group>
+        <group id="rxgrp" label="Bölüm-2">
+          <gallery id="rxgal" label="Fiyat Listeleri-1" columns="7" rows="3" itemHeight="191" itemWidth="135" imageMso="HeaderFooterFilePathInsert" getItemCount="rxgal_getItemCount" getItemLabel="rxgal_getItemLabel" getItemImage="rxgal_getItemImage" getItemScreentip="rxgal_getItemScreentip" onAction="OnActionCallbackscn" showItemLabel="false" size="large">
+            <button id="rxbtn1" imageMso="RefreshStatus" label="Changed by Scngnr" onAction="rxbtn_Click1"/>
+          </gallery>
+          <button id="btn_abb" imageMso="ReturnToTaskList" onAction="Anasalt" size="large"/>
+          <separator id="Separator1"/>
+          <gallery id="rxgal1" label="Fiyat Listeleri-2" columns="3" rows="24" size="large" imageMso="HeaderFooterFilePathInsert" getItemCount="rxgal_getItemCount1" getItemLabel="rxgal_getItemLabel1" getItemScreentip="rxgal_getItemScreentip1" onAction="OnActionCallback1" showItemLabel="true">
+            <button id="rxbtn2" imageMso="RefreshStatus" label="Changed by Scngnr" onAction="rxbtn_Click1"/>
+          </gallery>
+          <gallery id="rxgal2" label="Fiyat Listeleri-3" columns="3" rows="24" size="large" imageMso="HeaderFooterFilePathInsert" getItemCount="rxgal_getItemCount2" getItemLabel="rxgal_getItemLabel2" getItemScreentip="rxgal_getItemScreentip2" onAction="OnActionCallback2" showItemLabel="true">
+            <button id="rxbtn3" imageMso="RefreshStatus" label="Fiyat Listeleri-3" onAction="rxbtn_Click1"/>
+          </gallery>
+          <gallery id="rxgal3" label="Fiyat Listeleri-4" columns="2" rows="24" size="large" imageMso="HeaderFooterFilePathInsert" getItemCount="rxgal_getItemCount3" getItemLabel="rxgal_getItemLabel2" getItemScreentip="rxgal_getItemScreentip2" onAction="OnActionCallback3" showItemLabel="true">
+            <button id="rxbtn4" imageMso="FileOpenDatabase" label="Fiyat Listeleri-4" onAction="rxbtn_Click2"/>
+          </gallery>
+          <separator id="Separator2"/>
+          <splitButton id="ek3" size="large">
+            <button id="btn131" label="Pano İşçilik Sarf vs." onAction="Macropanofiyat" imageMso="AccessFormWizard"/>
+            <menu id="mnu_sbt53" itemSize="large">
+              <menu id="mnu_sbt351" label="Pano Girişi Seçimi" imageMso="Group3DEffects" itemSize="normal">
+                <button id="Button311" label="Pano Çarpandan Giriş" onAction="Macro311"/>
+                <button id="Button312" label="Pano Listeden Giriş" onAction="Macro312"/>
+              </menu>
+              <button id="Button1621" label="İşçilik Satırı Ekle" onAction="Macro1621" imageMso="StartTimer"/>
+              <button id="Button164" label="Sarf Malzeme Satırı Ekle" onAction="Macro1641" imageMso="ReviewBalloonsMenu"/>
+              <button id="btn431" label="Bakır Satırı Ekle" onAction="Macro169" imageMso="Chart3DBarChart"/>
+              <button id="btn432" label="Bakır Hesabı" onAction="Macro170" imageMso="TableDesign"/>
+              <button id="btn433" label="Klemens ve Kablo Hesabı" onAction="Macro171" imageMso="OrganizationChartSelectLevel"/>
+            </menu>
+          </splitButton>
+          <splitButton id="sbt41" size="large">
+            <button id="baslık1" label="Bölüm Adı Ekle" onAction="baslık1" imageMso="HorizontalLineInsert"/>
+            <menu id="mnu_sbt41" itemSize="large">
+              <button id="baslık11" label="Bölüm Adı Ekle" onAction="baslık1" imageMso="HorizontalLineInsert"/>
+              <button id="baslık13" label="Grup Adı Ekle" onAction="baslık3" imageMso="GroupOrganizationChartLayoutClassic"/>
+              <button id="baslık2" label="Proje Adı Ekle" onAction="baslık2" imageMso="CustomTextBoxGallery"/>
+            </menu>
+          </splitButton>
+          <splitButton id="sbt42" size="large">
+            <button id="toplam1" label="Toplam Ekle" onAction="toplam1" imageMso="OutlineSubtotals"/>
+            <menu id="mnu_sbt5" itemSize="normal">
+              <button id="toplam11" label="Toplam Ekle" onAction="toplam1" imageMso="OutlineSubtotals"/>
+              <button id="toplam2" label="Genel Toplam Ekle" onAction="toplam2" imageMso="TableStyleTotalsRow"/>
+              <splitButton id="sbt421">
+                <button id="Button21" label="Çarpan ekle" onAction="Macro21" imageMso="TableExportTableToSharePointList"/>
+                <menu id="mnu_sbt51" itemSize="normal">
+                  <button id="Button211" label="Tüm Çarpanları Ekle/Düzelt" onAction="Macro211"/>
+                </menu>
+              </splitButton>
+              <splitButton id="sbt422">
+                <button id="Button22" label="Çarpan Kaldır" onAction="Macro22" imageMso="InkDeleteAllInk"/>
+                <menu id="mnu_sbt52" itemSize="normal">
+                  <button id="Button221" label="Tüm Çarpanları Kaldır" onAction="Macro221"/>
+                </menu>
+              </splitButton>
+            </menu>
+          </splitButton>
+          <separator id="Separator21"/>
+          <gallery id="rxgal4" label="Otomatik Seçim" columns="2" rows="24" size="large" imageMso="TransitionTimeAutomaticallyAfter" getItemCount="rxgal_getItemCount4" getItemLabel="rxgal_getItemLabel4" getItemScreentip="rxgal_getItemScreentip4" onAction="OnActionCallback4" showItemLabel="true">
+            <button id="rxbtn5" imageMso="FileOpenDatabase" label="Otomatik Seçim Dosyaları" onAction="rxbtn_Click4"/>
+          </gallery>
+          <dialogBoxLauncher>
+            <button id="ButtonDL1" onAction="Macro76"/>
+          </dialogBoxLauncher>
+        </group>
+        <group id="Düzenlemeler" label="Bölüm-3">
+          <splitButton id="sbt2" size="large">
+            <button id="btn_sbt1" label="Malzeme Yönetimi" imageMso="CreateClassModule" onAction="Macro13"/>
+            <menu id="mnu_sbt1" itemSize="large">
+              <button id="Button13" label="İskontolar" onAction="Macro13" imageMso="CreateClassModule"/>
+              <button id="Button16" label="Malzeme Degişimi" onAction="Macro16" imageMso="DiagramReverseClassic"/>
+              <button id="Güncelleme" label="Fiyat ve Veri Güncelleme" imageMso="ListSynchronize" onAction="Macro74" description="Liste Güncelleme vs."/>
+              <button id="Güncelleme3" label="Teklif Aktarma" imageMso="FileSaveAsExcelXlsb" onAction="Macro741" description="Yeni Teklif Dosyasına Aktarma"/>
+            </menu>
+          </splitButton>
+          <button id="Button14" label="Malzeme İcmal" onAction="Macro14" imageMso="DatabaseDocumenter" size="large"/>
+        </group>
+        <group id="teklifsayfa" label="Bölüm-4">
+          <button id="btn1314" label="Modül Hesabı" onAction="Panoboyut" imageMso="_3DSurfaceMaterialClassic"/>
+          <splitButton id="sbt304" size="normal">
+            <button id="btn1324" label="Stok Kontrolü" onAction="Stokkontrol1" imageMso="CatalogMergeFindRecipient"/>
+            <menu id="mnu_sbt304" itemSize="normal">
+              <button id="Güncelleme2" label="Stok Kontrol" imageMso="FileSaveAsExcelXlsb" onAction="Macro742" description="Stok Kontrolü"/>
+            </menu>
+          </splitButton>
+          <splitButton id="sbt401" size="normal">
+            <button id="Button28" label="Şablonlar" onAction="Macro28" imageMso="AssignTask"/>
+            <menu id="mnu_sbt401" itemSize="normal">
+              <button id="Button501" label="PDF Dosyası Oluştur" onAction="Macro501" imageMso="FileSaveAsPdfOrXps"/>
+              <button id="Button502" label="Şablonu kaydet" onAction="Macro502" imageMso="BuildingBlocksSaveCoverPage"/>
+              <button id="Button503" label="Şablon Veri Düzenle" onAction="Macro503" imageMso="ContactSendMenu"/>
+            </menu>
+          </splitButton>
+          <separator id="Separator4"/>
+          <splitButton id="sbt400" size="large">
+            <button id="Button15" label="Fiyat Analizi" onAction="Macro15" imageMso="ChartPlotArea"/>
+            <menu id="mnu_sbt400" itemSize="normal">
+              <button id="Button500" label="Analiz Sayfasını Gizle" onAction="Macro500" imageMso="MasterDocumentLockSubdocument"/>
+            </menu>
+          </splitButton>
+        </group>
+        <group id="teklifcıkıs" label="Bölüm-5">
+          <splitButton id="sbt30" size="normal">
+            <button id="Button19" label="Kopyala Ekle" onAction="Macro19" imageMso="ConditionalFormattingHighlightDuplicateValues"/>
+            <menu id="mnu_sbt30" itemSize="large">
+              <button id="Button190" label="Kopyala" onAction="Macro190" imageMso="TableSelect"/>
+              <button id="Button191" label="Yapıştır" onAction="Macro191" imageMso="TableRowsInsertAboveWord"/>
+            </menu>
+          </splitButton>
+          <splitButton id="sbt3" size="normal">
+            <button id="Button171" label="Sayfa Düzenleme" onAction="MacroDAD0" imageMso="AutoSummarize"/>
+            <menu id="mnu_sbt3" itemSize="normal">
+              <button id="Button172" label="Teklif Sayfası Düzenleme" onAction="MacroDAD" imageMso="AutoSummarize"/>
+              <button id="Button160" label="Miktar Değiştirme" onAction="MacroadT" imageMso="FieldsMenu"/>
+              <button id="Button1711" label="Dil Çeviri" onAction="MacroDAD01" imageMso="Translate"/>
+              <button id="Button173" label="Yeni Teklif Formatında Aç" onAction="teklifformat" imageMso="DatasheetNewField"/>
+            </menu>
+          </splitButton>
+          <splitButton id="sbt4" size="normal">
+            <button id="Button41" label="Toplamları Düzelt" onAction="Macro18" imageMso="TableStyleTotalsRow"/>
+            <menu id="mnu_sbt4" itemSize="normal">
+              <button id="Button431" label="İşçilik+Sarf Fiyatları Gir/Düzelt" onAction="Macro431" imageMso="AfterUpdate"/>
+              <button id="Button43" label="İşçilik+Sarf+Ambalaj Fiyatları Gir/Düzelt" onAction="Macro43" imageMso="AfterUpdate"/>
+              <button id="Button44" label="İşçilik+Sarf+Ambalaj Fiyatları Sil" onAction="Macro44" imageMso="AfterDelete"/>
+            </menu>
+          </splitButton>
+          <button idMso="SheetRowsInsert" size="normal" showLabel="false"/>
+          <button idMso="SheetRowsDelete" size="normal" showLabel="false"/>
+          <splitButton idMso="FilePrintMenu" size="normal" showLabel="false"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>
