@@ -11,13 +11,16 @@
 
 | Yöntem | Sonuç |
 |--------|--------|
-| `vba_list_modules` | ✅ 54 bileşen listelendi |
-| `vba_read_all` / `vba_read_module` | ❌ `Can't perform operation since the project is protected` |
-| `vba_backup` | ❌ Aynı koruma hatası |
-| ZIP içinden `customUI.xml`, `workbook.xml` | ✅ Ribbon callback'leri ve sayfa yapısı okundu |
-| `data/vba-notes/registry-settings.md` | ✅ 40+ form/modül için önceden çıkarılmış notlar |
+| `vba_list_modules` (Excel COM) | ⚠️ Proje korumalı — liste alınamıyor |
+| `vba_read_module` (Excel COM) | ⚠️ Çoğu modül: *project is protected* |
+| **`oletools.olevba`** (dosyadan) | ✅ **54 modül kaynak kodu çıkarıldı** |
+| ZIP içinden `customUI.xml` | ✅ Ribbon callback'leri |
+| `data/xlam-backup/modules/` | ✅ Modül başına `.bas` / `.cls` / `.frm` |
+| `data/xlam-backup/index.json` | ✅ Satır sayıları ve dosya listesi |
 
-**Kod okumak için:** Excel → Güven Merkezi → *VBA proje nesne modeline erişime güven* + proje şifresi (varsa) gerekir. Şifre kaldırıldığında `npm run xlam:backup` ile tüm modüller `data/xlam-backup/` altına alınabilir.
+**Komut:** `npm run xlam:extract` → `data/files/teklif.xlam` dosyasından okur (Excel açık olması gerekmez).
+
+> Excel COM ile canlı okuma/yazma için hâlâ: Güven Merkezi → *VBA proje nesne modeline erişime güven* + proje şifresi kaldırılmalı.
 
 ---
 

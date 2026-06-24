@@ -15,6 +15,7 @@
     "modules:fix": "node scripts/fix-modules-neon.mjs",
     "modules:upsert-one": "node scripts/upsert-module.mjs",
     "xlam:backup": "node scripts/xlam-backup.mjs",
+    "xlam:extract": "python -c \"import subprocess,sys; r=subprocess.run([sys.executable,'-m','oletools.olevba','data/files/teklif.xlam','--decode','-c'],capture_output=True,text=True,encoding='utf-8',errors='replace'); open('data/xlam-backup/olevba-all.txt','w',encoding='utf-8').write(r.stdout); print('VBA MACRO:', r.stdout.count('VBA MACRO'))\" && node scripts/xlam-split-olevba.mjs",
     "cleanup:local": "node scripts/cleanup-local-artifacts.mjs"
   },
   "dependencies": {

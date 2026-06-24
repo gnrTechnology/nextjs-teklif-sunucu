@@ -1,0 +1,281 @@
+{
+  "extractedAt": "2026-06-24T20:31:57.523Z",
+  "count": 55,
+  "modules": [
+    {
+      "name": "UFOPAN00.frm",
+      "file": "UFOPAN00.frm",
+      "lines": 2819
+    },
+    {
+      "name": "UFmy.frm",
+      "file": "UFmy.frm",
+      "lines": 1689
+    },
+    {
+      "name": "zMrpi.bas",
+      "file": "zMrpi.bas",
+      "lines": 1509
+    },
+    {
+      "name": "zKisayol.bas",
+      "file": "zKisayol.bas",
+      "lines": 1297
+    },
+    {
+      "name": "UF2.frm",
+      "file": "UF2.frm",
+      "lines": 1249
+    },
+    {
+      "name": "UFKW.frm",
+      "file": "UFKW.frm",
+      "lines": 1212
+    },
+    {
+      "name": "JsonConverter.bas",
+      "file": "JsonConverter.bas",
+      "lines": 1122
+    },
+    {
+      "name": "UFObara1.frm",
+      "file": "UFObara1.frm",
+      "lines": 1046
+    },
+    {
+      "name": "zInternet.bas",
+      "file": "zInternet.bas",
+      "lines": 1015
+    },
+    {
+      "name": "UFTH.frm",
+      "file": "UFTH.frm",
+      "lines": 930
+    },
+    {
+      "name": "Module10.bas",
+      "file": "Module10.bas",
+      "lines": 926
+    },
+    {
+      "name": "UFDAD.frm",
+      "file": "UFDAD.frm",
+      "lines": 870
+    },
+    {
+      "name": "UFmd.frm",
+      "file": "UFmd.frm",
+      "lines": 801
+    },
+    {
+      "name": "UFOPAN11.frm",
+      "file": "UFOPAN11.frm",
+      "lines": 745
+    },
+    {
+      "name": "Module6.bas",
+      "file": "Module6.bas",
+      "lines": 657
+    },
+    {
+      "name": "UFDD.frm",
+      "file": "UFDD.frm",
+      "lines": 629
+    },
+    {
+      "name": "UserFormS1.frm",
+      "file": "UserFormS1.frm",
+      "lines": 594
+    },
+    {
+      "name": "Module2.bas",
+      "file": "Module2.bas",
+      "lines": 506
+    },
+    {
+      "name": "Module3.bas",
+      "file": "Module3.bas",
+      "lines": 477
+    },
+    {
+      "name": "UFOSARF.frm",
+      "file": "UFOSARF.frm",
+      "lines": 436
+    },
+    {
+      "name": "Module1.bas",
+      "file": "Module1.bas",
+      "lines": 422
+    },
+    {
+      "name": "zMalzemeListesiImport.bas",
+      "file": "zMalzemeListesiImport.bas",
+      "lines": 348
+    },
+    {
+      "name": "Module8.bas",
+      "file": "Module8.bas",
+      "lines": 275
+    },
+    {
+      "name": "Sayfa4.cls",
+      "file": "Sayfa4.cls",
+      "lines": 245
+    },
+    {
+      "name": "UFDD1.frm",
+      "file": "UFDD1.frm",
+      "lines": 243
+    },
+    {
+      "name": "UFDD2.frm",
+      "file": "UFDD2.frm",
+      "lines": 241
+    },
+    {
+      "name": "UFMZ.frm",
+      "file": "UFMZ.frm",
+      "lines": 238
+    },
+    {
+      "name": "Module7.bas",
+      "file": "Module7.bas",
+      "lines": 235
+    },
+    {
+      "name": "zLicense.bas",
+      "file": "zLicense.bas",
+      "lines": 228
+    },
+    {
+      "name": "zDosya",
+      "file": "zDosya.bas",
+      "lines": 227
+    },
+    {
+      "name": "UFFirma.frm",
+      "file": "UFFirma.frm",
+      "lines": 211
+    },
+    {
+      "name": "UFDAD0.frm",
+      "file": "UFDAD0.frm",
+      "lines": 181
+    },
+    {
+      "name": "Module5.bas",
+      "file": "Module5.bas",
+      "lines": 159
+    },
+    {
+      "name": "UFOPAN01.frm",
+      "file": "UFOPAN01.frm",
+      "lines": 152
+    },
+    {
+      "name": "UFKWP.frm",
+      "file": "UFKWP.frm",
+      "lines": 138
+    },
+    {
+      "name": "DL1.frm",
+      "file": "DL1.frm",
+      "lines": 134
+    },
+    {
+      "name": "zMailIslemleri.bas",
+      "file": "zMailIslemleri.bas",
+      "lines": 114
+    },
+    {
+      "name": "Module9.bas",
+      "file": "Module9.bas",
+      "lines": 99
+    },
+    {
+      "name": "Module11.bas",
+      "file": "Module11.bas",
+      "lines": 85
+    },
+    {
+      "name": "clsSayfaIzleyici.cls",
+      "file": "clsSayfaIzleyici.cls",
+      "lines": 77
+    },
+    {
+      "name": "UFOPAN00P2.frm",
+      "file": "UFOPAN00P2.frm",
+      "lines": 63
+    },
+    {
+      "name": "UFadT.frm",
+      "file": "UFadT.frm",
+      "lines": 62
+    },
+    {
+      "name": "UFDAD1.frm",
+      "file": "UFDAD1.frm",
+      "lines": 61
+    },
+    {
+      "name": "UserFormAD.frm",
+      "file": "UserFormAD.frm",
+      "lines": 51
+    },
+    {
+      "name": "UFKur.frm",
+      "file": "UFKur.frm",
+      "lines": 46
+    },
+    {
+      "name": "UFOPAN00P1.frm",
+      "file": "UFOPAN00P1.frm",
+      "lines": 43
+    },
+    {
+      "name": "zActiveWb.bas",
+      "file": "zActiveWb.bas",
+      "lines": 38
+    },
+    {
+      "name": "UserFormS2.frm",
+      "file": "UserFormS2.frm",
+      "lines": 37
+    },
+    {
+      "name": "UF2P.frm",
+      "file": "UF2P.frm",
+      "lines": 36
+    },
+    {
+      "name": "ThisWorkbook.cls",
+      "file": "ThisWorkbook.cls",
+      "lines": 32
+    },
+    {
+      "name": "Module4.bas",
+      "file": "Module4.bas",
+      "lines": 31
+    },
+    {
+      "name": "UFOPAN02.frm",
+      "file": "UFOPAN02.frm",
+      "lines": 28
+    },
+    {
+      "name": "UserForm2.frm",
+      "file": "UserForm2.frm",
+      "lines": 24
+    },
+    {
+      "name": "EVN.cls",
+      "file": "EVN.cls",
+      "lines": 20
+    },
+    {
+      "name": "olevba",
+      "file": "olevba.bas",
+      "lines": 6
+    }
+  ]
+}
