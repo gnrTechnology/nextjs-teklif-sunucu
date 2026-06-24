@@ -10,6 +10,9 @@ import {
   type HeartbeatStatus,
 } from "@/lib/date-utils";
 import PageHeader from "./ui/PageHeader";
+import EmptyState from "./ui/EmptyState";
+import { Radio } from "lucide-react";
+import { useMacFilter } from "@/lib/mac-filter";
 
 const STATUS_STYLE: Record<HeartbeatStatus, { dot: string; label: string; color: string }> = {
   online:  { dot: "#22c55e", label: "Çevrimiçi",  color: "#16a34a" },
@@ -36,6 +39,7 @@ function TimeAgo({ iso }: { iso: string }) {
 export default function HeartbeatsClient({ initial }: { initial: HeartbeatRow[] }) {
   const searchParams = useSearchParams();
   const macQuery = searchParams.get("q")?.toLowerCase() ?? "";
+  const { mac: globalMac, setMac, matchesMac } = useMacFilter();
   const [rows, setRows] = useState<HeartbeatRow[]>(initial);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [countdown, setCountdown] = useState(30);
@@ -73,9 +77,12 @@ export default function HeartbeatsClient({ initial }: { initial: HeartbeatRow[] 
   const offline = rows.filter((r) => getHeartbeatStatus(r.last_seen) === "offline").length;
 
   const filtered = useMemo(() => {
-    if (!macQuery) return rows;
-    return rows.filter((r) => r.mac.toLowerCase().includes(macQuery));
-  }, [rows, macQuery]);
+    return rows.filter((r) => {
+      if (globalMac && !matchesMac(r.mac)) return false;
+      if (!macQuery) return true;
+      return r.mac.toLowerCase().includes(macQuery);
+    });
+  }, [rows, macQuery, globalMac, matchesMac]);
 
   return (
     <div className="page-wrap">
@@ -120,14 +127,11 @@ export default function HeartbeatsClient({ initial }: { initial: HeartbeatRow[] 
 
       {rows.length === 0 ? (
         <div className="card">
-          <div className="empty-state">
-            <div className="empty-state-icon">📡</div>
-            <div>Henüz hiç heartbeat gelmedi.</div>
-            <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 6 }}>
-              Excel&apos;de <span className="mono">HeartbeatPing</span> veya{" "}
-              <span className="mono">InstallTeklifAgent</span> modülünü çalıştırın.
-            </div>
-          </div>
+          <EmptyState
+            icon={Radio}
+            title="Henüz heartbeat yok"
+            description="Excel'de HeartbeatPing veya InstallTeklifAgent modülünü çalıştırın."
+          />
         </div>
       ) : (
         <div className="card" style={{ overflow: "hidden" }}>
@@ -176,9 +180,15 @@ export default function HeartbeatsClient({ initial }: { initial: HeartbeatRow[] 
                       </span>
                     </td>
                     <td style={TD}>
-                      <span className="mono" style={{ fontSize: 12 }}>
+                      <button
+                        type="button"
+                        className="mono mac-link-btn"
+                        style={{ fontSize: 12, background: "none", border: "none", cursor: "pointer", color: "var(--accent)" }}
+                        onClick={() => setMac(row.mac)}
+                        title="Global MAC filtresi uygula"
+                      >
                         {row.mac}
-                      </span>
+                      </button>
                     </td>
                     <td style={TD}>
                       <span style={{ fontSize: 13 }}>{row.hostname ?? <Dim />}</span>

@@ -1,5 +1,5 @@
-export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`skeleton ${className}`.trim()} aria-hidden />;
+export function Skeleton({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return <div className={`skeleton ${className}`.trim()} style={style} aria-hidden />;
 }
 
 export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {

@@ -5,7 +5,8 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 > **Durum**: ✅ = Uygulandı · ⬜ = Planlandı
 
-> **teklif.xlam envanteri:** Canlı eklenti (54 bileşen, ~27.800 satır VBA) analizi ve xlam↔Neon geliştirme planı için bkz. [`data/xlam-inventory.md`](xlam-inventory.md).
+> **teklif.xlam envanteri:** [`data/xlam-inventory.md`](xlam-inventory.md)  
+> **UI planı ve yol haritası:** [`data/ui-plan.md`](ui-plan.md)
 
 ---
 

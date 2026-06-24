@@ -1,10 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import {
+  Monitor,
+  LayoutGrid,
+  List,
+  Cpu,
+  HardDrive,
+  Wifi,
+  Download,
+} from "lucide-react";
 import { formatTR } from "@/lib/date-utils";
 import type { DeviceSnapshot } from "@/lib/db";
+import { useMacFilter } from "@/lib/mac-filter";
+import PageHeader from "./ui/PageHeader";
+import EmptyState from "./ui/EmptyState";
+import DetailDrawer from "./ui/DetailDrawer";
 
-/* Kaç ms önce toplandı → "3 dakika önce" */
 function ago(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
   const min = Math.floor(ms / 60000);
@@ -15,265 +27,259 @@ function ago(iso: string): string {
   return `${Math.floor(h / 24)} gün önce`;
 }
 
-/* Veri kategorileri — anahtara göre grupla */
 const SECTION_ORDER = [
-  { key: "bilgisayar",   icon: "🖥", label: "Bilgisayar",       keys: ["computerName","windowsVersion","windowsActivation","systemUptime","timeZone","locale","domainName","loggedInUser"] },
-  { key: "donanim",      icon: "🔧", label: "Donanım",           keys: ["cpu","ram","gpu","screenResolution","bios","motherboard"] },
-  { key: "disk",         icon: "💾", label: "Disk",              keys: ["disks","diskInfo"] },
-  { key: "ag",           icon: "🌐", label: "Ağ",                keys: ["mac","ip","publicIp","networkAdapters","wifiProfiles","bitlockerStatus"] },
-  { key: "sistem",       icon: "⚙️", label: "Sistem",            keys: ["battery","printers","usbDevices","audioDevices","runningProcesses","installedSoftware"] },
+  { key: "bilgisayar", icon: Monitor, label: "Bilgisayar", keys: ["computerName", "windowsVersion", "windowsActivation", "systemUptime", "timeZone", "locale", "domainName", "loggedInUser"] },
+  { key: "donanim", icon: Cpu, label: "Donanım", keys: ["cpu", "ram", "gpu", "screenResolution", "bios", "motherboard"] },
+  { key: "disk", icon: HardDrive, label: "Disk", keys: ["disks", "diskInfo"] },
+  { key: "ag", icon: Wifi, label: "Ağ", keys: ["mac", "ip", "publicIp", "networkAdapters", "wifiProfiles", "bitlockerStatus"] },
 ];
 
 const KEY_LABELS: Record<string, string> = {
-  computerName: "Bilgisayar Adı", windowsVersion: "Windows Sürümü",
-  windowsActivation: "Aktivasyon", systemUptime: "Çalışma Süresi",
-  timeZone: "Saat Dilimi", locale: "Yerel Ayarlar", domainName: "Domain",
-  loggedInUser: "Kullanıcı", cpu: "İşlemci", ram: "Bellek",
-  gpu: "Ekran Kartı", screenResolution: "Ekran Çözünürlüğü",
-  bios: "BIOS", motherboard: "Anakart", disks: "Diskler", diskInfo: "Disk Bilgisi",
-  mac: "MAC Adresi", ip: "IP Adresi", publicIp: "Dış IP",
-  networkAdapters: "Ağ Adaptörleri", wifiProfiles: "Wi-Fi Profilleri",
-  bitlockerStatus: "BitLocker", battery: "Pil", printers: "Yazıcılar",
-  usbDevices: "USB Aygıtlar", audioDevices: "Ses Aygıtları",
-  runningProcesses: "Çalışan İşlemler", installedSoftware: "Yazılımlar",
+  computerName: "Bilgisayar Adı",
+  windowsVersion: "Windows Sürümü",
+  windowsActivation: "Aktivasyon",
+  systemUptime: "Çalışma Süresi",
+  timeZone: "Saat Dilimi",
+  locale: "Yerel Ayarlar",
+  domainName: "Domain",
+  loggedInUser: "Kullanıcı",
+  cpu: "İşlemci",
+  ram: "Bellek",
+  gpu: "Ekran Kartı",
+  screenResolution: "Ekran",
+  bios: "BIOS",
+  motherboard: "Anakart",
+  disks: "Diskler",
+  mac: "MAC",
+  ip: "IP",
+  publicIp: "Dış IP",
+  battery: "Pil",
 };
 
 function DataValue({ v }: { v: unknown }) {
-  if (v === null || v === undefined) return <span style={{ color: "var(--text-dim)" }}>—</span>;
-  if (Array.isArray(v)) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 160, overflowY: "auto" }}>
-        {v.map((item, i) => (
-          <div key={i} style={{ fontSize: 11, color: "var(--text-muted)", padding: "2px 0", borderBottom: "1px solid var(--border)" }}>
-            {typeof item === "object" ? JSON.stringify(item) : String(item)}
-          </div>
-        ))}
-      </div>
-    );
-  }
+  if (v === null || v === undefined) return <span className="text-dim">—</span>;
   if (typeof v === "object") {
     return (
-      <pre style={{ fontSize: 11, margin: 0, color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>
+      <pre className="device-data-pre">
         {JSON.stringify(v, null, 2)}
       </pre>
     );
   }
-  return <span style={{ fontSize: 13, color: "var(--text)" }}>{String(v)}</span>;
+  return <span>{String(v)}</span>;
 }
 
-function DeviceCard({ snap }: { snap: DeviceSnapshot }) {
-  const [expanded, setExpanded] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-
+function DeviceDetail({ snap }: { snap: DeviceSnapshot }) {
   const dataKeys = Object.keys(snap.data).filter((k) => !k.startsWith("_"));
-  const ageMs = Date.now() - new Date(snap.collectedAt).getTime();
-  const isRecent = ageMs < 24 * 3600 * 1000;
+  const used = new Set<string>();
+  const sections: { label: string; pairs: [string, unknown][] }[] = [];
 
-  /* Anahtarları section'lara dağıt */
-  const sectionData: Record<string, [string, unknown][]> = {};
-  const usedKeys = new Set<string>();
   for (const sec of SECTION_ORDER) {
     const pairs: [string, unknown][] = [];
     for (const k of sec.keys) {
-      if (k in snap.data) { pairs.push([k, snap.data[k]]); usedKeys.add(k); }
+      if (k in snap.data) {
+        pairs.push([k, snap.data[k]]);
+        used.add(k);
+      }
     }
-    if (pairs.length) sectionData[sec.key] = pairs;
+    if (pairs.length) sections.push({ label: sec.label, pairs });
   }
-  /* Kalan anahtarlar → "Diğer" */
-  const remaining = dataKeys.filter((k) => !usedKeys.has(k)).map((k) => [k, snap.data[k]] as [string, unknown]);
-  if (remaining.length) sectionData["diger"] = remaining;
+  const rest = dataKeys.filter((k) => !used.has(k)).map((k) => [k, snap.data[k]] as [string, unknown]);
+  if (rest.length) sections.push({ label: "Diğer", pairs: rest });
+
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `cihaz-${snap.mac.replace(/:/g, "-")}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   return (
-    <div className="card" style={{ marginBottom: 14 }}>
-      {/* Cihaz başlık */}
-      <div
-        className="card-header"
-        style={{ cursor: "pointer" }}
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
-          <span style={{ fontSize: 22 }}>🖥</span>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>
-              {snap.hostname ?? snap.mac}
+    <>
+      <div className="device-quick-stats">
+        {["cpu", "ram", "ip", "windowsVersion"].map((k) =>
+          snap.data[k] != null ? (
+            <div key={k} className="device-stat-chip">
+              <div className="device-stat-label">{KEY_LABELS[k] ?? k}</div>
+              <div className="device-stat-value">{String(snap.data[k]).slice(0, 60)}</div>
             </div>
-            <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 2 }}>
-              {snap.mac}
-              {snap.firmaAdi && ` · ${snap.firmaAdi}`}
-              {!!snap.data._ip && ` · ${String(snap.data._ip)}`}
-            </div>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{
-            fontSize: 11, padding: "3px 10px", borderRadius: 12,
-            background: isRecent ? "#10b98120" : "#6b728020",
-            color: isRecent ? "#10b981" : "#6b7280",
-            fontWeight: 600,
-          }}>
-            {isRecent ? "🟢" : "⚪"} {ago(snap.collectedAt)}
-          </span>
-          <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
-            {formatTR(snap.collectedAt)}
-          </span>
-          <span style={{ fontSize: 12, color: "var(--text-dim)", transition: "transform 0.15s", display: "inline-block", transform: expanded ? "rotate(90deg)" : "none" }}>▶</span>
-        </div>
+          ) : null,
+        )}
       </div>
-
-      {expanded && (
-        <div style={{ padding: "16px 18px" }}>
-          {/* Hızlı özet — en önemli veriler */}
-          <div style={{
-            display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: 10, marginBottom: 16,
-          }}>
-            {["computerName","windowsVersion","cpu","ram","ip","publicIp"].map((k) => (
-              snap.data[k] != null ? (
-                <div key={k} style={{
-                  background: "var(--bg)", border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-sm)", padding: "10px 14px",
-                }}>
-                  <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: 4 }}>
-                    {KEY_LABELS[k] ?? k}
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 600, wordBreak: "break-all" }}>
-                    {String(snap.data[k]).split("\n")[0].slice(0, 80)}
-                  </div>
-                </div>
-              ) : null
+      {sections.map((sec) => (
+        <div key={sec.label} className="device-detail-section">
+          <div className="device-detail-section-title">{sec.label}</div>
+          <div className="device-detail-table">
+            {sec.pairs.map(([k, v]) => (
+              <div key={k} className="device-detail-row">
+                <span className="device-detail-key">{KEY_LABELS[k] ?? k}</span>
+                <DataValue v={v} />
+              </div>
             ))}
           </div>
+        </div>
+      ))}
+      <button type="button" className="btn btn-ghost" onClick={exportJson} style={{ marginTop: 12 }}>
+        <Download size={14} />
+        JSON indir
+      </button>
+      <p className="text-dim" style={{ fontSize: 11, marginTop: 12 }}>
+        {dataKeys.length} alan · {formatTR(snap.collectedAt)}
+      </p>
+    </>
+  );
+}
 
-          {/* Section seçici */}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-            <button
-              onClick={() => setActiveSection(null)}
-              style={{
-                padding: "4px 12px", borderRadius: 20, fontSize: 11, cursor: "pointer",
-                border: "1px solid var(--border)",
-                background: activeSection === null ? "var(--accent)" : "var(--bg-card)",
-                color: activeSection === null ? "#fff" : "var(--text-muted)",
-              }}
-            >Tümü</button>
-            {[...SECTION_ORDER, { key: "diger", icon: "📦", label: "Diğer" }].map((sec) =>
-              sectionData[sec.key] ? (
-                <button
-                  key={sec.key}
-                  onClick={() => setActiveSection(sec.key === activeSection ? null : sec.key)}
-                  style={{
-                    padding: "4px 12px", borderRadius: 20, fontSize: 11, cursor: "pointer",
-                    border: "1px solid var(--border)",
-                    background: activeSection === sec.key ? "var(--accent)" : "var(--bg-card)",
-                    color: activeSection === sec.key ? "#fff" : "var(--text-muted)",
-                  }}
-                >
-                  {sec.icon} {sec.label} ({sectionData[sec.key].length})
-                </button>
-              ) : null
-            )}
-          </div>
+function DeviceGridCard({ snap, onOpen }: { snap: DeviceSnapshot; onOpen: () => void }) {
+  const ageMs = Date.now() - new Date(snap.collectedAt).getTime();
+  const isRecent = ageMs < 24 * 3600 * 1000;
 
-          {/* Detay tablo */}
-          {[...SECTION_ORDER, { key: "diger", icon: "📦", label: "Diğer" }].map((sec) => {
-            if (!sectionData[sec.key]) return null;
-            if (activeSection && activeSection !== sec.key) return null;
-            return (
-              <div key={sec.key} style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--text-muted)", marginBottom: 8 }}>
-                  {sec.icon} {sec.label}
-                </div>
-                <div style={{
-                  border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", overflow: "hidden",
-                }}>
-                  {sectionData[sec.key].map(([k, v], idx) => (
-                    <div key={k} style={{
-                      display: "grid", gridTemplateColumns: "200px 1fr",
-                      padding: "10px 14px",
-                      background: idx % 2 === 0 ? "var(--bg)" : "transparent",
-                      borderBottom: "1px solid var(--border)",
-                      gap: 12, alignItems: "start",
-                    }}>
-                      <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
-                        {KEY_LABELS[k] ?? k}
-                      </span>
-                      <DataValue v={v} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-
-          <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 8 }}>
-            {dataKeys.length} alan · Son güncelleme: {formatTR(snap.collectedAt)}
+  return (
+    <button type="button" className="card device-grid-card" onClick={onOpen} style={{ textAlign: "left", width: "100%" }}>
+      <div style={{ padding: "14px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <Monitor size={20} style={{ color: "var(--accent)", flexShrink: 0 }} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>{snap.hostname ?? snap.mac}</div>
+            <div className="mono text-dim" style={{ fontSize: 11 }}>{snap.mac}</div>
           </div>
         </div>
-      )}
-    </div>
+        {snap.firmaAdi && (
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8 }}>{snap.firmaAdi}</div>
+        )}
+        <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.5 }}>
+          {snap.data.cpu ? <div>{String(snap.data.cpu).slice(0, 50)}</div> : null}
+          {snap.data.ram ? <div>{String(snap.data.ram)}</div> : null}
+        </div>
+        <div
+          style={{
+            marginTop: 10,
+            fontSize: 11,
+            fontWeight: 600,
+            color: isRecent ? "var(--green)" : "var(--text-dim)",
+          }}
+        >
+          {isRecent ? "● " : "○ "}
+          {ago(snap.collectedAt)}
+        </div>
+      </div>
+    </button>
   );
 }
 
 export default function CihazlarClient({ initial }: { initial: DeviceSnapshot[] }) {
+  const { mac: globalMac, matchesMac } = useMacFilter();
   const [devices, setDevices] = useState<DeviceSnapshot[]>(initial);
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [selected, setSelected] = useState<DeviceSnapshot | null>(null);
 
-  /* 60sn'de bir yenile */
   useEffect(() => {
-    const id = setInterval(() => {
-      fetch("/api/device-info").then((r) => r.json()).then((j) => {
-        if (j.success) setDevices(j.data);
-      });
-    }, 60000);
-    return () => clearInterval(id);
-  }, []);
+    setDevices(initial);
+  }, [initial]);
 
-  const filtered = devices.filter((d) => {
+  async function reload() {
+    const r = await fetch("/api/device-info");
+    const j = await r.json();
+    if (j.success) setDevices(j.data);
+  }
+
+  const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return (
-      d.mac.toLowerCase().includes(q) ||
-      (d.hostname ?? "").toLowerCase().includes(q) ||
-      (d.firmaAdi ?? "").toLowerCase().includes(q)
-    );
-  });
+    return devices.filter((d) => {
+      if (!matchesMac(d.mac)) return false;
+      if (!q) return true;
+      return (
+        d.mac.toLowerCase().includes(q) ||
+        (d.hostname ?? "").toLowerCase().includes(q) ||
+        (d.firmaAdi ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [devices, search, matchesMac]);
+
+  const recentCount = devices.filter(
+    (d) => Date.now() - new Date(d.collectedAt).getTime() < 86400000,
+  ).length;
 
   return (
-    <div className="page-wrap">
-      <div className="page-header">
-        <div>
-          <div className="page-title">Cihaz Bilgileri</div>
-          <div className="page-sub">
-            CollectDeviceInfoServer modülünden toplanan donanım/sistem verileri — {devices.length} cihaz
+    <div className="page-wrap page-wrap--wide">
+      <PageHeader
+        title="Cihaz Bilgileri"
+        subtitle={`CollectDeviceInfoServer — ${devices.length} cihaz · ${recentCount} son 24 saat`}
+        live
+        actions={
+          <div className="device-view-toggle">
+            <button type="button" className={view === "grid" ? "active" : ""} onClick={() => setView("grid")} title="Kart görünümü">
+              <LayoutGrid size={14} />
+            </button>
+            <button type="button" className={view === "list" ? "active" : ""} onClick={() => setView("list")} title="Liste">
+              <List size={14} />
+            </button>
           </div>
-        </div>
-        <button
-          className="btn btn-ghost"
-          onClick={() => fetch("/api/device-info").then((r) => r.json()).then((j) => { if (j.success) setDevices(j.data); })}
-        >
-          ↻ Yenile
-        </button>
-      </div>
-
-      <input
-        className="form-input"
-        placeholder="🔍  MAC, hostname veya firma ara…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 400 }}
+        }
       />
+
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <input
+          className="form-input"
+          placeholder="MAC, hostname veya firma ara…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ flex: 1, minWidth: 200, maxWidth: 400 }}
+        />
+        {globalMac && (
+          <span className="badge badge-accent" style={{ alignSelf: "center" }}>
+            Global MAC: {globalMac}
+          </span>
+        )}
+      </div>
 
       {filtered.length === 0 ? (
         <div className="card">
-          <div className="empty-state">
-            <div className="empty-state-icon">🖥</div>
-            <div>Henüz cihaz verisi toplanmamış.</div>
-            <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 8 }}>
-              VBA&apos;dan <code>Call zInternet.RunRemoteCode(&quot;CollectDeviceInfoServer&quot;)</code> çalıştırın.
-            </div>
-          </div>
+          <EmptyState
+            icon={Monitor}
+            title="Henüz cihaz verisi yok"
+            description="Excel'de CollectDeviceInfoServer modülünü çalıştırın; veriler otomatik bu sayfaya düşer."
+            action={
+              <code className="mono" style={{ fontSize: 12 }}>
+                Call zInternet.RunRemoteCode(&quot;CollectDeviceInfoServer&quot;)
+              </code>
+            }
+          />
+        </div>
+      ) : view === "grid" ? (
+        <div className="device-grid">
+          {filtered.map((d) => (
+            <DeviceGridCard key={d.mac} snap={d} onOpen={() => setSelected(d)} />
+          ))}
         </div>
       ) : (
-        filtered.map((d) => <DeviceCard key={d.mac} snap={d} />)
+        <div className="card" style={{ padding: 0 }}>
+          {filtered.map((d) => (
+            <button
+              key={d.mac}
+              type="button"
+              className="device-list-row"
+              onClick={() => setSelected(d)}
+            >
+              <Monitor size={16} style={{ color: "var(--accent)" }} />
+              <span style={{ fontWeight: 600 }}>{d.hostname ?? d.mac}</span>
+              <span className="mono text-dim" style={{ fontSize: 11 }}>{d.mac}</span>
+              <span className="text-dim" style={{ marginLeft: "auto", fontSize: 12 }}>{ago(d.collectedAt)}</span>
+            </button>
+          ))}
+        </div>
       )}
+
+      <DetailDrawer
+        open={!!selected}
+        title={selected?.hostname ?? selected?.mac ?? ""}
+        subtitle={selected ? `${selected.mac}${selected.firmaAdi ? ` · ${selected.firmaAdi}` : ""}` : undefined}
+        onClose={() => setSelected(null)}
+      >
+        {selected && <DeviceDetail snap={selected} />}
+      </DetailDrawer>
     </div>
   );
 }

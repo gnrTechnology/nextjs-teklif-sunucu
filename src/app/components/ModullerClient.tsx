@@ -127,6 +127,8 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
   const [filterCat, setFilterCat] = useState<string>("tümü");
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [showInfraOnly, setShowInfraOnly] = useState(false);
+  const [feasFilter, setFeasFilter] = useState<"all" | "ok" | "partial" | "infra">("all");
+  const [visibleLimit, setVisibleLimit] = useState(80);
   const [page, setPage] = useState(0);
   const pageSize = 50;
 
@@ -236,12 +238,21 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
     if (showInfraOnly) {
       list = list.filter((m) => FEASIBILITY[m.methodName]?.level === "infra" || FEASIBILITY[m.methodName]?.level === "partial");
     }
+    if (feasFilter !== "all") {
+      list = list.filter((m) => {
+        const level = FEASIBILITY[m.methodName]?.level ?? "ok";
+        return level === feasFilter;
+      });
+    }
     return list;
-  }, [modules, filterCat, search, showInfraOnly]);
+  }, [modules, filterCat, search, showInfraOnly, feasFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, totalPages - 1);
-  const paged = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
+  const useVirtual = expanded.size === 0 && filtered.length > 100;
+  const visible = useVirtual
+    ? filtered.slice(0, visibleLimit)
+    : filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   return (
     <>
@@ -393,8 +404,23 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
               transition: "all 0.15s",
             }}
           >
-            ⚠️ Kısıtlı
+            Kısıtlı
           </button>
+          {(["all", "ok", "partial", "infra"] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => { setFeasFilter(f); setPage(0); setVisibleLimit(80); }}
+              style={{
+                padding: "6px 12px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+                border: "1px solid var(--border)",
+                background: feasFilter === f ? "var(--accent)" : "var(--bg-card)",
+                color: feasFilter === f ? "#fff" : "var(--text-muted)",
+              }}
+            >
+              {f === "all" ? "Tümü" : f === "ok" ? "Tam" : f === "partial" ? "Kısmi" : "Altyapı"}
+            </button>
+          ))}
           <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
             {filtered.length} / {modules.length} gösteriliyor
           </span>
@@ -434,7 +460,7 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
             </div>
           ) : (
             <div>
-              {paged.map((m) => {
+              {visible.map((m) => {
                 const isOpen = expanded.has(m.methodName);
                 return (
                   <div key={m.methodName} style={{ borderBottom: "1px solid var(--border)" }}>
@@ -574,7 +600,14 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
               })}
             </div>
           )}
-          {filtered.length > pageSize && (
+          {useVirtual && visibleLimit < filtered.length && (
+            <div className="table-pagination">
+              <button type="button" className="btn btn-ghost" onClick={() => setVisibleLimit((n) => n + 80)}>
+                Daha fazla göster ({visibleLimit}/{filtered.length})
+              </button>
+            </div>
+          )}
+          {!useVirtual && filtered.length > pageSize && (
             <div className="table-pagination">
               <span className="table-pagination-info">
                 {safePage * pageSize + 1}–{Math.min((safePage + 1) * pageSize, filtered.length)} / {filtered.length}

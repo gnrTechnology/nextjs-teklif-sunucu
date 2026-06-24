@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, Search, Server } from "lucide-react";
 import { ALL_NAV_ITEMS, breadcrumbTrail } from "@/lib/nav";
+import { MacFilterBar, MacFilterProvider } from "@/lib/mac-filter";
 import Sidebar from "./Sidebar";
 import ThemeToggle from "./ThemeToggle";
+import LiveRefresh from "./LiveRefresh";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -46,15 +48,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="app-shell">
-      <div
-        className={`sidebar-backdrop${mobileOpen ? " sidebar-backdrop--open" : ""}`}
-        onClick={() => setMobileOpen(false)}
-        aria-hidden={!mobileOpen}
-      />
-      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-      <div className="app-main">
-        <header className="topbar">
+    <Suspense fallback={null}>
+      <MacFilterProvider>
+        <LiveRefresh />
+        <div className="app-shell">
+          <div
+            className={`sidebar-backdrop${mobileOpen ? " sidebar-backdrop--open" : ""}`}
+            onClick={() => setMobileOpen(false)}
+            aria-hidden={!mobileOpen}
+          />
+          <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+          <div className="app-main">
+            <header className="topbar">
           <button
             type="button"
             className="topbar-menu-btn"
@@ -87,9 +92,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <span className="topbar-badge-text">Neon</span>
             </span>
           </div>
-        </header>
-        <main className="app-content">{children}</main>
-      </div>
-    </div>
+            </header>
+            <MacFilterBar />
+            <main className="app-content">{children}</main>
+          </div>
+        </div>
+      </MacFilterProvider>
+    </Suspense>
   );
 }

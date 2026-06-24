@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatTR, formatDurationSec, elapsedSecSince, timeAgo } from "@/lib/date-utils";
@@ -14,6 +14,8 @@ import type { ClientCommand } from "@/lib/db";
 import type { FolderWatchHealth } from "@/lib/types";
 import { CommandStatusBadge } from "@/lib/status-badges";
 import PageHeader from "./ui/PageHeader";
+import EmptyState from "./ui/EmptyState";
+import { useMacFilter } from "@/lib/mac-filter";
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: "Bekliyor", color: "var(--yellow)", bg: "var(--yellow-dim)" },
@@ -83,9 +85,12 @@ export default function KomutlarClient({
 }) {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") ?? "tümü";
+  const { mac: globalMac, setMac, matchesMac } = useMacFilter();
   const [commands, setCommands] = useState<ClientCommand[]>(initial);
   const [filterStatus, setFilterStatus] = useState<string>(initialStatus);
-  const [filterMac, setFilterMac]       = useState<string>("");
+  const [filterMac, setFilterMac]       = useState<string>(globalMac);
+  const [groupByMac, setGroupByMac]     = useState(false);
+  const [collapsedMacs, setCollapsedMacs] = useState<Set<string>>(new Set());
   const [expanded, setExpanded]         = useState<Set<number>>(new Set());
 
   /* Yeni komut formu */
@@ -96,6 +101,10 @@ export default function KomutlarClient({
   const [sending, setSending]           = useState(false);
   const [watchHealth, setWatchHealth]   = useState<Record<string, FolderWatchHealth>>({});
   const [, setTick]                     = useState(0);
+
+  useEffect(() => {
+    if (globalMac) setFilterMac(globalMac);
+  }, [globalMac]);
 
   const refresh = useCallback(() => {
     fetch("/api/commands/?limit=200")
@@ -211,12 +220,163 @@ export default function KomutlarClient({
 
   const filtered = commands.filter((c) => {
     if (filterStatus !== "tümü" && c.status !== filterStatus) return false;
-    if (filterMac && !c.mac.toLowerCase().includes(filterMac.toLowerCase())) return false;
+    const macQ = filterMac || globalMac;
+    if (macQ && !c.mac.toLowerCase().includes(macQ.toLowerCase())) return false;
     return true;
   });
 
+  const groupedByMac = useMemo(() => {
+    const map = new Map<string, ClientCommand[]>();
+    for (const c of filtered) {
+      if (!map.has(c.mac)) map.set(c.mac, []);
+      map.get(c.mac)!.push(c);
+    }
+    return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+  }, [filtered]);
+
   const counts = { pending: 0, running: 0, done: 0, error: 0 };
   commands.forEach((c) => { if (c.status in counts) counts[c.status as keyof typeof counts]++; });
+
+  function renderCommandRow(cmd: ClientCommand) {
+    const isOpen = expanded.has(cmd.id);
+    const runSec = cmd.status === "running" ? elapsedSecSince(cmd.executedAt) : null;
+    const isWatch = cmd.moduleName === "WatchFolderServer";
+    const health = isWatch ? watchHealth[cmd.mac] : undefined;
+    const progress = getCommandProgressView(cmd, health);
+    const showProgress = cmd.status === "pending" || cmd.status === "running"
+      || (isOpen && (cmd.status === "done" || cmd.status === "error"));
+    return (
+      <div key={cmd.id} style={{ borderBottom: "1px solid var(--border)" }}>
+        <div style={{
+          padding: "12px 18px", display: "flex",
+          alignItems: "center", gap: 12, flexWrap: "wrap",
+        }}>
+          <button
+            type="button"
+            onClick={() => toggleExpand(cmd.id)}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--text-dim)", fontSize: 11, padding: 4,
+              transform: isOpen ? "rotate(90deg)" : "none",
+              transition: "transform 0.15s",
+            }}
+          >▶</button>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, color: "var(--text-dim)" }}>#{cmd.id}</span>
+              <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>
+                {cmd.moduleName}
+              </span>
+              <StatusBadge status={cmd.status} />
+              {runSec != null && runSec >= 30 && progress.stuckState !== "alive_bg" && (
+                <span style={{
+                  fontSize: 10, padding: "2px 8px", borderRadius: 8,
+                  background: progress.stuckState === "stuck" ? "#ef444420" : "#f59e0b20",
+                  color: progress.stuckState === "stuck" ? "#ef4444" : "#f59e0b",
+                  fontWeight: 600,
+                }}>
+                  {formatDurationSec(runSec)} süredir
+                </span>
+              )}
+              {progress.stuckState === "alive_bg" && (
+                <span style={{
+                  fontSize: 10, padding: "2px 8px", borderRadius: 8,
+                  background: "#10b98120", color: "var(--green)", fontWeight: 600,
+                }}>
+                  Arka plan aktif
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+              <span className="mono">{cmd.mac}</span>
+              {cmd.param && <span style={{ marginLeft: 8 }}>param: {cmd.param.slice(0, 40)}</span>}
+            </div>
+            {showProgress && (
+              <CommandProgressBar
+                pct={progress.pct}
+                label={progress.label}
+                stuckState={progress.stuckState}
+                animate={cmd.status === "running"}
+              />
+            )}
+            {isWatch && cmd.status === "running" && health?.isAlive && (
+              <div style={{ fontSize: 11, marginTop: 4, color: "var(--green)" }}>
+                Son ping {timeAgo(health.lastPingAt)} —{" "}
+                <Link href="/klasor-izleme" style={{ color: "var(--accent)" }}>Klasör İzleme</Link>
+              </div>
+            )}
+          </div>
+
+          <div style={{ fontSize: 11, color: "var(--text-dim)", textAlign: "right" }}>
+            <div title="Oluşturulma">{formatTR(cmd.createdAt)}</div>
+            {cmd.executedAt && (
+              <div style={{ marginTop: 2 }} title="Çalıştırılma">
+                {cmd.status === "running" ? "▶" : "∆"} {formatTR(cmd.executedAt)}
+                {runSec != null && cmd.status === "running" && (
+                  <span style={{ marginLeft: 4, color: runSec >= 120 ? "#ef4444" : "inherit" }}>
+                    ({formatDurationSec(runSec)})
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-danger"
+            style={{ fontSize: 11, padding: "3px 9px" }}
+            onClick={(e) => deleteCmd(cmd.id, e)}
+          >Sil</button>
+        </div>
+
+        {isOpen && (
+          <div style={{
+            background: "var(--bg)", borderTop: "1px solid var(--border)",
+            padding: "14px 18px",
+          }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 4 }}>
+                  KOMUT DETAYI
+                </div>
+                <div style={{ fontSize: 12 }}>
+                  <div>ID: {cmd.id}</div>
+                  <div>MAC: <span className="mono">{cmd.mac}</span></div>
+                  <div>Modül: <span className="mono">{cmd.moduleName}</span></div>
+                  {cmd.param && <div>Param: <span className="mono">{cmd.param}</span></div>}
+                  <div>Oluşturan: {cmd.createdBy}</div>
+                  {cmd.progressAt && (
+                    <div>Son ilerleme: {formatTR(cmd.progressAt)} ({cmd.progressPct ?? 0}%)</div>
+                  )}
+                </div>
+              </div>
+              {(cmd.result || cmd.errorMsg) && (
+                <div>
+                  <div style={{
+                    fontSize: 11, fontWeight: 600,
+                    color: cmd.status === "error" ? "#ef4444" : "var(--text-muted)",
+                    marginBottom: 4,
+                  }}>
+                    {cmd.status === "error" ? "HATA" : "SONUÇ"}
+                  </div>
+                  <pre style={{
+                    fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)",
+                    color: cmd.status === "error" ? "#ef4444" : "var(--text)",
+                    background: "var(--code-bg)", padding: "8px 10px",
+                    borderRadius: "var(--radius-sm)", overflowX: "auto",
+                    maxHeight: 150, whiteSpace: "pre-wrap", wordBreak: "break-all",
+                  }}>
+                    {cmd.result ?? cmd.errorMsg}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrap">
@@ -339,169 +499,57 @@ export default function KomutlarClient({
         <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
           {filtered.length}/{commands.length}
         </span>
+        <button
+          type="button"
+          onClick={() => setGroupByMac(!groupByMac)}
+          style={{
+            padding: "4px 12px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+            border: "1px solid var(--border)",
+            background: groupByMac ? "var(--accent)" : "var(--bg-card)",
+            color: groupByMac ? "#fff" : "var(--text-muted)",
+          }}
+        >
+          MAC grupla
+        </button>
       </div>
 
       {/* Komut listesi */}
       <div className="card" style={{ padding: 0 }}>
         {filtered.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">📭</div>
-            <div>Komut bulunamadı.</div>
-          </div>
-        ) : (
-          filtered.map((cmd) => {
-            const isOpen = expanded.has(cmd.id);
-            const runSec = cmd.status === "running" ? elapsedSecSince(cmd.executedAt) : null;
-            const isWatch = cmd.moduleName === "WatchFolderServer";
-            const health = isWatch ? watchHealth[cmd.mac] : undefined;
-            const progress = getCommandProgressView(cmd, health);
-            const showProgress = cmd.status === "pending" || cmd.status === "running"
-              || (isOpen && (cmd.status === "done" || cmd.status === "error"));
+          <EmptyState title="Komut bulunamadı" description="Filtreleri değiştirin veya yeni komut gönderin." />
+        ) : groupByMac ? (
+          groupedByMac.map(([mac, cmds]) => {
+            const collapsed = collapsedMacs.has(mac);
+            const stuck = cmds.some((c) => {
+              if (c.status === "error") return true;
+              if (c.status === "running" && c.executedAt) {
+                const sec = elapsedSecSince(c.executedAt);
+                return sec != null && sec >= 120;
+              }
+              return false;
+            });
             return (
-              <div key={cmd.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                <div style={{
-                  padding: "12px 18px", display: "flex",
-                  alignItems: "center", gap: 12, flexWrap: "wrap",
-                }}>
-                  <button
-                    onClick={() => toggleExpand(cmd.id)}
-                    style={{
-                      background: "none", border: "none", cursor: "pointer",
-                      color: "var(--text-dim)", fontSize: 11, padding: 4,
-                      transform: isOpen ? "rotate(90deg)" : "none",
-                      transition: "transform 0.15s",
-                    }}
-                  >▶</button>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 11, color: "var(--text-dim)" }}>#{cmd.id}</span>
-                      <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>
-                        {cmd.moduleName}
-                      </span>
-                      <StatusBadge status={cmd.status} />
-                      {runSec != null && runSec >= 30 && progress.stuckState !== "alive_bg" && (
-                        <span style={{
-                          fontSize: 10, padding: "2px 8px", borderRadius: 8,
-                          background: progress.stuckState === "stuck" ? "#ef444420" : "#f59e0b20",
-                          color: progress.stuckState === "stuck" ? "#ef4444" : "#f59e0b",
-                          fontWeight: 600,
-                        }}>
-                          {formatDurationSec(runSec)} süredir
-                        </span>
-                      )}
-                      {progress.stuckState === "alive_bg" && (
-                        <span style={{
-                          fontSize: 10, padding: "2px 8px", borderRadius: 8,
-                          background: "#10b98120", color: "var(--green)", fontWeight: 600,
-                        }}>
-                          Arka plan aktif
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
-                      <span className="mono">{cmd.mac}</span>
-                      {cmd.param && <span style={{ marginLeft: 8 }}>param: {cmd.param.slice(0, 40)}</span>}
-                    </div>
-                    {showProgress && (
-                      <CommandProgressBar
-                        pct={progress.pct}
-                        label={progress.label}
-                        stuckState={progress.stuckState}
-                        animate={cmd.status === "running"}
-                      />
-                    )}
-                    {isWatch && cmd.status === "running" && health?.isAlive && (
-                      <div style={{ fontSize: 11, marginTop: 4, color: "var(--green)" }}>
-                        Son ping {timeAgo(health.lastPingAt)} —{" "}
-                        <Link href="/klasor-izleme" style={{ color: "var(--accent)" }}>Klasör İzleme</Link>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ fontSize: 11, color: "var(--text-dim)", textAlign: "right" }}>
-                    <div title="Oluşturulma">{formatTR(cmd.createdAt)}</div>
-                    {cmd.executedAt && (
-                      <div style={{ marginTop: 2 }} title="Çalıştırılma">
-                        {cmd.status === "running" ? "▶" : "∆"} {formatTR(cmd.executedAt)}
-                        {runSec != null && cmd.status === "running" && (
-                          <span style={{ marginLeft: 4, color: runSec >= 120 ? "#ef4444" : "inherit" }}>
-                            ({formatDurationSec(runSec)})
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    style={{ fontSize: 11, padding: "3px 9px" }}
-                    onClick={(e) => deleteCmd(cmd.id, e)}
-                  >Sil</button>
+              <div key={mac} className="command-mac-group">
+                <div
+                  className="command-mac-group-header"
+                  onClick={() => setCollapsedMacs((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(mac)) next.delete(mac);
+                    else next.add(mac);
+                    return next;
+                  })}
+                >
+                  <span className="mono" style={{ fontWeight: 600 }}>{mac}</span>
+                  <span style={{ fontSize: 12, color: stuck ? "var(--red)" : "var(--text-muted)" }}>
+                    {cmds.length} komut {stuck ? "· takılı olabilir" : ""} {collapsed ? "▸" : "▾"}
+                  </span>
                 </div>
-
-                {isOpen && (
-                  <div style={{
-                    background: "var(--bg)", borderTop: "1px solid var(--border)",
-                    padding: "14px 18px",
-                  }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                      <div>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 4 }}>
-                          KOMUT DETAYI
-                        </div>
-                        <div style={{ fontSize: 12 }}>
-                          <div>ID: {cmd.id}</div>
-                          <div>MAC: <span className="mono">{cmd.mac}</span></div>
-                          <div>Modül: <span className="mono">{cmd.moduleName}</span></div>
-                          {cmd.param && <div>Param: <span className="mono">{cmd.param}</span></div>}
-                          <div>Oluşturan: {cmd.createdBy}</div>
-                          {cmd.progressAt && (
-                            <div>Son ilerleme: {formatTR(cmd.progressAt)} ({cmd.progressPct ?? 0}%)</div>
-                          )}
-                        </div>
-                      </div>
-                      {(cmd.result || cmd.errorMsg) && (
-                        <div>
-                          <div style={{
-                            fontSize: 11, fontWeight: 600,
-                            color: cmd.status === "error" ? "#ef4444" : "var(--text-muted)",
-                            marginBottom: 4
-                          }}>
-                            {cmd.status === "error" ? "HATA" : "SONUÇ"}
-                          </div>
-                          <pre style={{
-                            fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)",
-                            color: cmd.status === "error" ? "#ef4444" : "var(--text)",
-                            background: "var(--code-bg)", padding: "8px 10px",
-                            borderRadius: "var(--radius-sm)", overflowX: "auto",
-                            maxHeight: 150, whiteSpace: "pre-wrap", wordBreak: "break-all",
-                          }}>
-                            {cmd.result ?? cmd.errorMsg}
-                          </pre>
-                        </div>
-                      )}
-                      {cmd.status === "done" && (
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 4 }}>
-                            MODÜL ÇIKTISI
-                          </div>
-                          <div style={{ fontSize: 12 }}>
-                            Veriler Excel sayfasına yazılır ve{" "}
-                            <a href="/modul-ciktilari/" style={{ color: "var(--accent)" }}>
-                              Modül Çıktıları
-                            </a>{" "}
-                            sayfasında görünür.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {!collapsed && cmds.map((cmd) => renderCommandRow(cmd))}
               </div>
             );
           })
+        ) : (
+          filtered.map((cmd) => renderCommandRow(cmd))
         )}
       </div>
 
