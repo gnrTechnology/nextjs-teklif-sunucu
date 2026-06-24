@@ -1,6 +1,6 @@
 /**
  * Modül erişim katmanı — Neon DB üzerinden çalışır.
- * Kaynak kod: data/modules-source/*.bas (Neon MCP ile DB'ye yazılır).
+ * Yerel VBA: data/modules-source/ (yalnızca xlam bootstrap / zInternet yamaları).
  */
 import { getDbModuleByMethodName, listDbModules } from "./db";
 import type { ModuleRecord } from "./types";

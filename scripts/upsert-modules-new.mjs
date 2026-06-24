@@ -9,7 +9,7 @@ const sql = neon(url);
 const metaPath = path.join(process.cwd(), "data", "modules-meta.json");
 const META = JSON.parse(fs.readFileSync(metaPath, "utf8"));
 
-const dir = path.join(process.cwd(), "data", "modules-new");
+const dir = path.join(process.cwd(), "data", "modules-staging");
 const files = fs.readdirSync(dir).filter((f) => f.endsWith(".bas"));
 
 for (const file of files) {

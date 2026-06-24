@@ -14,7 +14,7 @@ export async function GET() {
       {
         success: false,
         message:
-          "Sunucuda TeklifPollHost.xlsm bulunamadi. scripts/create-poll-host.ps1 calistirin.",
+          "Sunucuda TeklifPollHost.xlsm bulunamadi. InstallCommandQueue modulu ile olusturun veya data/files/ altina koyun.",
       },
       { status: 404 },
     );

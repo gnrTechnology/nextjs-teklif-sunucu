@@ -1,12 +1,13 @@
 /**
  * Kalan tum planli modulleri (module-proposals + dll-module-proposals) uretir.
+ * Cikti: data/modules-staging/ (Neon upsert oncesi gecici)
  * node scripts/generate-planned-remaining.mjs
  */
 import fs from "fs";
 import path from "path";
 
 const ROOT = process.cwd();
-const OUT = path.join(ROOT, "data", "modules-new");
+const OUT = path.join(ROOT, "data", "modules-staging");
 const META_PATH = path.join(ROOT, "data", "modules-meta.json");
 
 fs.mkdirSync(OUT, { recursive: true });
