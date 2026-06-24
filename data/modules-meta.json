@@ -1,89 +1,2006 @@
 {
-  "GetWindowsProductKey": { "description": "Windows urun anahtarini registry'den okur", "category": "registry" },
-  "HttpPatchJson": { "description": "PATCH JSON istegi gonderir (url|body)", "category": "http" },
-  "HttpDeleteRequest": { "description": "DELETE HTTP istegi gonderir", "category": "http" },
-  "ListRegistryKeys": { "description": "Registry alt anahtar ve degerlerini listeler", "category": "registry" },
-  "ExportRegistrySection": { "description": "Registry bolumunu .reg dosyasina aktarir", "category": "registry" },
-  "ImportRegistryFile": { "description": ".reg dosyasini sessizce ice aktarir", "category": "registry" },
-  "RemoveRunOnceCommand": { "description": "RunOnce kaydini siler", "category": "registry" },
-  "BackupVbaSettings": { "description": "VBA GetSetting degerlerini JSON dosyasina yedekler", "category": "registry" },
-  "RestoreVbaSettings": { "description": "JSON yedegi VBA SaveSetting ile geri yukler", "category": "registry" },
-  "MonitorRegistryChange": { "description": "Registry anahtarini degisiklik icin izler", "category": "registry" },
-  "CompareRegistrySnapshot": { "description": "Iki registry snapshot dosyasini karsilastirir", "category": "registry" },
-  "BasicAuthGet": { "description": "Basic Auth baslikli GET (url|user|pass)", "category": "http" },
-  "BearerTokenGet": { "description": "Bearer token ile GET (url|token)", "category": "http" },
-  "SubmitFormData": { "description": "application/x-www-form-urlencoded POST", "category": "http" },
-  "GetRedirectedUrl": { "description": "Yonlendirme zincirinin son URL'si", "category": "http" },
-  "WebScrapeSimple": { "description": "HTML indirir, etiket icerigi cikarir (url|tag)", "category": "http" },
-  "GetGoldPrice": { "description": "Yaklasik altin fiyati (USD/TRY)", "category": "http" },
-  "SendSlackMessage": { "description": "Slack webhook mesaji (url|mesaj)", "category": "http" },
-  "SendTeamsMessage": { "description": "Teams Adaptive Card webhook", "category": "http" },
-  "FetchCurrencyHistory": { "description": "Guncel doviz kurlari listesi", "category": "http" },
-  "OAuthGetToken": { "description": "OAuth2 client_credentials token (url|id|secret|scope)", "category": "http" },
-  "GetLatestModuleVersion": { "description": "Sunucudan modul kodu/versiyon sorgular", "category": "http" },
-  "CheckForUpdate": { "description": "Yerel vs sunucu modul karsilastirmasi", "category": "http" },
-  "WatchFolderForNewFile": { "description": "Klasore dosya dusene kadar bekler", "category": "dosya" },
-  "ConvertFileToBase64": { "description": "Dosyayi Base64 string'e kodlar", "category": "dosya" },
-  "ConvertBase64ToFile": { "description": "Base64 string'i dosyaya yazar", "category": "dosya" },
-  "SyncFolderToServer": { "description": "Klasor dosya sayisini API'ye raporlar", "category": "dosya" },
-  "ConvertPdfToText": { "description": "PDF metin cikarma (COM/DLL gerekir — placeholder)", "category": "dosya" },
-  "SaveAllWorkbooks": { "description": "Tum acik dosyalari kaydeder", "category": "excel" },
-  "ExportSheetAsPdf": { "description": "Aktif sayfayi PDF olarak disa aktarir", "category": "excel" },
-  "AutoFitAllColumns": { "description": "Tum sayfalarda sutun genisligi otomatik", "category": "excel" },
-  "RefreshAllPivotTables": { "description": "Tum pivot tablolari yeniler", "category": "excel" },
-  "RefreshAllConnections": { "description": "Dis veri baglantilarini yeniler", "category": "excel" },
-  "ConvertFormulasToValues": { "description": "Formulleri degerle degistirir", "category": "excel" },
-  "RemoveDuplicateRows": { "description": "Yinelenen satirlari siler", "category": "excel" },
-  "BulkFindAndReplace": { "description": "Calisma kitabinda toplu bul-degistir", "category": "excel" },
-  "FreezeFirstRowAndColumn": { "description": "Ilk satir ve sutunu dondurur", "category": "excel" },
-  "CreateSummarySheet": { "description": "Sayfa A1 degerlerini ozet sayfada toplar", "category": "excel" },
-  "ProtectAllSheets": { "description": "Tum sayfalari parola ile korur", "category": "excel" },
-  "UnprotectAllSheets": { "description": "Tum sayfa korumalarini kaldirir", "category": "excel" },
-  "SortSheetsByName": { "description": "Sayfalari alfabetik siralar", "category": "excel" },
-  "CopySheetToNewWorkbook": { "description": "Sayfayi yeni dosyaya kopyalar", "category": "excel" },
-  "AutoNumberRows": { "description": "Secili sutunda otomatik numara", "category": "excel" },
-  "CheckAdminRights": { "description": "Yonetici haklari kontrolu", "category": "guvenlik" },
-  "GenerateHardwareId": { "description": "CPU+MAC tabanli HWID", "category": "guvenlik" },
-  "DetectVirtualMachine": { "description": "VM ortami tespiti", "category": "guvenlik" },
-  "ValidateTCKimlik": { "description": "TC kimlik algoritma dogrulamasi", "category": "veri" },
-  "NormalizePhoneNumbers": { "description": "TR telefon formati normalizasyonu", "category": "veri" },
-  "FormatCurrencyColumn": { "description": "Para birimi sutun formati", "category": "veri" },
-  "ConvertSheetToJson": { "description": "Sayfayi JSON array'e cevirir", "category": "veri" },
-  "ImportJsonToSheet": { "description": "JSON icerigini sayfaya yazar", "category": "veri" },
-  "CleanHtmlToText": { "description": "HTML etiketlerini temizler", "category": "veri" },
-  "CheckFileIntegrity": { "description": "Dosya MD5 hash karsilastirmasi", "category": "guvenlik" },
-  "ShowYesNoCancelDialog": { "description": "Yes/No/Cancel dialog, secimi dondurur", "category": "ui" },
-  "ExportAllSheetsAsPdf": { "description": "Her sayfayi ayri PDF'e aktarir", "category": "excel" },
-  "ImportSheetFromFile": { "description": "Baska dosyadan sayfa kopyalar", "category": "excel" },
-  "BatchRenameSheets": { "description": "JSON ile toplu sayfa yeniden adlandirma", "category": "excel" },
-  "MergeMultipleFiles": { "description": "Birden fazla Excel dosyasini birlestirir", "category": "excel" },
-  "SplitSheetByColumn": { "description": "Sayfayi sutun degerine gore gruplar", "category": "excel" },
-  "AddWatermarkToSheet": { "description": "Sayfa basligina filigran metni", "category": "excel" },
-  "SendWorkbookByEmail": { "description": "Outlook COM ile e-posta gonderir", "category": "excel" },
-  "TableToJsonAndPost": { "description": "Sayfayi JSON yapip API'ye POST eder", "category": "excel" },
-  "CreateNamedRangeFromSelection": { "description": "Secimi adlandirilmis bolge yapar", "category": "excel" },
-  "GeneratePivotFromData": { "description": "Araliktan otomatik pivot olusturur", "category": "excel" },
-  "ApplyConditionalFormatting": { "description": "Pozitif degerlere yesil kosullu bicim", "category": "excel" },
-  "InsertChartFromData": { "description": "Veri araligindan grafik ekler", "category": "excel" },
-  "ConvertSheetToHtmlTable": { "description": "Sayfayi HTML olarak kaydeder", "category": "excel" },
-  "InsertRowAboveSelected": { "description": "Secili satirin ustune satir ekler", "category": "excel" },
-  "CheckLicenseStatus": { "description": "Registry lisans durumu", "category": "guvenlik" },
-  "ValidateMacWithServer": { "description": "MAC sunucu dogrulamasi", "category": "guvenlik" },
-  "EncryptTextXor": { "description": "XOR + Base64 sifreleme", "category": "guvenlik" },
-  "DecryptTextXor": { "description": "XOR + Base64 cozme", "category": "guvenlik" },
-  "AuditLogAction": { "description": "Eylemi sunucuya audit log olarak yazar", "category": "guvenlik" },
-  "CheckDebuggerAttached": { "description": "VBA debugger tespiti", "category": "guvenlik" },
-  "IpWhitelistCheck": { "description": "IP beyaz liste kontrolu", "category": "guvenlik" },
-  "TimeLimitedAccess": { "description": "Saat araligi disinda erisimi kilitler", "category": "guvenlik" },
-  "ConvertXmlToSheet": { "description": "XML dosyasini sayfaya aktarir", "category": "veri" },
-  "MergeJsonFiles": { "description": "Birden fazla JSON dosyasini birlestirir", "category": "veri" },
-  "SplitCsvByColumn": { "description": "CSV dosyasini sayfaya aktarir", "category": "veri" },
-  "RunAsAdmin": { "description": "PowerShell komutunu yukseltilmis calistirir", "category": "powershell" },
-  "CreateShadowCopy": { "description": "VSS shadow copy olusturur", "category": "sistem" },
-  "InstallWindowsUpdates": { "description": "PSWindowsUpdate ile guncelleme", "category": "sistem" },
-  "UploadFileToBlobStorage": { "description": "PUT ile blob storage yukleme", "category": "http" },
-  "FetchAndFillForm": { "description": "API JSON yanitini sayfaya yazar", "category": "http" },
-  "WatermarkVisibleOnPrint": { "description": "Baski altbilgisine filigran", "category": "excel" },
-  "LockWorkbookOnExpiry": { "description": "Tarih gecince sayfalari kilitler", "category": "guvenlik" },
-  "BlacklistMacAddress": { "description": "Kara listedeki MAC erisimini engeller", "category": "guvenlik" }
+  "GetWindowsProductKey": {
+    "description": "Windows urun anahtarini registry'den okur",
+    "category": "registry"
+  },
+  "HttpPatchJson": {
+    "description": "PATCH JSON istegi gonderir (url|body)",
+    "category": "http"
+  },
+  "HttpDeleteRequest": {
+    "description": "DELETE HTTP istegi gonderir",
+    "category": "http"
+  },
+  "ListRegistryKeys": {
+    "description": "Registry alt anahtar ve degerlerini listeler",
+    "category": "registry"
+  },
+  "ExportRegistrySection": {
+    "description": "Registry bolumunu .reg dosyasina aktarir",
+    "category": "registry"
+  },
+  "ImportRegistryFile": {
+    "description": ".reg dosyasini sessizce ice aktarir",
+    "category": "registry"
+  },
+  "RemoveRunOnceCommand": {
+    "description": "RunOnce kaydini siler",
+    "category": "registry"
+  },
+  "BackupVbaSettings": {
+    "description": "VBA GetSetting degerlerini JSON dosyasina yedekler",
+    "category": "registry"
+  },
+  "RestoreVbaSettings": {
+    "description": "JSON yedegi VBA SaveSetting ile geri yukler",
+    "category": "registry"
+  },
+  "MonitorRegistryChange": {
+    "description": "Registry anahtarini degisiklik icin izler",
+    "category": "registry"
+  },
+  "CompareRegistrySnapshot": {
+    "description": "Iki registry snapshot dosyasini karsilastirir",
+    "category": "registry"
+  },
+  "BasicAuthGet": {
+    "description": "Basic Auth baslikli GET (url|user|pass)",
+    "category": "http"
+  },
+  "BearerTokenGet": {
+    "description": "Bearer token ile GET (url|token)",
+    "category": "http"
+  },
+  "SubmitFormData": {
+    "description": "application/x-www-form-urlencoded POST",
+    "category": "http"
+  },
+  "GetRedirectedUrl": {
+    "description": "Yonlendirme zincirinin son URL'si",
+    "category": "http"
+  },
+  "WebScrapeSimple": {
+    "description": "HTML indirir, etiket icerigi cikarir (url|tag)",
+    "category": "http"
+  },
+  "GetGoldPrice": {
+    "description": "Yaklasik altin fiyati (USD/TRY)",
+    "category": "http"
+  },
+  "SendSlackMessage": {
+    "description": "Slack webhook mesaji (url|mesaj)",
+    "category": "http"
+  },
+  "SendTeamsMessage": {
+    "description": "Teams Adaptive Card webhook",
+    "category": "http"
+  },
+  "FetchCurrencyHistory": {
+    "description": "Guncel doviz kurlari listesi",
+    "category": "http"
+  },
+  "OAuthGetToken": {
+    "description": "OAuth2 client_credentials token (url|id|secret|scope)",
+    "category": "http"
+  },
+  "GetLatestModuleVersion": {
+    "description": "Sunucudan modul kodu/versiyon sorgular",
+    "category": "http"
+  },
+  "CheckForUpdate": {
+    "description": "Yerel vs sunucu modul karsilastirmasi",
+    "category": "http"
+  },
+  "WatchFolderForNewFile": {
+    "description": "Klasore dosya dusene kadar bekler",
+    "category": "dosya"
+  },
+  "ConvertFileToBase64": {
+    "description": "Dosyayi Base64 string'e kodlar",
+    "category": "dosya"
+  },
+  "ConvertBase64ToFile": {
+    "description": "Base64 string'i dosyaya yazar",
+    "category": "dosya"
+  },
+  "SyncFolderToServer": {
+    "description": "Klasor dosya sayisini API'ye raporlar",
+    "category": "dosya"
+  },
+  "ConvertPdfToText": {
+    "description": "PDF metin cikarma (COM/DLL gerekir — placeholder)",
+    "category": "dosya"
+  },
+  "SaveAllWorkbooks": {
+    "description": "Tum acik dosyalari kaydeder",
+    "category": "excel"
+  },
+  "ExportSheetAsPdf": {
+    "description": "Aktif sayfayi PDF olarak disa aktarir",
+    "category": "excel"
+  },
+  "AutoFitAllColumns": {
+    "description": "Tum sayfalarda sutun genisligi otomatik",
+    "category": "excel"
+  },
+  "RefreshAllPivotTables": {
+    "description": "Tum pivot tablolari yeniler",
+    "category": "excel"
+  },
+  "RefreshAllConnections": {
+    "description": "Dis veri baglantilarini yeniler",
+    "category": "excel"
+  },
+  "ConvertFormulasToValues": {
+    "description": "Formulleri degerle degistirir",
+    "category": "excel"
+  },
+  "RemoveDuplicateRows": {
+    "description": "Yinelenen satirlari siler",
+    "category": "excel"
+  },
+  "BulkFindAndReplace": {
+    "description": "Calisma kitabinda toplu bul-degistir",
+    "category": "excel"
+  },
+  "FreezeFirstRowAndColumn": {
+    "description": "Ilk satir ve sutunu dondurur",
+    "category": "excel"
+  },
+  "CreateSummarySheet": {
+    "description": "Sayfa A1 degerlerini ozet sayfada toplar",
+    "category": "excel"
+  },
+  "ProtectAllSheets": {
+    "description": "Tum sayfalari parola ile korur",
+    "category": "excel"
+  },
+  "UnprotectAllSheets": {
+    "description": "Tum sayfa korumalarini kaldirir",
+    "category": "excel"
+  },
+  "SortSheetsByName": {
+    "description": "Sayfalari alfabetik siralar",
+    "category": "excel"
+  },
+  "CopySheetToNewWorkbook": {
+    "description": "Sayfayi yeni dosyaya kopyalar",
+    "category": "excel"
+  },
+  "AutoNumberRows": {
+    "description": "Secili sutunda otomatik numara",
+    "category": "excel"
+  },
+  "CheckAdminRights": {
+    "description": "Yonetici haklari kontrolu",
+    "category": "guvenlik"
+  },
+  "GenerateHardwareId": {
+    "description": "CPU+MAC tabanli HWID",
+    "category": "guvenlik"
+  },
+  "DetectVirtualMachine": {
+    "description": "VM ortami tespiti",
+    "category": "guvenlik"
+  },
+  "ValidateTCKimlik": {
+    "description": "TC kimlik algoritma dogrulamasi",
+    "category": "veri"
+  },
+  "NormalizePhoneNumbers": {
+    "description": "TR telefon formati normalizasyonu",
+    "category": "veri"
+  },
+  "FormatCurrencyColumn": {
+    "description": "Para birimi sutun formati",
+    "category": "veri"
+  },
+  "ConvertSheetToJson": {
+    "description": "Sayfayi JSON array'e cevirir",
+    "category": "veri"
+  },
+  "ImportJsonToSheet": {
+    "description": "JSON icerigini sayfaya yazar",
+    "category": "veri"
+  },
+  "CleanHtmlToText": {
+    "description": "HTML etiketlerini temizler",
+    "category": "veri"
+  },
+  "CheckFileIntegrity": {
+    "description": "Dosya MD5 hash karsilastirmasi",
+    "category": "guvenlik"
+  },
+  "ShowYesNoCancelDialog": {
+    "description": "Yes/No/Cancel dialog, secimi dondurur",
+    "category": "ui"
+  },
+  "ExportAllSheetsAsPdf": {
+    "description": "Her sayfayi ayri PDF'e aktarir",
+    "category": "excel"
+  },
+  "ImportSheetFromFile": {
+    "description": "Baska dosyadan sayfa kopyalar",
+    "category": "excel"
+  },
+  "BatchRenameSheets": {
+    "description": "JSON ile toplu sayfa yeniden adlandirma",
+    "category": "excel"
+  },
+  "MergeMultipleFiles": {
+    "description": "Birden fazla Excel dosyasini birlestirir",
+    "category": "excel"
+  },
+  "SplitSheetByColumn": {
+    "description": "Sayfayi sutun degerine gore gruplar",
+    "category": "excel"
+  },
+  "AddWatermarkToSheet": {
+    "description": "Sayfa basligina filigran metni",
+    "category": "excel"
+  },
+  "SendWorkbookByEmail": {
+    "description": "Outlook COM ile e-posta gonderir",
+    "category": "excel"
+  },
+  "TableToJsonAndPost": {
+    "description": "Sayfayi JSON yapip API'ye POST eder",
+    "category": "excel"
+  },
+  "CreateNamedRangeFromSelection": {
+    "description": "Secimi adlandirilmis bolge yapar",
+    "category": "excel"
+  },
+  "GeneratePivotFromData": {
+    "description": "Araliktan otomatik pivot olusturur",
+    "category": "excel"
+  },
+  "ApplyConditionalFormatting": {
+    "description": "Pozitif degerlere yesil kosullu bicim",
+    "category": "excel"
+  },
+  "InsertChartFromData": {
+    "description": "Veri araligindan grafik ekler",
+    "category": "excel"
+  },
+  "ConvertSheetToHtmlTable": {
+    "description": "Sayfayi HTML olarak kaydeder",
+    "category": "excel"
+  },
+  "InsertRowAboveSelected": {
+    "description": "Secili satirin ustune satir ekler",
+    "category": "excel"
+  },
+  "CheckLicenseStatus": {
+    "description": "Registry lisans durumu",
+    "category": "guvenlik"
+  },
+  "ValidateMacWithServer": {
+    "description": "MAC sunucu dogrulamasi",
+    "category": "guvenlik"
+  },
+  "EncryptTextXor": {
+    "description": "XOR + Base64 sifreleme",
+    "category": "guvenlik"
+  },
+  "DecryptTextXor": {
+    "description": "XOR + Base64 cozme",
+    "category": "guvenlik"
+  },
+  "AuditLogAction": {
+    "description": "Eylemi sunucuya audit log olarak yazar",
+    "category": "guvenlik"
+  },
+  "CheckDebuggerAttached": {
+    "description": "VBA debugger tespiti",
+    "category": "guvenlik"
+  },
+  "IpWhitelistCheck": {
+    "description": "IP beyaz liste kontrolu",
+    "category": "guvenlik"
+  },
+  "TimeLimitedAccess": {
+    "description": "Saat araligi disinda erisimi kilitler",
+    "category": "guvenlik"
+  },
+  "ConvertXmlToSheet": {
+    "description": "XML dosyasini sayfaya aktarir",
+    "category": "veri"
+  },
+  "MergeJsonFiles": {
+    "description": "Birden fazla JSON dosyasini birlestirir",
+    "category": "veri"
+  },
+  "SplitCsvByColumn": {
+    "description": "CSV dosyasini sayfaya aktarir",
+    "category": "veri"
+  },
+  "RunAsAdmin": {
+    "description": "PowerShell komutunu yukseltilmis calistirir",
+    "category": "powershell"
+  },
+  "CreateShadowCopy": {
+    "description": "VSS shadow copy olusturur",
+    "category": "sistem"
+  },
+  "InstallWindowsUpdates": {
+    "description": "PSWindowsUpdate ile guncelleme",
+    "category": "sistem"
+  },
+  "UploadFileToBlobStorage": {
+    "description": "PUT ile blob storage yukleme",
+    "category": "http"
+  },
+  "FetchAndFillForm": {
+    "description": "API JSON yanitini sayfaya yazar",
+    "category": "http"
+  },
+  "WatermarkVisibleOnPrint": {
+    "description": "Baski altbilgisine filigran",
+    "category": "excel"
+  },
+  "LockWorkbookOnExpiry": {
+    "description": "Tarih gecince sayfalari kilitler",
+    "category": "guvenlik"
+  },
+  "BlacklistMacAddress": {
+    "description": "Kara listedeki MAC erisimini engeller",
+    "category": "guvenlik"
+  },
+  "CallDllFunction": {
+    "description": "Call Dll Function",
+    "category": "genel"
+  },
+  "ReadWriteNamedPipe": {
+    "description": "Read Write Named Pipe",
+    "category": "genel"
+  },
+  "ReadQrCode": {
+    "description": "Read Qr Code",
+    "category": "genel"
+  },
+  "SignPdfWithCertificate": {
+    "description": "Sign Pdf With Certificate",
+    "category": "genel"
+  },
+  "ReadFromExcelOneDrive": {
+    "description": "Read From Excel One Drive",
+    "category": "genel"
+  },
+  "WatchClipboard": {
+    "description": "Watch Clipboard",
+    "category": "genel"
+  },
+  "RemoteDesktopSession": {
+    "description": "Remote Desktop Session",
+    "category": "genel"
+  },
+  "GeneratePdfReport": {
+    "description": "Generate Pdf Report",
+    "category": "genel"
+  },
+  "LoadPluginFromServer": {
+    "description": "Load Plugin From Server",
+    "category": "genel"
+  },
+  "ConnectToOracle": {
+    "description": "Connect To Oracle",
+    "category": "genel"
+  },
+  "SyncSheetWithDatabase": {
+    "description": "Sync Sheet With Database",
+    "category": "genel"
+  },
+  "ExecuteTransactionalUpdate": {
+    "description": "Execute Transactional Update",
+    "category": "genel"
+  },
+  "MongoDbRestQuery": {
+    "description": "Mongo Db Rest Query",
+    "category": "genel"
+  },
+  "SendEmailWithOutlook": {
+    "description": "Send Email With Outlook",
+    "category": "send"
+  },
+  "SendEmailSmtp": {
+    "description": "Send Email Smtp",
+    "category": "send"
+  },
+  "ReadInboxEmails": {
+    "description": "Read Inbox Emails",
+    "category": "genel"
+  },
+  "ReplyToEmail": {
+    "description": "Reply To Email",
+    "category": "genel"
+  },
+  "CreateOutlookAppointment": {
+    "description": "Create Outlook Appointment",
+    "category": "genel"
+  },
+  "CreateOutlookTask": {
+    "description": "Create Outlook Task",
+    "category": "genel"
+  },
+  "SendBulkEmail": {
+    "description": "Send Bulk Email",
+    "category": "send"
+  },
+  "ExportContactsToVcard": {
+    "description": "Export Contacts To Vcard",
+    "category": "export"
+  },
+  "SendWhatsAppMessage": {
+    "description": "Send Whats App Message",
+    "category": "send"
+  },
+  "SendSmsViaTwilio": {
+    "description": "Send Sms Via Twilio",
+    "category": "send"
+  },
+  "CaptureActiveWindow": {
+    "description": "Capture Active Window",
+    "category": "genel"
+  },
+  "InsertImageFromUrl": {
+    "description": "Insert Image From Url",
+    "category": "genel"
+  },
+  "ResizeAllImages": {
+    "description": "Resize All Images",
+    "category": "genel"
+  },
+  "ExtractImagesFromSheet": {
+    "description": "Extract Images From Sheet",
+    "category": "genel"
+  },
+  "GenerateQrCodeImage": {
+    "description": "Generate Qr Code Image",
+    "category": "genel"
+  },
+  "ConvertImageFormat": {
+    "description": "Convert Image Format",
+    "category": "genel"
+  },
+  "AddLogoToAllSheets": {
+    "description": "Add Logo To All Sheets",
+    "category": "genel"
+  },
+  "RecordMacroToGif": {
+    "description": "Record Macro To Gif",
+    "category": "genel"
+  },
+  "PlayAudioFile": {
+    "description": "Play Audio File",
+    "category": "genel"
+  },
+  "TextToSpeech": {
+    "description": "Text To Speech",
+    "category": "genel"
+  },
+  "AutoFillFormFromApi": {
+    "description": "Auto Fill Form From Api",
+    "category": "genel"
+  },
+  "ChainModulesSequentially": {
+    "description": "Chain Modules Sequentially",
+    "category": "genel"
+  },
+  "RunModuleOnAllWorkbooks": {
+    "description": "Run Module On All Workbooks",
+    "category": "genel"
+  },
+  "ConditionalModuleRunner": {
+    "description": "Conditional Module Runner",
+    "category": "genel"
+  },
+  "RetryOnFailure": {
+    "description": "Retry On Failure",
+    "category": "genel"
+  },
+  "ParallelModuleRunner": {
+    "description": "Parallel Module Runner",
+    "category": "genel"
+  },
+  "AutoDocumentWorkbook": {
+    "description": "Auto Document Workbook",
+    "category": "genel"
+  },
+  "WorkflowEngine": {
+    "description": "Workflow Engine",
+    "category": "genel"
+  },
+  "RemoteConfigLoader": {
+    "description": "Remote Config Loader",
+    "category": "genel"
+  },
+  "GetDomainUsers": {
+    "description": "Get Domain Users",
+    "category": "get"
+  },
+  "GetLocalUsers": {
+    "description": "Get Local Users",
+    "category": "get"
+  },
+  "GetLocalAdmins": {
+    "description": "Get Local Admins",
+    "category": "get"
+  },
+  "GetGroupMembers": {
+    "description": "Get Group Members",
+    "category": "get"
+  },
+  "AddUserToLocalGroup": {
+    "description": "Add User To Local Group",
+    "category": "genel"
+  },
+  "RemoveUserFromLocalGroup": {
+    "description": "Remove User From Local Group",
+    "category": "genel"
+  },
+  "CreateLocalUser": {
+    "description": "Create Local User",
+    "category": "genel"
+  },
+  "DisableLocalUser": {
+    "description": "Disable Local User",
+    "category": "dll"
+  },
+  "ResetLocalUserPassword": {
+    "description": "Reset Local User Password",
+    "category": "genel"
+  },
+  "GetDomainControllerInfo": {
+    "description": "Get Domain Controller Info",
+    "category": "get"
+  },
+  "CheckDomainConnectivity": {
+    "description": "Check Domain Connectivity",
+    "category": "check"
+  },
+  "GetCurrentUserGroups": {
+    "description": "Get Current User Groups",
+    "category": "get"
+  },
+  "GetComputerOuPath": {
+    "description": "Get Computer Ou Path",
+    "category": "get"
+  },
+  "GetDomainPasswordPolicy": {
+    "description": "Get Domain Password Policy",
+    "category": "get"
+  },
+  "QueryActiveDirectoryLdap": {
+    "description": "Query Active Directory Ldap",
+    "category": "genel"
+  },
+  "GetPerformanceCounters": {
+    "description": "Get Performance Counters",
+    "category": "get"
+  },
+  "GetApplicationEventLog": {
+    "description": "Get Application Event Log",
+    "category": "get"
+  },
+  "GetSystemEventLog": {
+    "description": "Get System Event Log",
+    "category": "get"
+  },
+  "GetSecurityEventLog": {
+    "description": "Get Security Event Log",
+    "category": "get"
+  },
+  "TraceRouteToHost": {
+    "description": "Trace Route To Host",
+    "category": "genel"
+  },
+  "CheckDnsResolution": {
+    "description": "Check Dns Resolution",
+    "category": "check"
+  },
+  "GetNetworkStatistics": {
+    "description": "Get Network Statistics",
+    "category": "get"
+  },
+  "ProfileCodeRuntime": {
+    "description": "Profile Code Runtime",
+    "category": "genel"
+  },
+  "GetWindowsReliabilityHistory": {
+    "description": "Get Windows Reliability History",
+    "category": "get"
+  },
+  "GenerateDiagnosticsReport": {
+    "description": "Generate Diagnostics Report",
+    "category": "genel"
+  },
+  "MonitorCpuSpike": {
+    "description": "Monitor Cpu Spike",
+    "category": "genel"
+  },
+  "GetBootTime": {
+    "description": "Get Boot Time",
+    "category": "get"
+  },
+  "GetTopCpuProcesses": {
+    "description": "Get Top Cpu Processes",
+    "category": "get"
+  },
+  "GetTopMemoryProcesses": {
+    "description": "Get Top Memory Processes",
+    "category": "get"
+  },
+  "AnalyzeDiskUsageByFolder": {
+    "description": "Analyze Disk Usage By Folder",
+    "category": "genel"
+  },
+  "PostToGoogleSheets": {
+    "description": "Post To Google Sheets",
+    "category": "post"
+  },
+  "ReadFromGoogleSheets": {
+    "description": "Read From Google Sheets",
+    "category": "genel"
+  },
+  "UploadToOneDrive": {
+    "description": "Upload To One Drive",
+    "category": "genel"
+  },
+  "DownloadFromOneDrive": {
+    "description": "Download From One Drive",
+    "category": "dll"
+  },
+  "PostToAirtable": {
+    "description": "Post To Airtable",
+    "category": "post"
+  },
+  "ReadFromNotion": {
+    "description": "Read From Notion",
+    "category": "genel"
+  },
+  "SendToZapierWebhook": {
+    "description": "Send To Zapier Webhook",
+    "category": "send"
+  },
+  "PostToJiraIssue": {
+    "description": "Post To Jira Issue",
+    "category": "post"
+  },
+  "GetFromSalesforceApi": {
+    "description": "Get From Salesforce Api",
+    "category": "get"
+  },
+  "SyncToTrelloBoard": {
+    "description": "Sync To Trello Board",
+    "category": "genel"
+  },
+  "UploadToAwsS3": {
+    "description": "Upload To Aws S3",
+    "category": "genel"
+  },
+  "UploadToAzureBlob": {
+    "description": "Upload To Azure Blob",
+    "category": "genel"
+  },
+  "FetchFromFirebase": {
+    "description": "Fetch From Firebase",
+    "category": "genel"
+  },
+  "PostToSupabase": {
+    "description": "Post To Supabase",
+    "category": "post"
+  },
+  "SendToMakeWebhook": {
+    "description": "Send To Make Webhook",
+    "category": "send"
+  },
+  "ScanOpenPorts": {
+    "description": "Scan Open Ports",
+    "category": "genel"
+  },
+  "GetActiveConnections": {
+    "description": "Get Active Connections",
+    "category": "get"
+  },
+  "DetectSuspiciousProcesses": {
+    "description": "Detect Suspicious Processes",
+    "category": "dll"
+  },
+  "CheckWindowsDefenderStatus": {
+    "description": "Check Windows Defender Status",
+    "category": "check"
+  },
+  "GetLastLoginEvents": {
+    "description": "Get Last Login Events",
+    "category": "get"
+  },
+  "EncryptFileAES": {
+    "description": "Encrypt File A E S",
+    "category": "genel"
+  },
+  "DecryptFileAES": {
+    "description": "Decrypt File A E S",
+    "category": "dll"
+  },
+  "GenerateRandomToken": {
+    "description": "Generate Random Token",
+    "category": "genel"
+  },
+  "HashFilesSha256": {
+    "description": "Hash Files Sha256",
+    "category": "genel"
+  },
+  "CheckCertificateExpiry": {
+    "description": "Check Certificate Expiry",
+    "category": "check"
+  },
+  "GetInstalledAntivirus": {
+    "description": "Get Installed Antivirus",
+    "category": "get"
+  },
+  "DisableUsbStorage": {
+    "description": "Disable Usb Storage",
+    "category": "dll"
+  },
+  "EnableUsbStorage": {
+    "description": "Enable Usb Storage",
+    "category": "genel"
+  },
+  "GetAppLockerPolicy": {
+    "description": "Get App Locker Policy",
+    "category": "get"
+  },
+  "ScanFolderForMalware": {
+    "description": "Scan Folder For Malware",
+    "category": "genel"
+  },
+  "ExportAllModules": {
+    "description": "Export All Modules",
+    "category": "export"
+  },
+  "ImportModuleFromFile": {
+    "description": "Import Module From File",
+    "category": "import"
+  },
+  "ListAllModulesInWorkbook": {
+    "description": "List All Modules In Workbook",
+    "category": "genel"
+  },
+  "ClearModuleContents": {
+    "description": "Clear Module Contents",
+    "category": "genel"
+  },
+  "CompileVbaProject": {
+    "description": "Compile Vba Project",
+    "category": "genel"
+  },
+  "BackupVbaModulesToZip": {
+    "description": "Backup Vba Modules To Zip",
+    "category": "genel"
+  },
+  "SyncModulesFromServer": {
+    "description": "Sync Modules From Server",
+    "category": "genel"
+  },
+  "GetProcedureList": {
+    "description": "Get Procedure List",
+    "category": "get"
+  },
+  "RenameVbaModule": {
+    "description": "Rename Vba Module",
+    "category": "genel"
+  },
+  "AddModuleReference": {
+    "description": "Add Module Reference",
+    "category": "genel"
+  },
+  "RemoveModuleReference": {
+    "description": "Remove Module Reference",
+    "category": "genel"
+  },
+  "GetLineCountPerModule": {
+    "description": "Get Line Count Per Module",
+    "category": "get"
+  },
+  "InjectCodeToModule": {
+    "description": "Inject Code To Module",
+    "category": "genel"
+  },
+  "SearchInVbaCode": {
+    "description": "Search In Vba Code",
+    "category": "genel"
+  },
+  "ExportMacroToServer": {
+    "description": "Export Macro To Server",
+    "category": "export"
+  },
+  "GetInstalledPrinters": {
+    "description": "Get Installed Printers",
+    "category": "get"
+  },
+  "PrintSheetWithSettings": {
+    "description": "Print Sheet With Settings",
+    "category": "genel"
+  },
+  "SetDefaultPrinter": {
+    "description": "Set Default Printer",
+    "category": "set"
+  },
+  "GetPrinterStatus": {
+    "description": "Get Printer Status",
+    "category": "get"
+  },
+  "PrintRangeToPdf": {
+    "description": "Print Range To Pdf",
+    "category": "genel"
+  },
+  "GenerateWordReport": {
+    "description": "Generate Word Report",
+    "category": "genel"
+  },
+  "FillWordTemplate": {
+    "description": "Fill Word Template",
+    "category": "genel"
+  },
+  "ConvertWordToPdf": {
+    "description": "Convert Word To Pdf",
+    "category": "genel"
+  },
+  "MergeWordDocuments": {
+    "description": "Merge Word Documents",
+    "category": "genel"
+  },
+  "ExtractTextFromWord": {
+    "description": "Extract Text From Word",
+    "category": "genel"
+  },
+  "PrintWithWatermark": {
+    "description": "Print With Watermark",
+    "category": "genel"
+  },
+  "ExportToCsvAndPrint": {
+    "description": "Export To Csv And Print",
+    "category": "export"
+  },
+  "GenerateReportFromTemplate": {
+    "description": "Generate Report From Template",
+    "category": "genel"
+  },
+  "ApplyThemeToWorkbook": {
+    "description": "Apply Theme To Workbook",
+    "category": "genel"
+  },
+  "CreateDashboardSheet": {
+    "description": "Create Dashboard Sheet",
+    "category": "genel"
+  },
+  "AutoGenerateChartsForAllSheets": {
+    "description": "Auto Generate Charts For All Sheets",
+    "category": "genel"
+  },
+  "SetWorkbookMetadata": {
+    "description": "Set Workbook Metadata",
+    "category": "set"
+  },
+  "AddHyperlinksFromSheet": {
+    "description": "Add Hyperlinks From Sheet",
+    "category": "genel"
+  },
+  "ValidateSheetWithSchema": {
+    "description": "Validate Sheet With Schema",
+    "category": "genel"
+  },
+  "ImportDataFromRestApi": {
+    "description": "Import Data From Rest Api",
+    "category": "import"
+  },
+  "AutoFormatAsTable": {
+    "description": "Auto Format As Table",
+    "category": "genel"
+  },
+  "AddSparklinesToColumn": {
+    "description": "Add Sparklines To Column",
+    "category": "genel"
+  },
+  "ProtectFormulaColumns": {
+    "description": "Protect Formula Columns",
+    "category": "genel"
+  },
+  "ClearValidationRules": {
+    "description": "Clear Validation Rules",
+    "category": "genel"
+  },
+  "ApplyDropdownFromList": {
+    "description": "Apply Dropdown From List",
+    "category": "genel"
+  },
+  "CreateHeatmapConditional": {
+    "description": "Create Heatmap Conditional",
+    "category": "genel"
+  },
+  "BuildDynamicQueryTable": {
+    "description": "Build Dynamic Query Table",
+    "category": "genel"
+  },
+  "GeneratePivotTableReport": {
+    "description": "Generate Pivot Table Report",
+    "category": "genel"
+  },
+  "ExportRangeAsImage": {
+    "description": "Export Range As Image",
+    "category": "export"
+  },
+  "SyncNamedRangeToServer": {
+    "description": "Sync Named Range To Server",
+    "category": "genel"
+  },
+  "BuildMultiSheetWorkbook": {
+    "description": "Build Multi Sheet Workbook",
+    "category": "genel"
+  },
+  "AutoFillFromLookupTable": {
+    "description": "Auto Fill From Lookup Table",
+    "category": "genel"
+  },
+  "SyncToNetworkShare": {
+    "description": "Sync To Network Share",
+    "category": "genel"
+  },
+  "BackupToFtpServer": {
+    "description": "Backup To Ftp Server",
+    "category": "genel"
+  },
+  "DownloadFromFtp": {
+    "description": "Download From Ftp",
+    "category": "dll"
+  },
+  "IncrementalBackup": {
+    "description": "Incremental Backup",
+    "category": "genel"
+  },
+  "VerifyBackupIntegrity": {
+    "description": "Verify Backup Integrity",
+    "category": "genel"
+  },
+  "RotateBackupFiles": {
+    "description": "Rotate Backup Files",
+    "category": "genel"
+  },
+  "MirrorFolderStructure": {
+    "description": "Mirror Folder Structure",
+    "category": "genel"
+  },
+  "CompressAndUpload": {
+    "description": "Compress And Upload",
+    "category": "genel"
+  },
+  "DownloadAndExtract": {
+    "description": "Download And Extract",
+    "category": "dll"
+  },
+  "CheckSyncStatus": {
+    "description": "Check Sync Status",
+    "category": "check"
+  },
+  "ScheduleBackupTask": {
+    "description": "Schedule Backup Task",
+    "category": "genel"
+  },
+  "RestoreFromBackup": {
+    "description": "Restore From Backup",
+    "category": "genel"
+  },
+  "TranslateTextDeepL": {
+    "description": "Translate Text Deep L",
+    "category": "genel"
+  },
+  "TranslateTextGoogle": {
+    "description": "Translate Text Google",
+    "category": "genel"
+  },
+  "DetectLanguage": {
+    "description": "Detect Language",
+    "category": "dll"
+  },
+  "SpellCheckText": {
+    "description": "Spell Check Text",
+    "category": "genel"
+  },
+  "ExtractKeywords": {
+    "description": "Extract Keywords",
+    "category": "genel"
+  },
+  "SummarizeText": {
+    "description": "Summarize Text",
+    "category": "genel"
+  },
+  "ConvertTurkishChars": {
+    "description": "Convert Turkish Chars",
+    "category": "genel"
+  },
+  "ParseTurkishDate": {
+    "description": "Parse Turkish Date",
+    "category": "genel"
+  },
+  "GenerateSlug": {
+    "description": "Generate Slug",
+    "category": "genel"
+  },
+  "MaskSensitiveData": {
+    "description": "Mask Sensitive Data",
+    "category": "genel"
+  },
+  "RegexExtract": {
+    "description": "Regex Extract",
+    "category": "genel"
+  },
+  "RegexReplace": {
+    "description": "Regex Replace",
+    "category": "genel"
+  },
+  "TokenizeText": {
+    "description": "Tokenize Text",
+    "category": "genel"
+  },
+  "FormatJsonString": {
+    "description": "Format Json String",
+    "category": "genel"
+  },
+  "TextToSpeechSave": {
+    "description": "Text To Speech Save",
+    "category": "genel"
+  },
+  "GetInstalledWindowsFeatures": {
+    "description": "Get Installed Windows Features",
+    "category": "get"
+  },
+  "EnableWindowsFeature": {
+    "description": "Enable Windows Feature",
+    "category": "genel"
+  },
+  "DisableWindowsFeature": {
+    "description": "Disable Windows Feature",
+    "category": "dll"
+  },
+  "GetPowerPlan": {
+    "description": "Get Power Plan",
+    "category": "get"
+  },
+  "SetPowerPlan": {
+    "description": "Set Power Plan",
+    "category": "set"
+  },
+  "GetScreenSaverSettings": {
+    "description": "Get Screen Saver Settings",
+    "category": "get"
+  },
+  "DisableScreenSaver": {
+    "description": "Disable Screen Saver",
+    "category": "dll"
+  },
+  "GetAutoRunEntries": {
+    "description": "Get Auto Run Entries",
+    "category": "get"
+  },
+  "GetHotfixList": {
+    "description": "Get Hotfix List",
+    "category": "get"
+  },
+  "CheckWindowsFirewallStatus": {
+    "description": "Check Windows Firewall Status",
+    "category": "check"
+  },
+  "EnableWindowsFirewall": {
+    "description": "Enable Windows Firewall",
+    "category": "genel"
+  },
+  "DisableWindowsFirewall": {
+    "description": "Disable Windows Firewall",
+    "category": "dll"
+  },
+  "GetSharedFolders": {
+    "description": "Get Shared Folders",
+    "category": "get"
+  },
+  "CreateSharedFolder": {
+    "description": "Create Shared Folder",
+    "category": "genel"
+  },
+  "RemoveSharedFolder": {
+    "description": "Remove Shared Folder",
+    "category": "genel"
+  },
+  "GetSystemRestorePoints": {
+    "description": "Get System Restore Points",
+    "category": "get"
+  },
+  "CreateSystemRestorePoint": {
+    "description": "Create System Restore Point",
+    "category": "genel"
+  },
+  "GetWindowsLicenseInfo": {
+    "description": "Get Windows License Info",
+    "category": "get"
+  },
+  "GetComputerDescription": {
+    "description": "Get Computer Description",
+    "category": "get"
+  },
+  "SetSystemTime": {
+    "description": "Set System Time",
+    "category": "set"
+  },
+  "SyncSystemTimeNtp": {
+    "description": "Sync System Time Ntp",
+    "category": "genel"
+  },
+  "ValidateEmailAddress": {
+    "description": "Validate Email Address",
+    "category": "genel"
+  },
+  "ValidateIpAddress": {
+    "description": "Validate Ip Address",
+    "category": "genel"
+  },
+  "ValidateUrl": {
+    "description": "Validate Url",
+    "category": "genel"
+  },
+  "ValidateCreditCard": {
+    "description": "Validate Credit Card",
+    "category": "genel"
+  },
+  "ValidateIbanNumber": {
+    "description": "Validate Iban Number",
+    "category": "genel"
+  },
+  "ValidateTurkishPhone": {
+    "description": "Validate Turkish Phone",
+    "category": "genel"
+  },
+  "CalculateDescriptiveStats": {
+    "description": "Calculate Descriptive Stats",
+    "category": "genel"
+  },
+  "DetectOutliersIqr": {
+    "description": "Detect Outliers Iqr",
+    "category": "dll"
+  },
+  "CalculateCorrelation": {
+    "description": "Calculate Correlation",
+    "category": "genel"
+  },
+  "FitLinearRegression": {
+    "description": "Fit Linear Regression",
+    "category": "genel"
+  },
+  "MovingAverageSmoothing": {
+    "description": "Moving Average Smoothing",
+    "category": "genel"
+  },
+  "NormalizeDataMinMax": {
+    "description": "Normalize Data Min Max",
+    "category": "genel"
+  },
+  "FrequencyDistribution": {
+    "description": "Frequency Distribution",
+    "category": "genel"
+  },
+  "CheckDataCompleteness": {
+    "description": "Check Data Completeness",
+    "category": "check"
+  },
+  "CompareColumnDifferences": {
+    "description": "Compare Column Differences",
+    "category": "genel"
+  },
+  "ApprovalWorkflow": {
+    "description": "Approval Workflow",
+    "category": "genel"
+  },
+  "TriggerWebhookOnChange": {
+    "description": "Trigger Webhook On Change",
+    "category": "genel"
+  },
+  "BatchProcessRows": {
+    "description": "Batch Process Rows",
+    "category": "genel"
+  },
+  "RunModuleWithTimeout": {
+    "description": "Run Module With Timeout",
+    "category": "genel"
+  },
+  "LogWorkflowStep": {
+    "description": "Log Workflow Step",
+    "category": "genel"
+  },
+  "PauseAndResume": {
+    "description": "Pause And Resume",
+    "category": "genel"
+  },
+  "ParallelBatchRunner": {
+    "description": "Parallel Batch Runner",
+    "category": "genel"
+  },
+  "SendModuleResultSummary": {
+    "description": "Send Module Result Summary",
+    "category": "send"
+  },
+  "RollbackOnError": {
+    "description": "Rollback On Error",
+    "category": "genel"
+  },
+  "FtpUploadFile": {
+    "description": "Ftp Upload File",
+    "category": "genel"
+  },
+  "FtpDownloadFile": {
+    "description": "Ftp Download File",
+    "category": "genel"
+  },
+  "FtpListDirectory": {
+    "description": "Ftp List Directory",
+    "category": "genel"
+  },
+  "SftpUploadFile": {
+    "description": "Sftp Upload File",
+    "category": "genel"
+  },
+  "SshExecuteCommand": {
+    "description": "Ssh Execute Command",
+    "category": "genel"
+  },
+  "SendUdpPacket": {
+    "description": "Send Udp Packet",
+    "category": "send"
+  },
+  "GetNetworkRoutes": {
+    "description": "Get Network Routes",
+    "category": "get"
+  },
+  "GetArpTable": {
+    "description": "Get Arp Table",
+    "category": "get"
+  },
+  "DiscoverNetworkDevices": {
+    "description": "Discover Network Devices",
+    "category": "dll"
+  },
+  "GetMacVendor": {
+    "description": "Get Mac Vendor",
+    "category": "get"
+  },
+  "SetDnsServers": {
+    "description": "Set Dns Servers",
+    "category": "set"
+  },
+  "EnableDhcp": {
+    "description": "Enable Dhcp",
+    "category": "genel"
+  },
+  "GetVpnConnections": {
+    "description": "Get Vpn Connections",
+    "category": "get"
+  },
+  "ConnectVpn": {
+    "description": "Connect Vpn",
+    "category": "genel"
+  },
+  "DisconnectVpn": {
+    "description": "Disconnect Vpn",
+    "category": "dll"
+  },
+  "MinimizeExcelWindow": {
+    "description": "Minimize Excel Window",
+    "category": "genel"
+  },
+  "MaximizeExcelWindow": {
+    "description": "Maximize Excel Window",
+    "category": "genel"
+  },
+  "SetExcelAlwaysOnTop": {
+    "description": "Set Excel Always On Top",
+    "category": "dll"
+  },
+  "GetForegroundWindowTitle": {
+    "description": "Get Foreground Window Title",
+    "category": "dll"
+  },
+  "FindWindowByTitle": {
+    "description": "Find Window By Title",
+    "category": "dll"
+  },
+  "SendMessageToWindow": {
+    "description": "Send Message To Window",
+    "category": "send"
+  },
+  "PostMessageCloseWindow": {
+    "description": "Post Message Close Window",
+    "category": "dll"
+  },
+  "GetWindowRect": {
+    "description": "Get Window Rect",
+    "category": "dll"
+  },
+  "MoveWindowToPosition": {
+    "description": "Move Window To Position",
+    "category": "dll"
+  },
+  "SetWindowTransparency": {
+    "description": "Set Window Transparency",
+    "category": "dll"
+  },
+  "BlockUserInput": {
+    "description": "Block User Input",
+    "category": "genel"
+  },
+  "GetCursorPosition": {
+    "description": "Get Cursor Position",
+    "category": "dll"
+  },
+  "SetCursorPosition": {
+    "description": "Set Cursor Position",
+    "category": "dll"
+  },
+  "SimulateMouseClick": {
+    "description": "Simulate Mouse Click",
+    "category": "genel"
+  },
+  "GetClipboardSequence": {
+    "description": "Get Clipboard Sequence",
+    "category": "dll"
+  },
+  "LockWorkStation": {
+    "description": "Lock Work Station",
+    "category": "genel"
+  },
+  "GetLastInputIdleTime": {
+    "description": "Get Last Input Idle Time",
+    "category": "dll"
+  },
+  "ShowBalloonTip": {
+    "description": "Show Balloon Tip",
+    "category": "genel"
+  },
+  "EnumVisibleWindows": {
+    "description": "Enum Visible Windows",
+    "category": "genel"
+  },
+  "GetTickCount64": {
+    "description": "Get Tick Count64",
+    "category": "dll"
+  },
+  "GetSystemTimes": {
+    "description": "Get System Times",
+    "category": "dll"
+  },
+  "GetDiskFreeSpaceEx": {
+    "description": "Get Disk Free Space Ex",
+    "category": "dll"
+  },
+  "CreateFileMapping": {
+    "description": "Create File Mapping",
+    "category": "genel"
+  },
+  "ReadMemoryMappedFile": {
+    "description": "Read Memory Mapped File",
+    "category": "genel"
+  },
+  "WriteMemoryMappedFile": {
+    "description": "Write Memory Mapped File",
+    "category": "genel"
+  },
+  "GetProcessListNative": {
+    "description": "Get Process List Native",
+    "category": "dll"
+  },
+  "TerminateProcessByPid": {
+    "description": "Terminate Process By Pid",
+    "category": "genel"
+  },
+  "GetModuleFileName": {
+    "description": "Get Module File Name",
+    "category": "dll"
+  },
+  "IsProcessRunning": {
+    "description": "Is Process Running",
+    "category": "genel"
+  },
+  "GetEnvironmentBlock": {
+    "description": "Get Environment Block",
+    "category": "dll"
+  },
+  "SetEnvironmentVariable": {
+    "description": "Set Environment Variable",
+    "category": "dll"
+  },
+  "GetComputerNameEx": {
+    "description": "Get Computer Name Ex",
+    "category": "dll"
+  },
+  "GetFirmwareType": {
+    "description": "Get Firmware Type",
+    "category": "dll"
+  },
+  "IsWow64Process": {
+    "description": "Is Wow64 Process",
+    "category": "genel"
+  },
+  "LoadLibraryDynamic": {
+    "description": "Load Library Dynamic",
+    "category": "genel"
+  },
+  "FreeLibraryDynamic": {
+    "description": "Free Library Dynamic",
+    "category": "genel"
+  },
+  "GetLastErrorMessage": {
+    "description": "Get Last Error Message",
+    "category": "dll"
+  },
+  "CreateNamedPipeServer": {
+    "description": "Create Named Pipe Server",
+    "category": "genel"
+  },
+  "ConnectNamedPipeClient": {
+    "description": "Connect Named Pipe Client",
+    "category": "genel"
+  },
+  "RegOpenKeyExNative": {
+    "description": "Reg Open Key Ex Native",
+    "category": "genel"
+  },
+  "RegQueryValueExNative": {
+    "description": "Reg Query Value Ex Native",
+    "category": "genel"
+  },
+  "RegSetValueExNative": {
+    "description": "Reg Set Value Ex Native",
+    "category": "genel"
+  },
+  "GetUserNameEx": {
+    "description": "Get User Name Ex",
+    "category": "dll"
+  },
+  "LookupAccountSid": {
+    "description": "Lookup Account Sid",
+    "category": "genel"
+  },
+  "GetTokenInformation": {
+    "description": "Get Token Information",
+    "category": "dll"
+  },
+  "IsUserAnAdmin": {
+    "description": "Is User An Admin",
+    "category": "genel"
+  },
+  "OpenServiceManager": {
+    "description": "Open Service Manager",
+    "category": "genel"
+  },
+  "QueryServiceStatus": {
+    "description": "Query Service Status",
+    "category": "dll"
+  },
+  "StartWindowsService": {
+    "description": "Start Windows Service",
+    "category": "dll"
+  },
+  "StopWindowsService": {
+    "description": "Stop Windows Service",
+    "category": "genel"
+  },
+  "InstallWindowsService": {
+    "description": "Install Windows Service",
+    "category": "genel"
+  },
+  "UninstallWindowsService": {
+    "description": "Uninstall Windows Service",
+    "category": "genel"
+  },
+  "SetServiceAutoStart": {
+    "description": "Set Service Auto Start",
+    "category": "dll"
+  },
+  "GetServiceDependencies": {
+    "description": "Get Service Dependencies",
+    "category": "dll"
+  },
+  "PlaySystemBeep": {
+    "description": "Play System Beep",
+    "category": "dll"
+  },
+  "GetVolumeSerialNumber": {
+    "description": "Get Volume Serial Number",
+    "category": "dll"
+  },
+  "DnsLookupHost": {
+    "description": "Dns Lookup Host",
+    "category": "dll"
+  },
+  "GetAdaptersAddresses": {
+    "description": "Get Adapters Addresses",
+    "category": "dll"
+  },
+  "SendIcmpPing": {
+    "description": "Send Icmp Ping",
+    "category": "send"
+  },
+  "GetTcpTable": {
+    "description": "Get Tcp Table",
+    "category": "dll"
+  },
+  "GetUdpTable": {
+    "description": "Get Udp Table",
+    "category": "dll"
+  },
+  "EncryptDataDpapi": {
+    "description": "Encrypt Data Dpapi",
+    "category": "genel"
+  },
+  "DecryptDataDpapi": {
+    "description": "Decrypt Data Dpapi",
+    "category": "dll"
+  },
+  "HashFileMd5Native": {
+    "description": "Hash File Md5 Native",
+    "category": "genel"
+  },
+  "GetCertificateStore": {
+    "description": "Get Certificate Store",
+    "category": "dll"
+  },
+  "VerifyAuthenticodeSignature": {
+    "description": "Verify Authenticode Signature",
+    "category": "genel"
+  },
+  "GetSystemMetrics": {
+    "description": "Get System Metrics",
+    "category": "dll"
+  },
+  "GetDpiForWindow": {
+    "description": "Get Dpi For Window",
+    "category": "dll"
+  },
+  "TimeGetTime": {
+    "description": "Time Get Time",
+    "category": "dll"
+  },
+  "SqliteQueryLocal": {
+    "description": "Sqlite Query Local",
+    "category": "genel"
+  },
+  "SqliteBulkInsert": {
+    "description": "Sqlite Bulk Insert",
+    "category": "genel"
+  },
+  "CurlHttpGet": {
+    "description": "Curl Http Get",
+    "category": "genel"
+  },
+  "CurlHttpPostJson": {
+    "description": "Curl Http Post Json",
+    "category": "genel"
+  },
+  "CurlDownloadFile": {
+    "description": "Curl Download File",
+    "category": "genel"
+  },
+  "OpenSslAesEncrypt": {
+    "description": "Open Ssl Aes Encrypt",
+    "category": "genel"
+  },
+  "OpenSslRsaSign": {
+    "description": "Open Ssl Rsa Sign",
+    "category": "genel"
+  },
+  "ZstdCompressFile": {
+    "description": "Zstd Compress File",
+    "category": "genel"
+  },
+  "ZstdDecompressFile": {
+    "description": "Zstd Decompress File",
+    "category": "genel"
+  },
+  "PngEncodeScreenshot": {
+    "description": "Png Encode Screenshot",
+    "category": "genel"
+  },
+  "PdfMergeNative": {
+    "description": "Pdf Merge Native",
+    "category": "genel"
+  },
+  "PdfExtractText": {
+    "description": "Pdf Extract Text",
+    "category": "genel"
+  },
+  "ReadBarcodeZxing": {
+    "description": "Read Barcode Zxing",
+    "category": "genel"
+  },
+  "GenerateQrNative": {
+    "description": "Generate Qr Native",
+    "category": "genel"
+  },
+  "FFmpegConvertVideo": {
+    "description": "F Fmpeg Convert Video",
+    "category": "genel"
+  },
+  "TesseractOcr": {
+    "description": "Tesseract Ocr",
+    "category": "genel"
+  },
+  "SevenZipCompress": {
+    "description": "Seven Zip Compress",
+    "category": "genel"
+  },
+  "SevenZipExtract": {
+    "description": "Seven Zip Extract",
+    "category": "genel"
+  },
+  "LibXlWriteFast": {
+    "description": "Lib Xl Write Fast",
+    "category": "genel"
+  },
+  "DuckDbAnalytics": {
+    "description": "Duck Db Analytics",
+    "category": "dll"
+  },
+  "MsgParseOutlook": {
+    "description": "Msg Parse Outlook",
+    "category": "genel"
+  },
+  "SerialPortRead": {
+    "description": "Serial Port Read",
+    "category": "genel"
+  },
+  "UsbDeviceMonitor": {
+    "description": "Usb Device Monitor",
+    "category": "genel"
+  },
+  "GpuComputeReduce": {
+    "description": "Gpu Compute Reduce",
+    "category": "genel"
+  },
+  "MachineLearningOnnx": {
+    "description": "Machine Learning Onnx",
+    "category": "genel"
+  },
+  "TeklifCryptoCom": {
+    "description": "Teklif Crypto Com",
+    "category": "com"
+  },
+  "TeklifPipeCom": {
+    "description": "Teklif Pipe Com",
+    "category": "com"
+  },
+  "TeklifHttpCom": {
+    "description": "Teklif Http Com",
+    "category": "com"
+  },
+  "TeklifWmiCom": {
+    "description": "Teklif Wmi Com",
+    "category": "com"
+  },
+  "TeklifTaskCom": {
+    "description": "Teklif Task Com",
+    "category": "com"
+  },
+  "TeklifServiceCom": {
+    "description": "Teklif Service Com",
+    "category": "com"
+  },
+  "TeklifUpdateCom": {
+    "description": "Teklif Update Com",
+    "category": "com"
+  },
+  "TeklifScreenCapCom": {
+    "description": "Teklif Screen Cap Com",
+    "category": "com"
+  },
+  "TeklifPdfCom": {
+    "description": "Teklif Pdf Com",
+    "category": "com"
+  },
+  "TeklifExcelFastCom": {
+    "description": "Teklif Excel Fast Com",
+    "category": "com"
+  },
+  "TeklifDbCom": {
+    "description": "Teklif Db Com",
+    "category": "com"
+  },
+  "TeklifJsonCom": {
+    "description": "Teklif Json Com",
+    "category": "com"
+  },
+  "TeklifZipCom": {
+    "description": "Teklif Zip Com",
+    "category": "com"
+  },
+  "TeklifNotifyCom": {
+    "description": "Teklif Notify Com",
+    "category": "com"
+  },
+  "TeklifClipboardCom": {
+    "description": "Teklif Clipboard Com",
+    "category": "com"
+  },
+  "RegisterComDll": {
+    "description": "Register Com Dll",
+    "category": "genel"
+  },
+  "UnregisterComDll": {
+    "description": "Unregister Com Dll",
+    "category": "genel"
+  },
+  "ListRegisteredComObjects": {
+    "description": "List Registered Com Objects",
+    "category": "dll"
+  },
+  "CallComMethodDynamic": {
+    "description": "Call Com Method Dynamic",
+    "category": "dll"
+  },
+  "InstallTeklifAgentService": {
+    "description": "Install Teklif Agent Service",
+    "category": "genel"
+  },
+  "UninstallTeklifAgentService": {
+    "description": "Uninstall Teklif Agent Service",
+    "category": "genel"
+  },
+  "StartTeklifAgent": {
+    "description": "Start Teklif Agent",
+    "category": "dll"
+  },
+  "StopTeklifAgent": {
+    "description": "Stop Teklif Agent",
+    "category": "genel"
+  },
+  "GetTeklifAgentStatus": {
+    "description": "Get Teklif Agent Status",
+    "category": "dll"
+  },
+  "UpdateTeklifAgent": {
+    "description": "Update Teklif Agent",
+    "category": "genel"
+  },
+  "ConfigureAgentInterval": {
+    "description": "Configure Agent Interval",
+    "category": "genel"
+  },
+  "ConfigureAgentServerUrl": {
+    "description": "Configure Agent Server Url",
+    "category": "genel"
+  },
+  "ExportAgentLogs": {
+    "description": "Export Agent Logs",
+    "category": "export"
+  },
+  "RotateAgentLogFiles": {
+    "description": "Rotate Agent Log Files",
+    "category": "genel"
+  },
+  "ServiceHeartbeatLoop": {
+    "description": "Service Heartbeat Loop",
+    "category": "genel"
+  },
+  "ServiceCommandPoll": {
+    "description": "Service Command Poll",
+    "category": "genel"
+  },
+  "ServiceRunModuleViaExcel": {
+    "description": "Service Run Module Via Excel",
+    "category": "genel"
+  },
+  "ServiceRunModuleNative": {
+    "description": "Service Run Module Native",
+    "category": "genel"
+  },
+  "ServiceCollectHardwareSnapshot": {
+    "description": "Service Collect Hardware Snapshot",
+    "category": "genel"
+  },
+  "ServiceWatchFolder": {
+    "description": "Service Watch Folder",
+    "category": "genel"
+  },
+  "ServiceSyncFilesToServer": {
+    "description": "Service Sync Files To Server",
+    "category": "genel"
+  },
+  "ServiceRunScheduledModules": {
+    "description": "Service Run Scheduled Modules",
+    "category": "genel"
+  },
+  "ServiceVpnReconnect": {
+    "description": "Service Vpn Reconnect",
+    "category": "genel"
+  },
+  "ServicePrintQueueMonitor": {
+    "description": "Service Print Queue Monitor",
+    "category": "genel"
+  },
+  "ServiceBatteryAlert": {
+    "description": "Service Battery Alert",
+    "category": "genel"
+  },
+  "ServiceDiskSpaceAlert": {
+    "description": "Service Disk Space Alert",
+    "category": "genel"
+  },
+  "ServiceCertificateExpiryCheck": {
+    "description": "Service Certificate Expiry Check",
+    "category": "genel"
+  },
+  "ServiceDefenderStatusReport": {
+    "description": "Service Defender Status Report",
+    "category": "genel"
+  },
+  "ServicePendingRebootReport": {
+    "description": "Service Pending Reboot Report",
+    "category": "genel"
+  },
+  "ServiceOfflineQueueFlush": {
+    "description": "Service Offline Queue Flush",
+    "category": "genel"
+  },
+  "ServiceScreenCaptureScheduled": {
+    "description": "Service Screen Capture Scheduled",
+    "category": "genel"
+  },
+  "ServiceRecordAuditVideo": {
+    "description": "Service Record Audit Video",
+    "category": "genel"
+  },
+  "ServiceUsbInsertAlert": {
+    "description": "Service Usb Insert Alert",
+    "category": "genel"
+  },
+  "ServiceProcessBlacklist": {
+    "description": "Service Process Blacklist",
+    "category": "genel"
+  },
+  "PipeRequestRunModule": {
+    "description": "Pipe Request Run Module",
+    "category": "genel"
+  },
+  "PipeGetLastResult": {
+    "description": "Pipe Get Last Result",
+    "category": "genel"
+  },
+  "PipeCancelRunningModule": {
+    "description": "Pipe Cancel Running Module",
+    "category": "genel"
+  },
+  "LocalHttpAgentApi": {
+    "description": "Local Http Agent Api",
+    "category": "genel"
+  },
+  "MmfSharedStatusBlock": {
+    "description": "Mmf Shared Status Block",
+    "category": "genel"
+  },
+  "WmCopyDataIpc": {
+    "description": "Wm Copy Data Ipc",
+    "category": "genel"
+  },
+  "FileQueueCommands": {
+    "description": "File Queue Commands",
+    "category": "genel"
+  },
+  "GrpcAgentChannel": {
+    "description": "Grpc Agent Channel",
+    "category": "genel"
+  },
+  "WebSocketAgentStream": {
+    "description": "Web Socket Agent Stream",
+    "category": "genel"
+  },
+  "SseAgentToDashboard": {
+    "description": "Sse Agent To Dashboard",
+    "category": "genel"
+  },
+  "HybridHeartbeat": {
+    "description": "Hybrid Heartbeat",
+    "category": "genel"
+  },
+  "ExcelSafeRemoteExecute": {
+    "description": "Excel Safe Remote Execute",
+    "category": "genel"
+  },
+  "QueueModuleWhenExcelBusy": {
+    "description": "Queue Module When Excel Busy",
+    "category": "genel"
+  },
+  "NativeFallbackGetDiskInfo": {
+    "description": "Native Fallback Get Disk Info",
+    "category": "genel"
+  },
+  "SignedModuleDelivery": {
+    "description": "Signed Module Delivery",
+    "category": "genel"
+  },
+  "DualChannelCommand": {
+    "description": "Dual Channel Command",
+    "category": "dll"
+  },
+  "ModuleTimeoutWatchdog": {
+    "description": "Module Timeout Watchdog",
+    "category": "genel"
+  },
+  "ElevationRequestUac": {
+    "description": "Elevation Request Uac",
+    "category": "genel"
+  },
+  "RunAsDifferentUser": {
+    "description": "Run As Different User",
+    "category": "genel"
+  },
+  "SandboxUntrustedMacro": {
+    "description": "Sandbox Untrusted Macro",
+    "category": "genel"
+  },
+  "EncryptRegistrySecrets": {
+    "description": "Encrypt Registry Secrets",
+    "category": "genel"
+  },
+  "SecureDeleteFile": {
+    "description": "Secure Delete File",
+    "category": "genel"
+  },
+  "TamperDetectAgent": {
+    "description": "Tamper Detect Agent",
+    "category": "genel"
+  },
+  "LicenseBindToMachine": {
+    "description": "License Bind To Machine",
+    "category": "genel"
+  },
+  "RemoteWipeWorkstation": {
+    "description": "Remote Wipe Workstation",
+    "category": "genel"
+  },
+  "CollectForensicSnapshot": {
+    "description": "Collect Forensic Snapshot",
+    "category": "genel"
+  },
+  "GeoLocateByIp": {
+    "description": "Geo Locate By Ip",
+    "category": "genel"
+  },
+  "DetectVmEnvironment": {
+    "description": "Detect Vm Environment",
+    "category": "dll"
+  },
+  "DetectDebugger": {
+    "description": "Detect Debugger",
+    "category": "dll"
+  },
+  "RateLimitModuleCalls": {
+    "description": "Rate Limit Module Calls",
+    "category": "genel"
+  },
+  "BundleModuleDependencies": {
+    "description": "Bundle Module Dependencies",
+    "category": "genel"
+  },
+  "DeltaUpdateAgent": {
+    "description": "Delta Update Agent",
+    "category": "dll"
+  },
+  "MultiTenantAgentConfig": {
+    "description": "Multi Tenant Agent Config",
+    "category": "genel"
+  },
+  "AgentHealthDashboard": {
+    "description": "Agent Health Dashboard",
+    "category": "genel"
+  },
+  "CrossPlatformAgentNote": {
+    "description": "Cross Platform Agent Note",
+    "category": "genel"
+  }
 }

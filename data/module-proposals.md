@@ -332,21 +332,21 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 248 | InjectVbaModule | Çalışma zamanında hedef workbook'a VBA modülü enjekte eder| ✅ |
 | 249 | RemoveVbaModule | Workbook'tan modülü programatik olarak siler| ✅ |
 | 250 | RunMacroInWorkbook | Parametre workbook adındaki makroyu çalıştırır| ✅ |
-| 251 | CallDllFunction | `Declare`/`LoadLibrary` ile native DLL fonksiyonu çağırır | ⬜ |
-| 252 | ReadWriteNamedPipe | Windows adlandırılmış boru (Named Pipe) üzerinden IPC | ⬜ |
+| 251 | CallDllFunction | `Declare`/`LoadLibrary` ile native DLL fonksiyonu çağırır | ✅ |
+| 252 | ReadWriteNamedPipe | Windows adlandırılmış boru (Named Pipe) üzerinden IPC | ✅ |
 | 253 | SendKeystrokes | `SendKeys` veya UI Automation ile tuş dizisi gönderir | ✅ |
 | 254 | CaptureScreenshot | PrintScreen + clipboard + kaydedilmiş PNG| ✅ |
-| 255 | ReadQrCode | QR kod resim dosyasını ZXing COM ile okur | ⬜ |
+| 255 | ReadQrCode | QR kod resim dosyasını ZXing COM ile okur | ✅ |
 | 256 | GenerateBarcode | Code128 barkod formülü ile hücreye barkod yazar | ✅ |
-| 257 | SignPdfWithCertificate | iTextSharp COM ile PDF'e dijital imza atar | ⬜ |
+| 257 | SignPdfWithCertificate | iTextSharp COM ile PDF'e dijital imza atar | ✅ |
 | 258 | ConnectToSqlServer | ADO üzerinden SQL Server sorgusu çalıştırır| ✅ |
 | 259 | ConnectToMySql | MySQL ODBC connector ile sorgu | ✅ |
-| 260 | ReadFromExcelOneDrive | SharePoint/OneDrive URL'den Excel dosyasını okur | ⬜ |
-| 261 | WatchClipboard | Pano değişimini izler, metin kopyalanınca modül tetikler | ⬜ |
-| 262 | RemoteDesktopSession | RDP oturumu başlatır, uzak bilgisayarda komut çalıştırır | ⬜ |
-| 263 | GeneratePdfReport | iTextSharp ile çok sayfalı PDF raporu üretir | ⬜ |
+| 260 | ReadFromExcelOneDrive | SharePoint/OneDrive URL'den Excel dosyasını okur | ✅ |
+| 261 | WatchClipboard | Pano değişimini izler, metin kopyalanınca modül tetikler | ✅ |
+| 262 | RemoteDesktopSession | RDP oturumu başlatır, uzak bilgisayarda komut çalıştırır | ✅ |
+| 263 | GeneratePdfReport | iTextSharp ile çok sayfalı PDF raporu üretir | ✅ |
 | 264 | EmbedImageInCell | URL'den indirilen resmi hücreye gömer| ✅ |
-| 265 | LoadPluginFromServer | Sunucudan DLL indirir, çalışma zamanında yükler | ⬜ |
+| 265 | LoadPluginFromServer | Sunucudan DLL indirir, çalışma zamanında yükler | ✅ |
 
 ---
 
@@ -356,14 +356,14 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 |---|-----------|----------|-------|
 | 266 | AdoQueryToSheet | ADODB.Connection ile herhangi bir ODBC/OLEDB kaynağını sorgular | ✅ |
 | 267 | ConnectToPostgres | PostgreSQL ODBC ile sorgu çalıştırır | ✅ |
-| 268 | ConnectToOracle | Oracle ODP.NET / ODBC ile sorgu çalıştırır | ⬜ |
+| 268 | ConnectToOracle | Oracle ODP.NET / ODBC ile sorgu çalıştırır | ✅ |
 | 269 | BulkInsertToSqlServer | Sayfadaki veriyi SQL Server'a toplu ekler (BULK INSERT) | ✅ |
 | 270 | ExportQueryResultToExcel | SQL sorgu sonucunu yeni Excel dosyasına aktarır | ✅ |
-| 271 | SyncSheetWithDatabase | Sayfa ile veritabanı tablosunu iki yönlü senkronize eder | ⬜ |
+| 271 | SyncSheetWithDatabase | Sayfa ile veritabanı tablosunu iki yönlü senkronize eder | ✅ |
 | 272 | CallStoredProcedure | SQL Server saklı yordamını parametrelerle çağırır | ✅ |
 | 273 | GetDatabaseSchema | Tablo listesi ve sütun bilgilerini sayfaya döker | ✅ |
-| 274 | ExecuteTransactionalUpdate | BEGIN/COMMIT ile atomik güncelleme işlemi yapar | ⬜ |
-| 275 | MongoDbRestQuery | MongoDB Data API (REST) ile koleksiyon sorgular | ⬜ |
+| 274 | ExecuteTransactionalUpdate | BEGIN/COMMIT ile atomik güncelleme işlemi yapar | ✅ |
+| 275 | MongoDbRestQuery | MongoDB Data API (REST) ile koleksiyon sorgular | ✅ |
 
 ---
 
@@ -371,16 +371,16 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 276 | SendEmailWithOutlook | Outlook COM ile konu+alıcı+ek ile e-posta gönderir | ⬜ |
-| 277 | SendEmailSmtp | SMTP/CDO.Message ile e-posta gönderir | ⬜ |
-| 278 | ReadInboxEmails | Outlook InboxItems'ten son N e-postayı sayfaya listeler | ⬜ |
-| 279 | ReplyToEmail | Belirtilen EntryID'li e-postayı yanıtlar | ⬜ |
-| 280 | CreateOutlookAppointment | Takvim randevusu oluşturur (başlık, yer, tarih, süre) | ⬜ |
-| 281 | CreateOutlookTask | Görev oluşturur, son tarih ve öncelik atar | ⬜ |
-| 282 | SendBulkEmail | Sayfadaki alıcı listesine kişiselleştirilmiş toplu e-posta | ⬜ |
-| 283 | ExportContactsToVcard | Outlook kişilerini .vcf formatında dışa aktarır | ⬜ |
-| 284 | SendWhatsAppMessage | WhatsApp Business API ile mesaj gönderir | ⬜ |
-| 285 | SendSmsViaTwilio | Twilio REST API ile SMS gönderir | ⬜ |
+| 276 | SendEmailWithOutlook | Outlook COM ile konu+alıcı+ek ile e-posta gönderir | ✅ |
+| 277 | SendEmailSmtp | SMTP/CDO.Message ile e-posta gönderir | ✅ |
+| 278 | ReadInboxEmails | Outlook InboxItems'ten son N e-postayı sayfaya listeler | ✅ |
+| 279 | ReplyToEmail | Belirtilen EntryID'li e-postayı yanıtlar | ✅ |
+| 280 | CreateOutlookAppointment | Takvim randevusu oluşturur (başlık, yer, tarih, süre) | ✅ |
+| 281 | CreateOutlookTask | Görev oluşturur, son tarih ve öncelik atar | ✅ |
+| 282 | SendBulkEmail | Sayfadaki alıcı listesine kişiselleştirilmiş toplu e-posta | ✅ |
+| 283 | ExportContactsToVcard | Outlook kişilerini .vcf formatında dışa aktarır | ✅ |
+| 284 | SendWhatsAppMessage | WhatsApp Business API ile mesaj gönderir | ✅ |
+| 285 | SendSmsViaTwilio | Twilio REST API ile SMS gönderir | ✅ |
 
 ---
 
@@ -388,16 +388,16 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 286 | CaptureActiveWindow | Sadece Excel penceresinin ekran görüntüsünü alır | ⬜ |
-| 287 | InsertImageFromUrl | URL'den resim indirip aktif hücreye ekler | ⬜ |
-| 288 | ResizeAllImages | Sayfadaki tüm resimleri belirtilen boyuta küçültür | ⬜ |
-| 289 | ExtractImagesFromSheet | Sayfadaki tüm resimleri klasöre kaydeder | ⬜ |
-| 290 | GenerateQrCodeImage | QR kod PNG'sini oluşturup hücreye ekler | ⬜ |
-| 291 | ConvertImageFormat | JPG/PNG/BMP dönüşümü (Shell ImageMagick veya WIA) | ⬜ |
-| 292 | AddLogoToAllSheets | Tüm sayfalara şirket logosunu belirli konuma ekler | ⬜ |
-| 293 | RecordMacroToGif | Makro çalışırken ekranı GIF olarak kaydeder | ⬜ |
-| 294 | PlayAudioFile | .wav/.mp3 dosyasını çalar (Windows Media Player COM) | ⬜ |
-| 295 | TextToSpeech | Metin okuma — SAPI.SpVoice ile Türkçe/İngilizce seslendirme | ⬜ |
+| 286 | CaptureActiveWindow | Sadece Excel penceresinin ekran görüntüsünü alır | ✅ |
+| 287 | InsertImageFromUrl | URL'den resim indirip aktif hücreye ekler | ✅ |
+| 288 | ResizeAllImages | Sayfadaki tüm resimleri belirtilen boyuta küçültür | ✅ |
+| 289 | ExtractImagesFromSheet | Sayfadaki tüm resimleri klasöre kaydeder | ✅ |
+| 290 | GenerateQrCodeImage | QR kod PNG'sini oluşturup hücreye ekler | ✅ |
+| 291 | ConvertImageFormat | JPG/PNG/BMP dönüşümü (Shell ImageMagick veya WIA) | ✅ |
+| 292 | AddLogoToAllSheets | Tüm sayfalara şirket logosunu belirli konuma ekler | ✅ |
+| 293 | RecordMacroToGif | Makro çalışırken ekranı GIF olarak kaydeder | ✅ |
+| 294 | PlayAudioFile | .wav/.mp3 dosyasını çalar (Windows Media Player COM) | ✅ |
+| 295 | TextToSpeech | Metin okuma — SAPI.SpVoice ile Türkçe/İngilizce seslendirme | ✅ |
 
 ---
 
@@ -405,16 +405,16 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 296 | AutoFillFormFromApi | API'den gelen veriyle UserForm alanlarını otomatik doldurur | ⬜ |
-| 297 | ChainModulesSequentially | Parametre listesiyle modülleri sıralı zincirleme çalıştırır | ⬜ |
-| 298 | RunModuleOnAllWorkbooks | Açık tüm workbook'lara modülü uygular | ⬜ |
-| 299 | ConditionalModuleRunner | Koşul sağlanırsa A modülü, yoksa B modülü çalıştırır | ⬜ |
-| 300 | RetryOnFailure | Başarısız modülü N kez yeniden dener, başarısızsa loglar | ⬜ |
-| 301 | ParallelModuleRunner | Birden fazla modülü sözde paralel (hızlı ardışık) çalıştırır | ⬜ |
+| 296 | AutoFillFormFromApi | API'den gelen veriyle UserForm alanlarını otomatik doldurur | ✅ |
+| 297 | ChainModulesSequentially | Parametre listesiyle modülleri sıralı zincirleme çalıştırır | ✅ |
+| 298 | RunModuleOnAllWorkbooks | Açık tüm workbook'lara modülü uygular | ✅ |
+| 299 | ConditionalModuleRunner | Koşul sağlanırsa A modülü, yoksa B modülü çalıştırır | ✅ |
+| 300 | RetryOnFailure | Başarısız modülü N kez yeniden dener, başarısızsa loglar | ✅ |
+| 301 | ParallelModuleRunner | Birden fazla modülü sözde paralel (hızlı ardışık) çalıştırır | ✅ |
 | 302 | ModuleVersionControl | Modülün son çalışma tarihini ve versiyonunu registry'e yazar| ✅ |
-| 303 | AutoDocumentWorkbook | Tüm sayfa/formül/named-range bilgisini dokümana döker | ⬜ |
-| 304 | WorkflowEngine | JSON tanımlı iş akışını adım adım çalıştırır | ⬜ |
-| 305 | RemoteConfigLoader | Sunucudan yapılandırma JSON'u çekip registry'e yazar | ⬜ |
+| 303 | AutoDocumentWorkbook | Tüm sayfa/formül/named-range bilgisini dokümana döker | ✅ |
+| 304 | WorkflowEngine | JSON tanımlı iş akışını adım adım çalıştırır | ✅ |
+| 305 | RemoteConfigLoader | Sunucudan yapılandırma JSON'u çekip registry'e yazar | ✅ |
 
 ---
 
@@ -530,21 +530,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 306 | GetDomainUsers | Domain'deki tüm kullanıcıları PS ADSI ile listeler | ⬜ |
-| 307 | GetLocalUsers | Yerel kullanıcı hesaplarını (etkin/pasif) listeler | ⬜ |
-| 308 | GetLocalAdmins | Yerel Administrators grubundaki hesapları listeler | ⬜ |
-| 309 | GetGroupMembers | param=`GroupName` ile gruptaki üyeleri döndürür | ⬜ |
-| 310 | AddUserToLocalGroup | Kullanıcıyı yerel gruba ekler (admin gerekir) | ⬜ |
-| 311 | RemoveUserFromLocalGroup | Kullanıcıyı yerel gruptan çıkarır | ⬜ |
-| 312 | CreateLocalUser | Yeni yerel kullanıcı oluşturur, parola atar | ⬜ |
-| 313 | DisableLocalUser | Yerel kullanıcı hesabını devre dışı bırakır | ⬜ |
-| 314 | ResetLocalUserPassword | Yerel kullanıcı parolasını sıfırlar | ⬜ |
-| 315 | GetDomainControllerInfo | DC adı, site, FSMO rolleri hakkında bilgi alır | ⬜ |
-| 316 | CheckDomainConnectivity | Domain Controller'a bağlantı testi yapar | ⬜ |
-| 317 | GetCurrentUserGroups | Oturumu açık kullanıcının üye olduğu grupları listeler | ⬜ |
-| 318 | GetComputerOuPath | Bilgisayarın OU hiyerarşisini döndürür | ⬜ |
-| 319 | GetDomainPasswordPolicy | Domain parola politikasını (uzunluk, karmaşıklık) okur | ⬜ |
-| 320 | QueryActiveDirectoryLdap | LDAP sorgusu çalıştırır, sonucu sayfaya yazar | ⬜ |
+| 306 | GetDomainUsers | Domain'deki tüm kullanıcıları PS ADSI ile listeler | ✅ |
+| 307 | GetLocalUsers | Yerel kullanıcı hesaplarını (etkin/pasif) listeler | ✅ |
+| 308 | GetLocalAdmins | Yerel Administrators grubundaki hesapları listeler | ✅ |
+| 309 | GetGroupMembers | param=`GroupName` ile gruptaki üyeleri döndürür | ✅ |
+| 310 | AddUserToLocalGroup | Kullanıcıyı yerel gruba ekler (admin gerekir) | ✅ |
+| 311 | RemoveUserFromLocalGroup | Kullanıcıyı yerel gruptan çıkarır | ✅ |
+| 312 | CreateLocalUser | Yeni yerel kullanıcı oluşturur, parola atar | ✅ |
+| 313 | DisableLocalUser | Yerel kullanıcı hesabını devre dışı bırakır | ✅ |
+| 314 | ResetLocalUserPassword | Yerel kullanıcı parolasını sıfırlar | ✅ |
+| 315 | GetDomainControllerInfo | DC adı, site, FSMO rolleri hakkında bilgi alır | ✅ |
+| 316 | CheckDomainConnectivity | Domain Controller'a bağlantı testi yapar | ✅ |
+| 317 | GetCurrentUserGroups | Oturumu açık kullanıcının üye olduğu grupları listeler | ✅ |
+| 318 | GetComputerOuPath | Bilgisayarın OU hiyerarşisini döndürür | ✅ |
+| 319 | GetDomainPasswordPolicy | Domain parola politikasını (uzunluk, karmaşıklık) okur | ✅ |
+| 320 | QueryActiveDirectoryLdap | LDAP sorgusu çalıştırır, sonucu sayfaya yazar | ✅ |
 
 ---
 
@@ -552,21 +552,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 321 | GetPerformanceCounters | CPU, RAM, Disk I/O performans sayaçlarını anlık okur | ⬜ |
-| 322 | GetApplicationEventLog | Son N uygulama olay günlüğü kaydını listeler | ⬜ |
-| 323 | GetSystemEventLog | Son N sistem olay günlüğü kaydını listeler | ⬜ |
-| 324 | GetSecurityEventLog | Son N güvenlik olay günlüğü kaydını listeler | ⬜ |
-| 325 | TraceRouteToHost | `tracert` çıktısını hop'lar halinde sayfaya yazar | ⬜ |
-| 326 | CheckDnsResolution | Hostname'i DNS ile çözümler, A/CNAME kayıtlarını gösterir | ⬜ |
-| 327 | GetNetworkStatistics | `netstat` çıktısını parse edip aktif bağlantıları listeler | ⬜ |
-| 328 | ProfileCodeRuntime | Belirtilen modülün çalışma süresini ms olarak ölçer | ⬜ |
-| 329 | GetWindowsReliabilityHistory | Güvenilirlik endeksi tarihçesini PS ile alır | ⬜ |
-| 330 | GenerateDiagnosticsReport | CPU/RAM/Disk/Event log özetini tek sayfada raporlar | ⬜ |
-| 331 | MonitorCpuSpike | CPU kullanımı eşiği aşarsa bildirim gönderir | ⬜ |
-| 332 | GetBootTime | Son yeniden başlatma zamanını döndürür | ⬜ |
-| 333 | GetTopCpuProcesses | En fazla CPU kullanan 10 process'i listeler | ⬜ |
-| 334 | GetTopMemoryProcesses | En fazla RAM kullanan 10 process'i listeler | ⬜ |
-| 335 | AnalyzeDiskUsageByFolder | Klasör bazında disk kullanımını ağaç yapısında gösterir | ⬜ |
+| 321 | GetPerformanceCounters | CPU, RAM, Disk I/O performans sayaçlarını anlık okur | ✅ |
+| 322 | GetApplicationEventLog | Son N uygulama olay günlüğü kaydını listeler | ✅ |
+| 323 | GetSystemEventLog | Son N sistem olay günlüğü kaydını listeler | ✅ |
+| 324 | GetSecurityEventLog | Son N güvenlik olay günlüğü kaydını listeler | ✅ |
+| 325 | TraceRouteToHost | `tracert` çıktısını hop'lar halinde sayfaya yazar | ✅ |
+| 326 | CheckDnsResolution | Hostname'i DNS ile çözümler, A/CNAME kayıtlarını gösterir | ✅ |
+| 327 | GetNetworkStatistics | `netstat` çıktısını parse edip aktif bağlantıları listeler | ✅ |
+| 328 | ProfileCodeRuntime | Belirtilen modülün çalışma süresini ms olarak ölçer | ✅ |
+| 329 | GetWindowsReliabilityHistory | Güvenilirlik endeksi tarihçesini PS ile alır | ✅ |
+| 330 | GenerateDiagnosticsReport | CPU/RAM/Disk/Event log özetini tek sayfada raporlar | ✅ |
+| 331 | MonitorCpuSpike | CPU kullanımı eşiği aşarsa bildirim gönderir | ✅ |
+| 332 | GetBootTime | Son yeniden başlatma zamanını döndürür | ✅ |
+| 333 | GetTopCpuProcesses | En fazla CPU kullanan 10 process'i listeler | ✅ |
+| 334 | GetTopMemoryProcesses | En fazla RAM kullanan 10 process'i listeler | ✅ |
+| 335 | AnalyzeDiskUsageByFolder | Klasör bazında disk kullanımını ağaç yapısında gösterir | ✅ |
 
 ---
 
@@ -574,21 +574,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 336 | PostToGoogleSheets | Google Sheets API v4 ile sayfaya veri yazar | ⬜ |
-| 337 | ReadFromGoogleSheets | Google Sheets'ten veri okur, Excel'e aktarır | ⬜ |
-| 338 | UploadToOneDrive | Microsoft Graph API ile dosyayı OneDrive'a yükler | ⬜ |
-| 339 | DownloadFromOneDrive | OneDrive'dan dosya indirir, yerel yola kaydeder | ⬜ |
-| 340 | PostToAirtable | Airtable REST API ile tablo kaydı ekler/günceller | ⬜ |
-| 341 | ReadFromNotion | Notion API ile veritabanı sorgusu çalıştırır | ⬜ |
-| 342 | SendToZapierWebhook | Zapier catch-hook URL'ye JSON veri gönderir | ⬜ |
-| 343 | PostToJiraIssue | Jira REST API ile issue oluşturur | ⬜ |
-| 344 | GetFromSalesforceApi | Salesforce REST API ile nesne sorgular (SOQL) | ⬜ |
-| 345 | SyncToTrelloBoard | Trello API ile kart oluşturur veya günceller | ⬜ |
-| 346 | UploadToAwsS3 | AWS S3 REST (Signature V4) ile dosya yükler | ⬜ |
-| 347 | UploadToAzureBlob | Azure Blob Storage SAS URL ile dosya yükler | ⬜ |
-| 348 | FetchFromFirebase | Firebase REST API ile Realtime DB okur | ⬜ |
-| 349 | PostToSupabase | Supabase REST API ile tablo kaydı ekler | ⬜ |
-| 350 | SendToMakeWebhook | Make.com (Integromat) webhook'a veri gönderir | ⬜ |
+| 336 | PostToGoogleSheets | Google Sheets API v4 ile sayfaya veri yazar | ✅ |
+| 337 | ReadFromGoogleSheets | Google Sheets'ten veri okur, Excel'e aktarır | ✅ |
+| 338 | UploadToOneDrive | Microsoft Graph API ile dosyayı OneDrive'a yükler | ✅ |
+| 339 | DownloadFromOneDrive | OneDrive'dan dosya indirir, yerel yola kaydeder | ✅ |
+| 340 | PostToAirtable | Airtable REST API ile tablo kaydı ekler/günceller | ✅ |
+| 341 | ReadFromNotion | Notion API ile veritabanı sorgusu çalıştırır | ✅ |
+| 342 | SendToZapierWebhook | Zapier catch-hook URL'ye JSON veri gönderir | ✅ |
+| 343 | PostToJiraIssue | Jira REST API ile issue oluşturur | ✅ |
+| 344 | GetFromSalesforceApi | Salesforce REST API ile nesne sorgular (SOQL) | ✅ |
+| 345 | SyncToTrelloBoard | Trello API ile kart oluşturur veya günceller | ✅ |
+| 346 | UploadToAwsS3 | AWS S3 REST (Signature V4) ile dosya yükler | ✅ |
+| 347 | UploadToAzureBlob | Azure Blob Storage SAS URL ile dosya yükler | ✅ |
+| 348 | FetchFromFirebase | Firebase REST API ile Realtime DB okur | ✅ |
+| 349 | PostToSupabase | Supabase REST API ile tablo kaydı ekler | ✅ |
+| 350 | SendToMakeWebhook | Make.com (Integromat) webhook'a veri gönderir | ✅ |
 
 ---
 
@@ -596,21 +596,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 351 | ScanOpenPorts | Belirtilen host'un açık portlarını TCP ile tarar | ⬜ |
-| 352 | GetActiveConnections | Aktif TCP/UDP bağlantılarını ve process'lerini listeler | ⬜ |
-| 353 | DetectSuspiciousProcesses | Bilinen zararlı yazılım adlarıyla process listesini karşılaştırır | ⬜ |
-| 354 | CheckWindowsDefenderStatus | Windows Defender real-time protection durumunu kontrol eder | ⬜ |
-| 355 | GetLastLoginEvents | Son 10 başarılı/başarısız oturum açma olayını listeler | ⬜ |
-| 356 | EncryptFileAES | AES-256 (PS Cmdlet) ile dosyayı şifreler | ⬜ |
-| 357 | DecryptFileAES | AES-256 şifreli dosyayı çözer | ⬜ |
-| 358 | GenerateRandomToken | Kriptografik olarak güçlü rastgele token üretir | ⬜ |
-| 359 | HashFilesSha256 | Klasördeki tüm dosyaların SHA-256 hash'ini hesaplar | ⬜ |
-| 360 | CheckCertificateExpiry | Windows sertifika deposundaki sertifikaların sona erme tarihini kontrol eder | ⬜ |
-| 361 | GetInstalledAntivirus | Yüklü antivirüs yazılımlarını WMI ile listeler | ⬜ |
-| 362 | DisableUsbStorage | USB depolama sürücüsünü registry üzerinden devre dışı bırakır | ⬜ |
-| 363 | EnableUsbStorage | USB depolama sürücüsünü yeniden etkinleştirir | ⬜ |
-| 364 | GetAppLockerPolicy | AppLocker kurallarını listeler | ⬜ |
-| 365 | ScanFolderForMalware | Defender CLI ile belirli klasörü tarar | ⬜ |
+| 351 | ScanOpenPorts | Belirtilen host'un açık portlarını TCP ile tarar | ✅ |
+| 352 | GetActiveConnections | Aktif TCP/UDP bağlantılarını ve process'lerini listeler | ✅ |
+| 353 | DetectSuspiciousProcesses | Bilinen zararlı yazılım adlarıyla process listesini karşılaştırır | ✅ |
+| 354 | CheckWindowsDefenderStatus | Windows Defender real-time protection durumunu kontrol eder | ✅ |
+| 355 | GetLastLoginEvents | Son 10 başarılı/başarısız oturum açma olayını listeler | ✅ |
+| 356 | EncryptFileAES | AES-256 (PS Cmdlet) ile dosyayı şifreler | ✅ |
+| 357 | DecryptFileAES | AES-256 şifreli dosyayı çözer | ✅ |
+| 358 | GenerateRandomToken | Kriptografik olarak güçlü rastgele token üretir | ✅ |
+| 359 | HashFilesSha256 | Klasördeki tüm dosyaların SHA-256 hash'ini hesaplar | ✅ |
+| 360 | CheckCertificateExpiry | Windows sertifika deposundaki sertifikaların sona erme tarihini kontrol eder | ✅ |
+| 361 | GetInstalledAntivirus | Yüklü antivirüs yazılımlarını WMI ile listeler | ✅ |
+| 362 | DisableUsbStorage | USB depolama sürücüsünü registry üzerinden devre dışı bırakır | ✅ |
+| 363 | EnableUsbStorage | USB depolama sürücüsünü yeniden etkinleştirir | ✅ |
+| 364 | GetAppLockerPolicy | AppLocker kurallarını listeler | ✅ |
+| 365 | ScanFolderForMalware | Defender CLI ile belirli klasörü tarar | ✅ |
 
 ---
 
@@ -618,21 +618,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 366 | ExportAllModules | Aktif workbook'taki tüm VBA modüllerini .bas/.cls olarak dışa aktarır | ⬜ |
-| 367 | ImportModuleFromFile | .bas/.cls dosyasını workbook'a içe aktarır | ⬜ |
-| 368 | ListAllModulesInWorkbook | Mevcut workbook'taki tüm modülleri ve prosedürleri listeler | ⬜ |
-| 369 | ClearModuleContents | Belirtilen modülün kodunu temizler | ⬜ |
-| 370 | CompileVbaProject | VBA projesini derlemeye zorlayarak hataları raporlar | ⬜ |
-| 371 | BackupVbaModulesToZip | Tüm modülleri ZIP arşivine yedekler | ⬜ |
-| 372 | SyncModulesFromServer | Sunucudan güncel modülleri indirip workbook'u günceller | ⬜ |
-| 373 | GetProcedureList | Modüldeki tüm prosedürleri (Sub/Function) listeler | ⬜ |
-| 374 | RenameVbaModule | Modülün adını programatik olarak değiştirir | ⬜ |
-| 375 | AddModuleReference | VBA projesine referans (Tools > References) ekler | ⬜ |
-| 376 | RemoveModuleReference | VBA projesinden referansı kaldırır | ⬜ |
-| 377 | GetLineCountPerModule | Her modülün satır sayısını raporlar | ⬜ |
-| 378 | InjectCodeToModule | Varolan modüle programatik olarak kod ekler | ⬜ |
-| 379 | SearchInVbaCode | Tüm modüllerde metin arar, bulunan satırları raporlar | ⬜ |
-| 380 | ExportMacroToServer | Yerel makroyu sunucu API'sine POST eder | ⬜ |
+| 366 | ExportAllModules | Aktif workbook'taki tüm VBA modüllerini .bas/.cls olarak dışa aktarır | ✅ |
+| 367 | ImportModuleFromFile | .bas/.cls dosyasını workbook'a içe aktarır | ✅ |
+| 368 | ListAllModulesInWorkbook | Mevcut workbook'taki tüm modülleri ve prosedürleri listeler | ✅ |
+| 369 | ClearModuleContents | Belirtilen modülün kodunu temizler | ✅ |
+| 370 | CompileVbaProject | VBA projesini derlemeye zorlayarak hataları raporlar | ✅ |
+| 371 | BackupVbaModulesToZip | Tüm modülleri ZIP arşivine yedekler | ✅ |
+| 372 | SyncModulesFromServer | Sunucudan güncel modülleri indirip workbook'u günceller | ✅ |
+| 373 | GetProcedureList | Modüldeki tüm prosedürleri (Sub/Function) listeler | ✅ |
+| 374 | RenameVbaModule | Modülün adını programatik olarak değiştirir | ✅ |
+| 375 | AddModuleReference | VBA projesine referans (Tools > References) ekler | ✅ |
+| 376 | RemoveModuleReference | VBA projesinden referansı kaldırır | ✅ |
+| 377 | GetLineCountPerModule | Her modülün satır sayısını raporlar | ✅ |
+| 378 | InjectCodeToModule | Varolan modüle programatik olarak kod ekler | ✅ |
+| 379 | SearchInVbaCode | Tüm modüllerde metin arar, bulunan satırları raporlar | ✅ |
+| 380 | ExportMacroToServer | Yerel makroyu sunucu API'sine POST eder | ✅ |
 
 ---
 
@@ -640,18 +640,18 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 381 | GetInstalledPrinters | Yüklü yazıcıları ve varsayılan yazıcıyı listeler | ⬜ |
-| 382 | PrintSheetWithSettings | param=`{"printer":"HP LaserJet","copies":2}` ile sayfa yazdırır | ⬜ |
-| 383 | SetDefaultPrinter | Varsayılan yazıcıyı değiştirir | ⬜ |
-| 384 | GetPrinterStatus | Yazıcı kuyruğunu ve durumunu kontrol eder | ⬜ |
-| 385 | PrintRangeToPdf | Belirtilen aralığı PDF olarak yazdırır | ⬜ |
-| 386 | GenerateWordReport | Word COM ile rapor şablonunu doldurur, kaydeder | ⬜ |
-| 387 | FillWordTemplate | .docx şablonundaki yer tutucuları JSON verisiyle doldurur | ⬜ |
-| 388 | ConvertWordToPdf | Word dosyasını PDF'e dönüştürür (Word COM) | ⬜ |
-| 389 | MergeWordDocuments | Birden fazla .docx dosyasını birleştirir | ⬜ |
-| 390 | ExtractTextFromWord | .docx dosyasından düz metin çıkartır | ⬜ |
-| 391 | PrintWithWatermark | Sayfaya filigran ekleyip yazdırır | ⬜ |
-| 392 | ExportToCsvAndPrint | Sayfayı CSV'ye aktarıp varsayılan programda açar | ⬜ |
+| 381 | GetInstalledPrinters | Yüklü yazıcıları ve varsayılan yazıcıyı listeler | ✅ |
+| 382 | PrintSheetWithSettings | param=`{"printer":"HP LaserJet","copies":2}` ile sayfa yazdırır | ✅ |
+| 383 | SetDefaultPrinter | Varsayılan yazıcıyı değiştirir | ✅ |
+| 384 | GetPrinterStatus | Yazıcı kuyruğunu ve durumunu kontrol eder | ✅ |
+| 385 | PrintRangeToPdf | Belirtilen aralığı PDF olarak yazdırır | ✅ |
+| 386 | GenerateWordReport | Word COM ile rapor şablonunu doldurur, kaydeder | ✅ |
+| 387 | FillWordTemplate | .docx şablonundaki yer tutucuları JSON verisiyle doldurur | ✅ |
+| 388 | ConvertWordToPdf | Word dosyasını PDF'e dönüştürür (Word COM) | ✅ |
+| 389 | MergeWordDocuments | Birden fazla .docx dosyasını birleştirir | ✅ |
+| 390 | ExtractTextFromWord | .docx dosyasından düz metin çıkartır | ✅ |
+| 391 | PrintWithWatermark | Sayfaya filigran ekleyip yazdırır | ✅ |
+| 392 | ExportToCsvAndPrint | Sayfayı CSV'ye aktarıp varsayılan programda açar | ✅ |
 
 ---
 
@@ -659,26 +659,26 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 393 | GenerateReportFromTemplate | Şablon sayfasını klonlayıp JSON verisiyle doldurur | ⬜ |
-| 394 | ApplyThemeToWorkbook | Workbook'a önceden tanımlanmış tema uygular | ⬜ |
-| 395 | CreateDashboardSheet | KPI kartları, sparkline ve özet tablolarla dashboard oluşturur | ⬜ |
-| 396 | AutoGenerateChartsForAllSheets | Her sayfa için otomatik grafik üretir | ⬜ |
-| 397 | SetWorkbookMetadata | Yazar, şirket, başlık, anahtar kelime meta verilerini atar | ⬜ |
-| 398 | AddHyperlinksFromSheet | A sütunundaki URL'leri tıklanabilir bağlantıya çevirir | ⬜ |
-| 399 | ValidateSheetWithSchema | JSON şemasına göre sütun tipi doğrulaması yapar | ⬜ |
-| 400 | ImportDataFromRestApi | REST API endpoint'inden sayfa verisi yeniler (Power Query alternatifi) | ⬜ |
-| 401 | AutoFormatAsTable | Seçili aralığı stillendirilmiş Excel tablosuna dönüştürür | ⬜ |
-| 402 | AddSparklinesToColumn | Belirtilen sütuna satır bazlı sparkline ekler | ⬜ |
-| 403 | ProtectFormulaColumns | Formül içeren tüm sütunları otomatik kilitler | ⬜ |
-| 404 | ClearValidationRules | Sayfadaki tüm veri doğrulama kurallarını kaldırır | ⬜ |
-| 405 | ApplyDropdownFromList | Belirtilen aralığa açılır liste doğrulaması ekler | ⬜ |
-| 406 | CreateHeatmapConditional | Değerlere göre yeşil-sarı-kırmızı ısı haritası uygular | ⬜ |
-| 407 | BuildDynamicQueryTable | Web URL'den QueryTable oluşturur, otomatik yenileme ayarlar | ⬜ |
-| 408 | GeneratePivotTableReport | Veri aralığından programatik PivotTable raporu oluşturur | ⬜ |
-| 409 | ExportRangeAsImage | Belirtilen aralığı PNG görüntüsüne dönüştürür | ⬜ |
-| 410 | SyncNamedRangeToServer | Adlandırılmış bölgenin verilerini sunucuya gönderir | ⬜ |
-| 411 | BuildMultiSheetWorkbook | Parametre listesindeki sayfa adlarıyla yeni workbook oluşturur | ⬜ |
-| 412 | AutoFillFromLookupTable | VLOOKUP yerine VBA ile büyük tablodan toplu doldurma | ⬜ |
+| 393 | GenerateReportFromTemplate | Şablon sayfasını klonlayıp JSON verisiyle doldurur | ✅ |
+| 394 | ApplyThemeToWorkbook | Workbook'a önceden tanımlanmış tema uygular | ✅ |
+| 395 | CreateDashboardSheet | KPI kartları, sparkline ve özet tablolarla dashboard oluşturur | ✅ |
+| 396 | AutoGenerateChartsForAllSheets | Her sayfa için otomatik grafik üretir | ✅ |
+| 397 | SetWorkbookMetadata | Yazar, şirket, başlık, anahtar kelime meta verilerini atar | ✅ |
+| 398 | AddHyperlinksFromSheet | A sütunundaki URL'leri tıklanabilir bağlantıya çevirir | ✅ |
+| 399 | ValidateSheetWithSchema | JSON şemasına göre sütun tipi doğrulaması yapar | ✅ |
+| 400 | ImportDataFromRestApi | REST API endpoint'inden sayfa verisi yeniler (Power Query alternatifi) | ✅ |
+| 401 | AutoFormatAsTable | Seçili aralığı stillendirilmiş Excel tablosuna dönüştürür | ✅ |
+| 402 | AddSparklinesToColumn | Belirtilen sütuna satır bazlı sparkline ekler | ✅ |
+| 403 | ProtectFormulaColumns | Formül içeren tüm sütunları otomatik kilitler | ✅ |
+| 404 | ClearValidationRules | Sayfadaki tüm veri doğrulama kurallarını kaldırır | ✅ |
+| 405 | ApplyDropdownFromList | Belirtilen aralığa açılır liste doğrulaması ekler | ✅ |
+| 406 | CreateHeatmapConditional | Değerlere göre yeşil-sarı-kırmızı ısı haritası uygular | ✅ |
+| 407 | BuildDynamicQueryTable | Web URL'den QueryTable oluşturur, otomatik yenileme ayarlar | ✅ |
+| 408 | GeneratePivotTableReport | Veri aralığından programatik PivotTable raporu oluşturur | ✅ |
+| 409 | ExportRangeAsImage | Belirtilen aralığı PNG görüntüsüne dönüştürür | ✅ |
+| 410 | SyncNamedRangeToServer | Adlandırılmış bölgenin verilerini sunucuya gönderir | ✅ |
+| 411 | BuildMultiSheetWorkbook | Parametre listesindeki sayfa adlarıyla yeni workbook oluşturur | ✅ |
+| 412 | AutoFillFromLookupTable | VLOOKUP yerine VBA ile büyük tablodan toplu doldurma | ✅ |
 
 ---
 
@@ -686,18 +686,18 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 413 | SyncToNetworkShare | Yerel klasörü ağ paylaşımıyla senkronize eder | ⬜ |
-| 414 | BackupToFtpServer | FTP ile dosyaları uzak sunucuya yedekler | ⬜ |
-| 415 | DownloadFromFtp | FTP sunucusundan dosya indirir | ⬜ |
-| 416 | IncrementalBackup | Sadece değişen dosyaları yedekler (hash karşılaştırma) | ⬜ |
-| 417 | VerifyBackupIntegrity | Yedek dosyaların orijinalle MD5 eşleşmesini kontrol eder | ⬜ |
-| 418 | RotateBackupFiles | En eski yedekleri silerek N adet yedek tutar | ⬜ |
-| 419 | MirrorFolderStructure | Klasör yapısını (boş klasörler dahil) hedefe kopyalar | ⬜ |
-| 420 | CompressAndUpload | Klasörü ZIP'ler ve sunucuya yükler | ⬜ |
-| 421 | DownloadAndExtract | Sunucudan ZIP indirir, belirtilen klasöre açar | ⬜ |
-| 422 | CheckSyncStatus | İki klasörün senkronizasyon durumunu raporlar | ⬜ |
-| 423 | ScheduleBackupTask | Windows görev zamanlayıcıya yedekleme görevi ekler | ⬜ |
-| 424 | RestoreFromBackup | Yedekten belirtilen dosyaları geri yükler | ⬜ |
+| 413 | SyncToNetworkShare | Yerel klasörü ağ paylaşımıyla senkronize eder | ✅ |
+| 414 | BackupToFtpServer | FTP ile dosyaları uzak sunucuya yedekler | ✅ |
+| 415 | DownloadFromFtp | FTP sunucusundan dosya indirir | ✅ |
+| 416 | IncrementalBackup | Sadece değişen dosyaları yedekler (hash karşılaştırma) | ✅ |
+| 417 | VerifyBackupIntegrity | Yedek dosyaların orijinalle MD5 eşleşmesini kontrol eder | ✅ |
+| 418 | RotateBackupFiles | En eski yedekleri silerek N adet yedek tutar | ✅ |
+| 419 | MirrorFolderStructure | Klasör yapısını (boş klasörler dahil) hedefe kopyalar | ✅ |
+| 420 | CompressAndUpload | Klasörü ZIP'ler ve sunucuya yükler | ✅ |
+| 421 | DownloadAndExtract | Sunucudan ZIP indirir, belirtilen klasöre açar | ✅ |
+| 422 | CheckSyncStatus | İki klasörün senkronizasyon durumunu raporlar | ✅ |
+| 423 | ScheduleBackupTask | Windows görev zamanlayıcıya yedekleme görevi ekler | ✅ |
+| 424 | RestoreFromBackup | Yedekten belirtilen dosyaları geri yükler | ✅ |
 
 ---
 
@@ -705,21 +705,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 425 | TranslateTextDeepL | DeepL API ile metin çevirisi (param=`{"text":"...","target":"TR"}`) | ⬜ |
-| 426 | TranslateTextGoogle | Google Cloud Translation API ile metin çevirisi | ⬜ |
-| 427 | DetectLanguage | Metnin dilini tespit eder (langdetect API) | ⬜ |
-| 428 | SpellCheckText | Hunspell/PS ile Türkçe yazım denetimi yapar | ⬜ |
-| 429 | ExtractKeywords | TF-IDF benzeri yöntemle metinden anahtar kelimeler çıkartır | ⬜ |
-| 430 | SummarizeText | Cümleleri önem sırasına göre sıralayıp özet oluşturur | ⬜ |
-| 431 | ConvertTurkishChars | Türkçe karakterleri ASCII'ye dönüştürür (ğ→g, ş→s vb.) | ⬜ |
-| 432 | ParseTurkishDate | "15 Ocak 2025" formatını Date türüne çevirir | ⬜ |
-| 433 | GenerateSlug | Başlığı URL-dostu slug formatına dönüştürür | ⬜ |
-| 434 | MaskSensitiveData | TC kimlik, IBAN, kredi kartı numaralarını maskeler | ⬜ |
-| 435 | RegexExtract | VBScript.RegExp ile metinden pattern çıkartır | ⬜ |
-| 436 | RegexReplace | VBScript.RegExp ile toplu metin dönüşümü yapar | ⬜ |
-| 437 | TokenizeText | Metni kelimelere/cümlelere böler, istatistik çıkartır | ⬜ |
-| 438 | FormatJsonString | JSON string'ini girintili okunabilir formata dönüştürür | ⬜ |
-| 439 | TextToSpeechSave | SAPI.SpVoice ile metni .wav dosyasına kaydeder | ⬜ |
+| 425 | TranslateTextDeepL | DeepL API ile metin çevirisi (param=`{"text":"...","target":"TR"}`) | ✅ |
+| 426 | TranslateTextGoogle | Google Cloud Translation API ile metin çevirisi | ✅ |
+| 427 | DetectLanguage | Metnin dilini tespit eder (langdetect API) | ✅ |
+| 428 | SpellCheckText | Hunspell/PS ile Türkçe yazım denetimi yapar | ✅ |
+| 429 | ExtractKeywords | TF-IDF benzeri yöntemle metinden anahtar kelimeler çıkartır | ✅ |
+| 430 | SummarizeText | Cümleleri önem sırasına göre sıralayıp özet oluşturur | ✅ |
+| 431 | ConvertTurkishChars | Türkçe karakterleri ASCII'ye dönüştürür (ğ→g, ş→s vb.) | ✅ |
+| 432 | ParseTurkishDate | "15 Ocak 2025" formatını Date türüne çevirir | ✅ |
+| 433 | GenerateSlug | Başlığı URL-dostu slug formatına dönüştürür | ✅ |
+| 434 | MaskSensitiveData | TC kimlik, IBAN, kredi kartı numaralarını maskeler | ✅ |
+| 435 | RegexExtract | VBScript.RegExp ile metinden pattern çıkartır | ✅ |
+| 436 | RegexReplace | VBScript.RegExp ile toplu metin dönüşümü yapar | ✅ |
+| 437 | TokenizeText | Metni kelimelere/cümlelere böler, istatistik çıkartır | ✅ |
+| 438 | FormatJsonString | JSON string'ini girintili okunabilir formata dönüştürür | ✅ |
+| 439 | TextToSpeechSave | SAPI.SpVoice ile metni .wav dosyasına kaydeder | ✅ |
 
 ---
 
@@ -727,27 +727,27 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 440 | GetInstalledWindowsFeatures | Yüklü Windows özelliklerini (Roles/Features) listeler | ⬜ |
-| 441 | EnableWindowsFeature | Belirtilen Windows özelliğini etkinleştirir | ⬜ |
-| 442 | DisableWindowsFeature | Belirtilen Windows özelliğini devre dışı bırakır | ⬜ |
-| 443 | GetPowerPlan | Aktif güç planını ve seçeneklerini listeler | ⬜ |
-| 444 | SetPowerPlan | Yüksek performans/güç tasarrufu planını aktif eder | ⬜ |
-| 445 | GetScreenSaverSettings | Ekran koruyucu bekleme süresi ve durum bilgisi | ⬜ |
-| 446 | DisableScreenSaver | Ekran koruyucuyu devre dışı bırakır | ⬜ |
-| 447 | GetAutoRunEntries | Autorun.inf girişlerini ve başlangıç lokasyonlarını listeler | ⬜ |
-| 448 | GetHotfixList | Yüklü Windows hotfix ve yamaları listeler | ⬜ |
-| 449 | CheckWindowsFirewallStatus | Güvenlik duvarı profil durumlarını (Domain/Private/Public) döndürür | ⬜ |
-| 450 | EnableWindowsFirewall | Tüm profillerde güvenlik duvarını etkinleştirir | ⬜ |
-| 451 | DisableWindowsFirewall | Güvenlik duvarını devre dışı bırakır (dikkat: güvenlik riski) | ⬜ |
-| 452 | GetSharedFolders | Paylaşılan klasörleri (net share) listeler | ⬜ |
-| 453 | CreateSharedFolder | Klasörü ağda paylaştırır, izin atar | ⬜ |
-| 454 | RemoveSharedFolder | Ağ paylaşımını kaldırır | ⬜ |
-| 455 | GetSystemRestorePoints | Sistem geri yükleme noktalarını listeler | ⬜ |
-| 456 | CreateSystemRestorePoint | Yeni sistem geri yükleme noktası oluşturur | ⬜ |
-| 457 | GetWindowsLicenseInfo | Windows lisans anahtarı ve aktivasyon durumu (WMI) | ⬜ |
-| 458 | GetComputerDescription | Bilgisayar açıklama metnini okur/yazar | ⬜ |
-| 459 | SetSystemTime | Sistem saatini ayarlar (admin gerekir) | ⬜ |
-| 460 | SyncSystemTimeNtp | NTP sunucusuyla saat senkronizasyonu yapar | ⬜ |
+| 440 | GetInstalledWindowsFeatures | Yüklü Windows özelliklerini (Roles/Features) listeler | ✅ |
+| 441 | EnableWindowsFeature | Belirtilen Windows özelliğini etkinleştirir | ✅ |
+| 442 | DisableWindowsFeature | Belirtilen Windows özelliğini devre dışı bırakır | ✅ |
+| 443 | GetPowerPlan | Aktif güç planını ve seçeneklerini listeler | ✅ |
+| 444 | SetPowerPlan | Yüksek performans/güç tasarrufu planını aktif eder | ✅ |
+| 445 | GetScreenSaverSettings | Ekran koruyucu bekleme süresi ve durum bilgisi | ✅ |
+| 446 | DisableScreenSaver | Ekran koruyucuyu devre dışı bırakır | ✅ |
+| 447 | GetAutoRunEntries | Autorun.inf girişlerini ve başlangıç lokasyonlarını listeler | ✅ |
+| 448 | GetHotfixList | Yüklü Windows hotfix ve yamaları listeler | ✅ |
+| 449 | CheckWindowsFirewallStatus | Güvenlik duvarı profil durumlarını (Domain/Private/Public) döndürür | ✅ |
+| 450 | EnableWindowsFirewall | Tüm profillerde güvenlik duvarını etkinleştirir | ✅ |
+| 451 | DisableWindowsFirewall | Güvenlik duvarını devre dışı bırakır (dikkat: güvenlik riski) | ✅ |
+| 452 | GetSharedFolders | Paylaşılan klasörleri (net share) listeler | ✅ |
+| 453 | CreateSharedFolder | Klasörü ağda paylaştırır, izin atar | ✅ |
+| 454 | RemoveSharedFolder | Ağ paylaşımını kaldırır | ✅ |
+| 455 | GetSystemRestorePoints | Sistem geri yükleme noktalarını listeler | ✅ |
+| 456 | CreateSystemRestorePoint | Yeni sistem geri yükleme noktası oluşturur | ✅ |
+| 457 | GetWindowsLicenseInfo | Windows lisans anahtarı ve aktivasyon durumu (WMI) | ✅ |
+| 458 | GetComputerDescription | Bilgisayar açıklama metnini okur/yazar | ✅ |
+| 459 | SetSystemTime | Sistem saatini ayarlar (admin gerekir) | ✅ |
+| 460 | SyncSystemTimeNtp | NTP sunucusuyla saat senkronizasyonu yapar | ✅ |
 
 ---
 
@@ -755,21 +755,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 461 | ValidateEmailAddress | RFC-5321 uyumlu e-posta adres doğrulaması (regex + MX kontrol) | ⬜ |
-| 462 | ValidateIpAddress | IPv4/IPv6 adres formatını doğrular | ⬜ |
-| 463 | ValidateUrl | URL formatını ve erişilebilirliğini kontrol eder | ⬜ |
-| 464 | ValidateCreditCard | Luhn algoritmasıyla kredi kartı numarası doğrular | ⬜ |
-| 465 | ValidateIbanNumber | IBAN kontrol basamağını doğrular | ⬜ |
-| 466 | ValidateTurkishPhone | Türkiye telefon formatı doğrulaması (+90 5xx xxx xx xx) | ⬜ |
-| 467 | CalculateDescriptiveStats | Min, Max, Ortalama, Medyan, Std sapma hesaplar | ⬜ |
-| 468 | DetectOutliersIqr | IQR yöntemiyle aykırı değerleri tespit eder | ⬜ |
-| 469 | CalculateCorrelation | İki sütun arasındaki Pearson korelasyonunu hesaplar | ⬜ |
-| 470 | FitLinearRegression | En küçük kareler yöntemiyle doğrusal regresyon | ⬜ |
-| 471 | MovingAverageSmoothing | Hareketli ortalama ile veri düzleştirme | ⬜ |
-| 472 | NormalizeDataMinMax | Veriyi 0-1 aralığına normalleştirir | ⬜ |
-| 473 | FrequencyDistribution | Belirtilen sütun için frekans dağılımı tablosu oluşturur | ⬜ |
-| 474 | CheckDataCompleteness | Eksik/boş hücre yüzdesini sütun bazında raporlar | ⬜ |
-| 475 | CompareColumnDifferences | İki sütun arasındaki farkları vurgular | ⬜ |
+| 461 | ValidateEmailAddress | RFC-5321 uyumlu e-posta adres doğrulaması (regex + MX kontrol) | ✅ |
+| 462 | ValidateIpAddress | IPv4/IPv6 adres formatını doğrular | ✅ |
+| 463 | ValidateUrl | URL formatını ve erişilebilirliğini kontrol eder | ✅ |
+| 464 | ValidateCreditCard | Luhn algoritmasıyla kredi kartı numarası doğrular | ✅ |
+| 465 | ValidateIbanNumber | IBAN kontrol basamağını doğrular | ✅ |
+| 466 | ValidateTurkishPhone | Türkiye telefon formatı doğrulaması (+90 5xx xxx xx xx) | ✅ |
+| 467 | CalculateDescriptiveStats | Min, Max, Ortalama, Medyan, Std sapma hesaplar | ✅ |
+| 468 | DetectOutliersIqr | IQR yöntemiyle aykırı değerleri tespit eder | ✅ |
+| 469 | CalculateCorrelation | İki sütun arasındaki Pearson korelasyonunu hesaplar | ✅ |
+| 470 | FitLinearRegression | En küçük kareler yöntemiyle doğrusal regresyon | ✅ |
+| 471 | MovingAverageSmoothing | Hareketli ortalama ile veri düzleştirme | ✅ |
+| 472 | NormalizeDataMinMax | Veriyi 0-1 aralığına normalleştirir | ✅ |
+| 473 | FrequencyDistribution | Belirtilen sütun için frekans dağılımı tablosu oluşturur | ✅ |
+| 474 | CheckDataCompleteness | Eksik/boş hücre yüzdesini sütun bazında raporlar | ✅ |
+| 475 | CompareColumnDifferences | İki sütun arasındaki farkları vurgular | ✅ |
 
 ---
 
@@ -777,21 +777,21 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 476 | ChainModulesSequentially | JSON listesiyle modülleri sıralı zincirleme çalıştırır | ⬜ |
-| 477 | RetryOnFailure | Başarısız modülü N kez yeniden dener, loglar | ⬜ |
-| 478 | ConditionalModuleRunner | Koşul sağlanırsa A modülü, yoksa B modülü çalıştırır | ⬜ |
-| 479 | RunModuleOnAllWorkbooks | Açık tüm workbook'lara belirtilen modülü uygular | ⬜ |
-| 480 | WorkflowEngine | JSON tanımlı adım-adım iş akışını yürütür | ⬜ |
-| 481 | ApprovalWorkflow | Onay gerektiren eylemleri kuyruğa alır, dashboard'dan onaylanır | ⬜ |
-| 482 | TriggerWebhookOnChange | Belirtilen hücre değiştiğinde webhook tetikler | ⬜ |
-| 483 | BatchProcessRows | Sayfadaki her satır için modülü döngüsel çalıştırır | ⬜ |
-| 484 | RunModuleWithTimeout | Modülü zaman aşımı kontrolüyle çalıştırır | ⬜ |
-| 485 | LogWorkflowStep | Her adımı zaman damgasıyla sunucuya loglar | ⬜ |
-| 486 | PauseAndResume | Uzun işlemlerde ara verip devam etme desteği sağlar | ⬜ |
-| 487 | ParallelBatchRunner | Birden fazla modülü hızlı ardışık çalıştırır | ⬜ |
-| 488 | AutoDocumentWorkbook | Tüm sayfa/formül/named-range bilgisini dokümana döker | ⬜ |
-| 489 | SendModuleResultSummary | Modül çalışma özetini e-posta/Telegram ile gönderir | ⬜ |
-| 490 | RollbackOnError | Hata durumunda önceki veriyi yedekten geri yükler | ⬜ |
+| 476 | ChainModulesSequentially | JSON listesiyle modülleri sıralı zincirleme çalıştırır | ✅ |
+| 477 | RetryOnFailure | Başarısız modülü N kez yeniden dener, loglar | ✅ |
+| 478 | ConditionalModuleRunner | Koşul sağlanırsa A modülü, yoksa B modülü çalıştırır | ✅ |
+| 479 | RunModuleOnAllWorkbooks | Açık tüm workbook'lara belirtilen modülü uygular | ✅ |
+| 480 | WorkflowEngine | JSON tanımlı adım-adım iş akışını yürütür | ✅ |
+| 481 | ApprovalWorkflow | Onay gerektiren eylemleri kuyruğa alır, dashboard'dan onaylanır | ✅ |
+| 482 | TriggerWebhookOnChange | Belirtilen hücre değiştiğinde webhook tetikler | ✅ |
+| 483 | BatchProcessRows | Sayfadaki her satır için modülü döngüsel çalıştırır | ✅ |
+| 484 | RunModuleWithTimeout | Modülü zaman aşımı kontrolüyle çalıştırır | ✅ |
+| 485 | LogWorkflowStep | Her adımı zaman damgasıyla sunucuya loglar | ✅ |
+| 486 | PauseAndResume | Uzun işlemlerde ara verip devam etme desteği sağlar | ✅ |
+| 487 | ParallelBatchRunner | Birden fazla modülü hızlı ardışık çalıştırır | ✅ |
+| 488 | AutoDocumentWorkbook | Tüm sayfa/formül/named-range bilgisini dokümana döker | ✅ |
+| 489 | SendModuleResultSummary | Modül çalışma özetini e-posta/Telegram ile gönderir | ✅ |
+| 490 | RollbackOnError | Hata durumunda önceki veriyi yedekten geri yükler | ✅ |
 
 ---
 
@@ -799,18 +799,18 @@ End Function
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 491 | FtpUploadFile | FTP (Passive Mode) ile dosya yükler | ⬜ |
-| 492 | FtpDownloadFile | FTP sunucusundan dosya indirir | ⬜ |
-| 493 | FtpListDirectory | FTP dizin içeriğini listeler | ⬜ |
-| 494 | SftpUploadFile | WinSCP COM ile SFTP dosya yükleme | ⬜ |
-| 495 | SshExecuteCommand | Plink.exe ile SSH komut çalıştırır, çıktıyı döndürür | ⬜ |
-| 496 | SendUdpPacket | WScript.Shell ile UDP paket gönderir (basit protokoller) | ⬜ |
-| 497 | GetNetworkRoutes | `route print` çıktısını parse ederek aktif yolları listeler | ⬜ |
-| 498 | GetArpTable | `arp -a` çıktısını IP-MAC eşleştirmesiyle listeler | ⬜ |
-| 499 | DiscoverNetworkDevices | Yerel ağdaki aktif IP adreslerini ping sweep ile bulur | ⬜ |
-| 500 | GetMacVendor | MAC adresi üreticisini API'den sorgular | ⬜ |
-| 501 | SetDnsServers | Adaptörün DNS sunucularını PS ile değiştirir | ⬜ |
-| 502 | EnableDhcp | Belirtilen adaptörü DHCP moduna geçirir | ⬜ |
-| 503 | GetVpnConnections | Yüklü VPN bağlantılarını ve durumlarını listeler | ⬜ |
-| 504 | ConnectVpn | Belirtilen VPN profiline bağlanır (rasdial) | ⬜ |
-| 505 | DisconnectVpn | Aktif VPN bağlantısını sonlandırır | ⬜ |
+| 491 | FtpUploadFile | FTP (Passive Mode) ile dosya yükler | ✅ |
+| 492 | FtpDownloadFile | FTP sunucusundan dosya indirir | ✅ |
+| 493 | FtpListDirectory | FTP dizin içeriğini listeler | ✅ |
+| 494 | SftpUploadFile | WinSCP COM ile SFTP dosya yükleme | ✅ |
+| 495 | SshExecuteCommand | Plink.exe ile SSH komut çalıştırır, çıktıyı döndürür | ✅ |
+| 496 | SendUdpPacket | WScript.Shell ile UDP paket gönderir (basit protokoller) | ✅ |
+| 497 | GetNetworkRoutes | `route print` çıktısını parse ederek aktif yolları listeler | ✅ |
+| 498 | GetArpTable | `arp -a` çıktısını IP-MAC eşleştirmesiyle listeler | ✅ |
+| 499 | DiscoverNetworkDevices | Yerel ağdaki aktif IP adreslerini ping sweep ile bulur | ✅ |
+| 500 | GetMacVendor | MAC adresi üreticisini API'den sorgular | ✅ |
+| 501 | SetDnsServers | Adaptörün DNS sunucularını PS ile değiştirir | ✅ |
+| 502 | EnableDhcp | Belirtilen adaptörü DHCP moduna geçirir | ✅ |
+| 503 | GetVpnConnections | Yüklü VPN bağlantılarını ve durumlarını listeler | ✅ |
+| 504 | ConnectVpn | Belirtilen VPN profiline bağlanır (rasdial) | ✅ |
+| 505 | DisconnectVpn | Aktif VPN bağlantısını sonlandırır | ✅ |
