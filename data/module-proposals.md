@@ -138,11 +138,11 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 103 | GetRedirectedUrl | Yönlendirme zincirinin son URL'sini bulur | ✅ |
 | 104 | BasicAuthGet | Basic Auth başlıklı GET isteği yapar | ✅ |
 | 105 | BearerTokenGet | Bearer token ile korumalı endpoint'ten veri alır | ✅ |
-| 106 | UploadExcelToSharePoint | SharePoint REST API ile Excel dosyasını yükler | ⬜ |
+| 106 | UploadExcelToSharePoint | SharePoint REST API ile Excel dosyasını yükler | ✅ |
 | 107 | GetWeatherData | OpenWeatherMap API ile hava durumu bilgisi çeker | ✅ |
 | 108 | FetchCurrencyHistory | Son 30 günlük döviz kuru tarihçesini sayfaya yazar | ✅ |
 | 109 | OAuthGetToken | OAuth 2.0 Client Credentials ile access token alır | ✅ |
-| 110 | WebhookListener | Belirli endpoint'i dinleyip gelen veriyi sayfaya yazar | ⬜ |
+| 110 | WebhookListener | Belirli endpoint'i dinleyip gelen veriyi sayfaya yazar | ✅ |
 
 ---
 
@@ -205,7 +205,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 156 | AddWatermarkToSheet | Sayfa arka planına metin filigran ekler | ✅ |
 | 157 | SendWorkbookByEmail | MAPI / Outlook COM ile dosyayı e-posta ekine ekler | ✅ |
 | 158 | CreateSummarySheet | Tüm sayfaların A1 değerlerini özet sayfada toplar | ✅ |
-| 159 | CompressAllImages | Sayfadaki resimlerin sıkıştırma kalitesini düşürür | ⬜ |
+| 159 | CompressAllImages | Sayfadaki resimlerin sıkıştırma kalitesini düşürür | ✅ |
 | 160 | TableToJsonAndPost | Seçili tabloyu JSON'a çevirip API'ye gönderir | ✅ |
 | 161 | CreateNamedRangeFromSelection | Seçimi adlandırılmış bölge olarak tanımlar | ✅ |
 | 162 | GeneratePivotFromData | Parametre ile belirtilen aralıktan otomatik pivot oluşturur | ✅ |
@@ -233,16 +233,16 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 177 | DecryptTextXor | XOR + Base64 ile metin çözme | ✅ |
 | 178 | CheckAdminRights | Yönetici haklarıyla çalışılıp çalışılmadığını kontrol eder | ✅ |
 | 179 | LockWorkbookOnExpiry | Lisans süresi dolduysa dosyayı kilitler + sunucuya bildirir | ✅ |
-| 180 | DetectCopyAndSelfDestruct | startingAddin kontrolü; ihlal varsa cleanup tetikler | ⬜ |
+| 180 | DetectCopyAndSelfDestruct | startingAddin kontrolü; ihlal varsa cleanup tetikler | ✅ |
 | 181 | AuditLogAction | Kullanıcı eylemini timestamp + mac + detail ile sunucuya loglar | ✅ |
-| 182 | ObfuscateSheetFormulas | Formülleri xlVeryHidden sayfalara taşıyarak gizler | ⬜ |
+| 182 | ObfuscateSheetFormulas | Formülleri xlVeryHidden sayfalara taşıyarak gizler | ✅ |
 | 183 | CheckDebuggerAttached | VBA debugger'ın çalışıp çalışmadığını tespit eder | ✅ |
-| 184 | EncryptCellRange | Seçili hücreleri RC4 algoritmasıyla şifreler | ⬜ |
-| 185 | DecryptCellRange | RC4 ile şifrelenmiş hücreleri çözer | ⬜ |
+| 184 | EncryptCellRange | Seçili hücreleri RC4 algoritmasıyla şifreler | ✅ |
+| 185 | DecryptCellRange | RC4 ile şifrelenmiş hücreleri çözer | ✅ |
 | 186 | BlacklistMacAddress | Kara listedeki MAC'leri sunucudan çekip erişimi engeller | ✅ |
 | 187 | TimeLimitedAccess | Belirli saat aralığı dışında dosyayı kilitler | ✅ |
 | 188 | IpWhitelistCheck | İzin verilen IP aralığında olup olmadığını kontrol eder | ✅ |
-| 189 | AntiScreenCapture | PrintScreen ve Snipping Tool'u geçici olarak engeller | ⬜ |
+| 189 | AntiScreenCapture | PrintScreen ve Snipping Tool'u geçici olarak engeller | ✅ |
 | 190 | WatermarkVisibleOnPrint | Baskı önizlemesinde görünür filigran ekler | ✅ |
 
 ---
@@ -252,8 +252,8 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
 | 191 | ShowToastNotification | Windows 10/11 baloncuk bildirimi (PS BurntToast) | ✅ |
-| 192 | ShowProgressBar | Özel UserForm ile %0→%100 ilerleme çubuğu | ⬜ |
-| 193 | ShowCustomInputForm | Çok alanlı giriş formu; sonuçları JSON döndürür | ⬜ |
+| 192 | ShowProgressBar | Özel UserForm ile %0→%100 ilerleme çubuğu | ✅ |
+| 193 | ShowCustomInputForm | Çok alanlı giriş formu; sonuçları JSON döndürür | ✅ |
 | 194 | ShowYesNoCancelDialog | Üç seçenekli dialog, seçimi string döndürür | ✅ |
 | 195 | PlaySystemSound | Windows ses teması çalar (Asterisk, Critical vb.) | ✅ |
 | 196 | OpenUrlInBrowser | Varsayılan tarayıcıda URL açar | ✅ |
@@ -261,14 +261,14 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 198 | SetExcelTitleBar | Excel başlık çubuğunu özelleştirir | ✅ |
 | 199 | ShowStatusBarProgress | Durum çubuğunda % göstergesiyle uzun işlem | ✅ |
 | 200 | FlashTaskbarIcon | Görev çubuğu simgesini yanıp söndürür (dikkat çekme) | ✅ |
-| 201 | ShowRibbonCustomGroup | Dinamik olarak Ribbon'a özel grup ekler | ⬜ |
-| 202 | HideRibbonCustomGroup | Eklenen özel Ribbon grubunu kaldırır | ⬜ |
-| 203 | ShowFloatingToolbar | Ekranın üstünde kayan mini araç çubuğu oluşturur | ⬜ |
-| 204 | ShowCountdownTimer | Geri sayım sayacı gösteren modeless UserForm | ⬜ |
-| 205 | DisplayQrCode | Değeri QR kod resmi olarak hücreye ekler | ⬜ |
+| 201 | ShowRibbonCustomGroup | Dinamik olarak Ribbon'a özel grup ekler | ✅ |
+| 202 | HideRibbonCustomGroup | Eklenen özel Ribbon grubunu kaldırır | ✅ |
+| 203 | ShowFloatingToolbar | Ekranın üstünde kayan mini araç çubuğu oluşturur | ✅ |
+| 204 | ShowCountdownTimer | Geri sayım sayacı gösteren modeless UserForm | ✅ |
+| 205 | DisplayQrCode | Değeri QR kod resmi olarak hücreye ekler | ✅ |
 | 206 | AnimateStatusMessage | Durum çubuğunda kayan yazı efekti | ✅ |
-| 207 | ShowDarkModeUserForm | Koyu tema uygulanmış modern UserForm | ⬜ |
-| 208 | ShowCalendarPicker | Takvim widget'ı gösteren UserForm, tarih seçtirir | ⬜ |
+| 207 | ShowDarkModeUserForm | Koyu tema uygulanmış modern UserForm | ✅ |
+| 208 | ShowCalendarPicker | Takvim widget'ı gösteren UserForm, tarih seçtirir | ✅ |
 
 ---
 
@@ -279,23 +279,23 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 209 | ConvertSheetToJson | Aktif sayfayı JSON array string'e çevirir | ✅ |
 | 210 | ImportJsonToSheet | JSON array'i başlık + satırlarıyla sayfaya aktarır | ✅ |
 | 211 | ConvertXmlToSheet | XML dökümanını sayfaya çevirir (MSXML2.DOMDocument) | ✅ |
-| 212 | ExportSheetToServer | Sayfayı JSON olarak sunucu API'sine POST eder | ⬜ |
+| 212 | ExportSheetToServer | Sayfayı JSON olarak sunucu API'sine POST eder | ✅ |
 | 213 | NormalizePhoneNumbers | TR format telefon numaralarını `+90 5xx xxx xx xx`'e çevirir | ✅ |
 | 214 | ValidateTCKimlik | TC kimlik algoritma doğrulaması | ✅ |
 | 215 | FormatCurrencyColumn | Para birimi sütununu `₺ 1.234,56` formatına çevirir | ✅ |
 | 216 | MergeJsonFiles | Birden fazla JSON dosyasını tek array'de birleştirir | ✅ |
 | 217 | SplitCsvByColumn | CSV dosyasını sütun değerine göre ayrı dosyalara böler | ✅ |
-| 218 | SqliteQueryToSheet | SQLite dosyasını ADO üzerinden sorgular, sonucu sayfaya yazar | ⬜ |
+| 218 | SqliteQueryToSheet | SQLite dosyasını ADO üzerinden sorgular, sonucu sayfaya yazar | ✅ |
 | 219 | ConvertBase64ToFile | Base64 string'i dosyaya çözer (ADODB.Stream) | ✅ |
 | 220 | ConvertFileToBase64 | Dosyayı Base64 string'e kodlar | ✅ |
 | 221 | CleanHtmlToText | HTML içeriğinden etiketleri temizler, düz metin döndürür | ✅ |
-| 222 | SheetToPivotJson | Sayfa verisini pivot-ready JSON formatına dönüştürür | ⬜ |
-| 223 | CsvToJsonApi | CSV dosyasını okuyup her satırı API'ye POST eder | ⬜ |
-| 224 | NormalizeIbanFormat | IBAN numarasını formatlı ve doğrulamalı yazar | ⬜ |
-| 225 | ExtractEmailsFromSheet | Sayfa genelinde e-posta adreslerini bulup listeler | ⬜ |
-| 226 | ConvertDateFormats | Farklı formatlardaki tarihleri standart ISO'ya çevirir | ⬜ |
-| 227 | DeduplicateByKey | Belirtilen sütuna göre tekrarlayan satırları kaldırır | ⬜ |
-| 228 | MergeColumnsWithSeparator | Birden fazla sütunu ayraçla birleştirir | ⬜ |
+| 222 | SheetToPivotJson | Sayfa verisini pivot-ready JSON formatına dönüştürür | ✅ |
+| 223 | CsvToJsonApi | CSV dosyasını okuyup her satırı API'ye POST eder | ✅ |
+| 224 | NormalizeIbanFormat | IBAN numarasını formatlı ve doğrulamalı yazar | ✅ |
+| 225 | ExtractEmailsFromSheet | Sayfa genelinde e-posta adreslerini bulup listeler | ✅ |
+| 226 | ConvertDateFormats | Farklı formatlardaki tarihleri standart ISO'ya çevirir | ✅ |
+| 227 | DeduplicateByKey | Belirtilen sütuna göre tekrarlayan satırları kaldırır | ✅ |
+| 228 | MergeColumnsWithSeparator | Birden fazla sütunu ayraçla birleştirir | ✅ |
 
 ---
 
@@ -315,12 +315,12 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 238 | HeartbeatPing | Her N dakikada MAC + versiyon ile sunucuya sinyal gönderir | ✅ |
 | 239 | ScheduleTaskWeekly | Haftanın belirli günü ve saatinde tekrarlayan görev| ✅ |
 | 240 | ScheduleTaskMonthly | Ayın belirli günü ve saatinde tekrarlayan görev| ✅ |
-| 241 | SelfHealingCheck | Modüllerin hash'ini kontrol edip bozulanları yeniden indirir | ⬜ |
-| 242 | WakeOnLanSchedule | WOL magic packet gönderip belirli saatte bilgisayar uyanmasını sağlar | ⬜ |
-| 243 | RecurringDataSync | Belirli aralıkta Excel verisini sunucuya senkronize eder | ⬜ |
+| 241 | SelfHealingCheck | Modüllerin hash'ini kontrol edip bozulanları yeniden indirir | ✅ |
+| 242 | WakeOnLanSchedule | WOL magic packet gönderip belirli saatte bilgisayar uyanmasını sağlar | ✅ |
+| 243 | RecurringDataSync | Belirli aralıkta Excel verisini sunucuya senkronize eder | ✅ |
 | 244 | AutoArchiveOldRows | N günden eski satırları arşiv sayfasına taşır| ✅ |
-| 245 | TriggerOnCellChange | Belirli hücre değiştiğinde uzak modül tetikler | ⬜ |
-| 246 | DailyDatabaseBackup | Her gün belirtilen saatte veritabanını yedekler | ⬜ |
+| 245 | TriggerOnCellChange | Belirli hücre değiştiğinde uzak modül tetikler | ✅ |
+| 246 | DailyDatabaseBackup | Her gün belirtilen saatte veritabanını yedekler | ✅ |
 
 ---
 
@@ -337,10 +337,10 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 253 | SendKeystrokes | `SendKeys` veya UI Automation ile tuş dizisi gönderir | ✅ |
 | 254 | CaptureScreenshot | PrintScreen + clipboard + kaydedilmiş PNG| ✅ |
 | 255 | ReadQrCode | QR kod resim dosyasını ZXing COM ile okur | ⬜ |
-| 256 | GenerateBarcode | Code128 barkod formülü ile hücreye barkod yazar | ⬜ |
+| 256 | GenerateBarcode | Code128 barkod formülü ile hücreye barkod yazar | ✅ |
 | 257 | SignPdfWithCertificate | iTextSharp COM ile PDF'e dijital imza atar | ⬜ |
 | 258 | ConnectToSqlServer | ADO üzerinden SQL Server sorgusu çalıştırır| ✅ |
-| 259 | ConnectToMySql | MySQL ODBC connector ile sorgu | ⬜ |
+| 259 | ConnectToMySql | MySQL ODBC connector ile sorgu | ✅ |
 | 260 | ReadFromExcelOneDrive | SharePoint/OneDrive URL'den Excel dosyasını okur | ⬜ |
 | 261 | WatchClipboard | Pano değişimini izler, metin kopyalanınca modül tetikler | ⬜ |
 | 262 | RemoteDesktopSession | RDP oturumu başlatır, uzak bilgisayarda komut çalıştırır | ⬜ |
@@ -354,14 +354,14 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 
 | # | MethodName | Açıklama | Durum |
 |---|-----------|----------|-------|
-| 266 | AdoQueryToSheet | ADODB.Connection ile herhangi bir ODBC/OLEDB kaynağını sorgular | ⬜ |
-| 267 | ConnectToPostgres | PostgreSQL ODBC ile sorgu çalıştırır | ⬜ |
+| 266 | AdoQueryToSheet | ADODB.Connection ile herhangi bir ODBC/OLEDB kaynağını sorgular | ✅ |
+| 267 | ConnectToPostgres | PostgreSQL ODBC ile sorgu çalıştırır | ✅ |
 | 268 | ConnectToOracle | Oracle ODP.NET / ODBC ile sorgu çalıştırır | ⬜ |
-| 269 | BulkInsertToSqlServer | Sayfadaki veriyi SQL Server'a toplu ekler (BULK INSERT) | ⬜ |
-| 270 | ExportQueryResultToExcel | SQL sorgu sonucunu yeni Excel dosyasına aktarır | ⬜ |
+| 269 | BulkInsertToSqlServer | Sayfadaki veriyi SQL Server'a toplu ekler (BULK INSERT) | ✅ |
+| 270 | ExportQueryResultToExcel | SQL sorgu sonucunu yeni Excel dosyasına aktarır | ✅ |
 | 271 | SyncSheetWithDatabase | Sayfa ile veritabanı tablosunu iki yönlü senkronize eder | ⬜ |
-| 272 | CallStoredProcedure | SQL Server saklı yordamını parametrelerle çağırır | ⬜ |
-| 273 | GetDatabaseSchema | Tablo listesi ve sütun bilgilerini sayfaya döker | ⬜ |
+| 272 | CallStoredProcedure | SQL Server saklı yordamını parametrelerle çağırır | ✅ |
+| 273 | GetDatabaseSchema | Tablo listesi ve sütun bilgilerini sayfaya döker | ✅ |
 | 274 | ExecuteTransactionalUpdate | BEGIN/COMMIT ile atomik güncelleme işlemi yapar | ⬜ |
 | 275 | MongoDbRestQuery | MongoDB Data API (REST) ile koleksiyon sorgular | ⬜ |
 
