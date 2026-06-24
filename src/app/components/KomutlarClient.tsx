@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { formatTR, formatDurationSec, elapsedSecSince, timeAgo } from "@/lib/date-utils";
 import {
   getCommandProgressView,
@@ -11,22 +12,18 @@ import {
 } from "@/lib/command-progress";
 import type { ClientCommand } from "@/lib/db";
 import type { FolderWatchHealth } from "@/lib/types";
+import { CommandStatusBadge } from "@/lib/status-badges";
+import PageHeader from "./ui/PageHeader";
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Bekliyor",  color: "#f59e0b", bg: "#f59e0b20" },
-  running: { label: "Çalışıyor", color: "#3b82f6", bg: "#3b82f620" },
-  done:    { label: "Tamamlandı",color: "#10b981", bg: "#10b98120" },
-  error:   { label: "Hata",      color: "#ef4444", bg: "#ef444420" },
+  pending: { label: "Bekliyor", color: "var(--yellow)", bg: "var(--yellow-dim)" },
+  running: { label: "Çalışıyor", color: "var(--accent)", bg: "var(--accent-dim)" },
+  done: { label: "Tamamlandı", color: "var(--green)", bg: "var(--green-dim)" },
+  error: { label: "Hata", color: "var(--red)", bg: "var(--red-dim)" },
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const c = STATUS_CFG[status] ?? STATUS_CFG.pending;
-  return (
-    <span style={{
-      fontSize: 11, padding: "2px 9px", borderRadius: 10, fontWeight: 600,
-      background: c.bg, color: c.color,
-    }}>{c.label}</span>
-  );
+  return <CommandStatusBadge status={status} />;
 }
 
 function CommandProgressBar({
@@ -84,8 +81,10 @@ export default function KomutlarClient({
   allModuleNames: string[];
   allMacs: string[];
 }) {
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams.get("status") ?? "tümü";
   const [commands, setCommands] = useState<ClientCommand[]>(initial);
-  const [filterStatus, setFilterStatus] = useState<string>("tümü");
+  const [filterStatus, setFilterStatus] = useState<string>(initialStatus);
   const [filterMac, setFilterMac]       = useState<string>("");
   const [expanded, setExpanded]         = useState<Set<number>>(new Set());
 
@@ -221,20 +220,21 @@ export default function KomutlarClient({
 
   return (
     <div className="page-wrap">
-      <div className="page-header">
-        <div>
-          <div className="page-title">Uzaktan Komut Kuyruğu</div>
-          <div className="page-sub">
-            Dashboard'dan VBA istemcilerine modül çalıştırma komutu gönder
-          </div>
-        </div>
-        <button className="btn btn-ghost" onClick={refresh}>↻ Yenile</button>
-        {counts.error + counts.running > 0 && (
-          <button className="btn btn-danger" style={{ marginLeft: 8 }} onClick={clearStuckCommands}>
-            Takılı/hatalı komutları sil
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Uzaktan Komut Kuyruğu"
+        subtitle="Dashboard'dan VBA istemcilerine modül çalıştırma komutu gönder"
+        live
+        actions={
+          <>
+            <button type="button" className="btn btn-ghost" onClick={refresh}>Yenile</button>
+            {counts.error + counts.running > 0 && (
+              <button type="button" className="btn btn-danger" onClick={clearStuckCommands}>
+                Takılı komutları sil
+              </button>
+            )}
+          </>
+        }
+      />
 
       {/* Stats */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>

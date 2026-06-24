@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ActivityCategory, UnifiedActivityItem } from "@/lib/types";
 import { ACTIVITY_CATEGORY_LABELS } from "@/lib/activity";
 import { formatTR } from "@/lib/date-utils";
-import Refresher from "./Refresher";
+import PageHeader from "./ui/PageHeader";
 
 const CATEGORIES: { id: ActivityCategory; label: string }[] = [
   { id: "all", label: "Tümü" },
@@ -68,21 +68,43 @@ export default function LoglarClient({ initial }: { initial: UnifiedActivityItem
     return c;
   }, [items]);
 
+  function exportCsv() {
+    const header = ["Zaman", "Kategori", "Başlık", "MAC", "Kaynak", "Detay"];
+    const lines = filtered.map((i) =>
+      [
+        i.createdAt,
+        i.category,
+        i.title,
+        i.mac ?? "",
+        i.source ?? "",
+        (i.detail ?? "").replace(/\n/g, " "),
+      ]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(","),
+    );
+    const blob = new Blob([header.join(",") + "\n" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `teklif-loglar-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="page-wrap">
-      <div className="page-header">
-        <div>
-          <div className="page-title">Denetim &amp; Aktivite Logları</div>
-          <div className="page-sub">
-            Lisans, ihlal, dashboard, modül çıktıları, heartbeat, komutlar ve klasör izleme — tek ekran
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {loading && <span style={{ fontSize: 12, color: "var(--text-dim)" }}>Yükleniyor…</span>}
-          <Refresher />
-          <button className="btn btn-ghost" onClick={refresh}>↻ Yenile</button>
-        </div>
-      </div>
+      <PageHeader
+        title="Denetim & Aktivite Logları"
+        subtitle="Lisans, ihlal, heartbeat, komutlar ve klasör izleme — tek ekran"
+        live
+        actions={
+          <>
+            {loading && <span className="text-muted">Yükleniyor…</span>}
+            <button type="button" className="btn btn-ghost" onClick={exportCsv}>CSV İndir</button>
+            <button type="button" className="btn btn-ghost" onClick={refresh}>Yenile</button>
+          </>
+        }
+      />
 
       <div
         style={{

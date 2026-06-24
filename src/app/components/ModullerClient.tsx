@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatTR } from "@/lib/date-utils";
 import type { ModuleRecord } from "@/lib/types";
+import PageHeader from "./ui/PageHeader";
+import { useToast } from "./ToastProvider";
 
 const CATEGORIES = [
   "genel", "lisans", "sistem", "dosya", "zamanlanmis", "uzman",
@@ -111,6 +113,8 @@ function CopySnippet({ name }: { name: string }) {
 
 export default function ModullerClient({ initial }: { initial: ModuleRecord[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
   const [modules, setModules] = useState<ModuleRecord[]>(initial);
   const [isPending, startTransition] = useTransition();
 
@@ -121,8 +125,15 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
   const [deleting, setDeleting] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [filterCat, setFilterCat] = useState<string>("tümü");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [showInfraOnly, setShowInfraOnly] = useState(false);
+  const [page, setPage] = useState(0);
+  const pageSize = 50;
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) setSearch(q);
+  }, [searchParams]);
 
   function refresh() {
     startTransition(() => router.refresh());
@@ -174,6 +185,7 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
         });
       }
       closePanel();
+      toast(editing ? "Modül güncellendi" : "Modül eklendi", "success");
       refresh();
     } finally {
       setSaving(false);
@@ -226,6 +238,10 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
     }
     return list;
   }, [modules, filterCat, search, showInfraOnly]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   return (
     <>
@@ -351,22 +367,20 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
       )}
 
       {/* ── Ana sayfa içeriği ── */}
-      <div className="page-wrap">
-        <div className="page-header">
-          <div>
-            <div className="page-title">Modüller</div>
-            <div className="page-sub">RunRemoteCode ile VBA'ya gönderilen modüller — Neon DB ({modules.length} modül)</div>
-          </div>
-          <button className="btn btn-primary" onClick={openNew}>+ Yeni Modül</button>
-        </div>
+      <div className="page-wrap page-wrap--wide">
+        <PageHeader
+          title="Uzak Modüller"
+          subtitle={`RunRemoteCode ile VBA'ya gönderilen modüller — Neon DB (${modules.length} modül)`}
+          actions={<button type="button" className="btn btn-primary" onClick={openNew}>Yeni Modül</button>}
+        />
 
         {/* Arama + filtreler */}
         <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
           <input
             className="form-input"
-            placeholder="🔍  Modül ara…"
+            placeholder="Modül ara…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             style={{ flex: 1, minWidth: 200, maxWidth: 320 }}
           />
           <button
@@ -420,7 +434,7 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
             </div>
           ) : (
             <div>
-              {filtered.map((m) => {
+              {paged.map((m) => {
                 const isOpen = expanded.has(m.methodName);
                 return (
                   <div key={m.methodName} style={{ borderBottom: "1px solid var(--border)" }}>
@@ -558,6 +572,18 @@ export default function ModullerClient({ initial }: { initial: ModuleRecord[] })
                   </div>
                 );
               })}
+            </div>
+          )}
+          {filtered.length > pageSize && (
+            <div className="table-pagination">
+              <span className="table-pagination-info">
+                {safePage * pageSize + 1}–{Math.min((safePage + 1) * pageSize, filtered.length)} / {filtered.length}
+              </span>
+              <div className="table-pagination-btns">
+                <button type="button" className="btn btn-ghost" disabled={safePage === 0} onClick={() => setPage((p) => p - 1)}>Önceki</button>
+                <span className="table-pagination-page">{safePage + 1} / {totalPages}</span>
+                <button type="button" className="btn btn-ghost" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Sonraki</button>
+              </div>
             </div>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { listClientCommands } from "@/lib/db";
 import { listHeartbeats } from "@/lib/db";
 import { listDbModules } from "@/lib/db";
@@ -14,10 +15,12 @@ export default async function KomutlarPage() {
   const allModuleNames = modules.filter((m) => m.active !== false).map((m) => m.methodName);
 
   return (
-    <KomutlarClient
-      initial={commands}
-      allModuleNames={allModuleNames}
-      allMacs={allMacs}
-    />
+    <Suspense>
+      <KomutlarClient
+        initial={commands}
+        allModuleNames={allModuleNames}
+        allMacs={allMacs}
+      />
+    </Suspense>
   );
 }

@@ -3,19 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { LicenseRecord } from "@/lib/types";
-
-function LicenseBadge({ value }: { value: string }) {
-  const active = ["true", "1", "active", "evet"].includes(value.toLowerCase());
-  return (
-    <span className={`badge ${active ? "badge-green" : "badge-red"}`}>
-      <span className="badge-dot" />
-      {active ? "Aktif" : "Pasif"}
-    </span>
-  );
-}
+import { LicenseBadge } from "@/lib/status-badges";
+import { useToast } from "./ToastProvider";
+import { AlertTriangle } from "lucide-react";
 
 export default function LisanslarTable({ licenses }: { licenses: LicenseRecord[] }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
 
@@ -45,9 +39,10 @@ export default function LisanslarTable({ licenses }: { licenses: LicenseRecord[]
 
     if (res.ok) {
       setSelected(new Set());
+      toast(`${macs.length} lisans ${action === "activate" ? "aktifleştirildi" : "pasifleştirildi"}`, "success");
       startTransition(() => router.refresh());
     } else {
-      alert("İşlem başarısız oldu.");
+      toast("Toplu işlem başarısız", "error");
     }
   }
 
@@ -58,8 +53,12 @@ export default function LisanslarTable({ licenses }: { licenses: LicenseRecord[]
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: isActive ? "deactivate" : "activate" }),
     });
-    if (res.ok) startTransition(() => router.refresh());
-    else alert("Değişiklik kaydedilemedi.");
+    if (res.ok) {
+      toast(isActive ? "Lisans pasifleştirildi" : "Lisans aktifleştirildi", "success");
+      startTransition(() => router.refresh());
+    } else {
+      toast("Değişiklik kaydedilemedi", "error");
+    }
   }
 
   const allSelected = licenses.length > 0 && selected.size === licenses.length;

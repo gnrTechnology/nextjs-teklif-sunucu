@@ -8,58 +8,22 @@ import {
   listDeviceSnapshots,
   listClientCommands,
   listModuleOutputs,
+  listDbModules,
 } from "@/lib/db";
 import { formatTR, getHeartbeatStatus, timeAgo } from "@/lib/date-utils";
 import { listFirmAutoModules } from "@/lib/firm-auto-modules";
-import { listModules } from "@/lib/modules";
-import { loadProposalsSummary } from "@/lib/proposals";
 import { getApiCatalogStats } from "@/lib/api-catalog";
-import Refresher from "./components/Refresher";
-
-const QUICK_LINKS = [
-  { href: "/komutlar",        icon: "🎮", label: "Uzak Komutlar"    },
-  { href: "/heartbeats",      icon: "📡", label: "Nabız İzleme"     },
-  { href: "/klasor-izleme",   icon: "📁", label: "Klasör İzleme"    },
-  { href: "/cihazlar",        icon: "🖥", label: "Cihaz Bilgileri"  },
-  { href: "/modul-ciktilari", icon: "📤", label: "Modül Çıktıları"  },
-  { href: "/moduller",        icon: "📦", label: "Uzak Modüller"    },
-  { href: "/firma-modulleri", icon: "⚡", label: "Oto. Modüller"    },
-  { href: "/oneriler",        icon: "💡", label: "Modül Önerileri"  },
-  { href: "/api-referans",    icon: "🔌", label: "API Referans"     },
-];
-
-function LicenseBadge({ value }: { value: string }) {
-  const active = ["true", "1", "active", "evet"].includes(value.toLowerCase());
-  return (
-    <span className={`badge ${active ? "badge-green" : "badge-red"}`}>
-      <span className="badge-dot" />{active ? "Aktif" : "Pasif"}
-    </span>
-  );
-}
-
-function CmdBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending: "badge-yellow",
-    running: "badge-blue",
-    done: "badge-green",
-    error: "badge-red",
-  };
-  const labels: Record<string, string> = {
-    pending: "Bekliyor",
-    running: "Çalışıyor",
-    done: "Tamam",
-    error: "Hata",
-  };
-  return <span className={`badge ${map[status] ?? "badge-blue"}`}>{labels[status] ?? status}</span>;
-}
-
-function HbDot({ lastSeen }: { lastSeen: string }) {
-  const st = getHeartbeatStatus(lastSeen);
-  const color = st === "online" ? "var(--green)" : st === "idle" ? "var(--yellow)" : "var(--red)";
-  return (
-    <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
-  );
-}
+import PageHeader from "./components/ui/PageHeader";
+import StatCard from "./components/ui/StatCard";
+import AlertBanner, { type AlertItem } from "./components/ui/AlertBanner";
+import DataTable from "./components/ui/DataTable";
+import {
+  CommandStatusBadge,
+  HeartbeatDot,
+  isLicenseActive,
+  LicenseBadge,
+} from "@/lib/status-badges";
+import { Radio, Terminal, KeyRound, Package } from "lucide-react";
 
 export default async function Dashboard() {
   const [
@@ -71,24 +35,20 @@ export default async function Dashboard() {
     snapshots,
     commands,
     outputs,
-    proposals,
   ] = await Promise.all([
     listLicenses(),
-    listModules(),
+    listDbModules(),
     listFirmAutoModules(),
     listLogs(8),
     listHeartbeats(),
     listDeviceSnapshots(),
     listClientCommands({ limit: 200 }),
-    listModuleOutputs({ limit: 1 }),
-    loadProposalsSummary(),
+    listModuleOutputs({ limit: 50 }),
   ]);
 
   const apiStats = getApiCatalogStats();
-
-  const activeLicenses = licenses.filter((l) =>
-    ["true", "1", "active", "evet"].includes(l.license.toLowerCase()),
-  );
+  const activeLicenses = licenses.filter((l) => isLicenseActive(l.license));
+  const inactiveLicenses = licenses.length - activeLicenses.length;
 
   const onlineCount = heartbeats.filter((h) => getHeartbeatStatus(h.last_seen) === "online").length;
   const idleCount = heartbeats.filter((h) => getHeartbeatStatus(h.last_seen) === "idle").length;
@@ -96,251 +56,287 @@ export default async function Dashboard() {
 
   const cmdPending = commands.filter((c) => c.status === "pending" || c.status === "running").length;
   const cmdError = commands.filter((c) => c.status === "error").length;
+  const cmdErrorRecent = commands.filter((c) => c.status === "error").slice(0, 5);
 
-  const categoryCounts: Record<string, number> = {};
-  for (const m of modules) {
-    const cat = (m as { category?: string }).category ?? "genel";
-    categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
+  const topModules = [...modules]
+    .filter((m) => (m.runCount ?? 0) > 0)
+    .sort((a, b) => (b.runCount ?? 0) - (a.runCount ?? 0))
+    .slice(0, 5);
+
+  const alerts: AlertItem[] = [];
+  if (offlineCount > 0) {
+    alerts.push({
+      id: "offline",
+      tone: offlineCount > 3 ? "danger" : "warning",
+      message: `${offlineCount} cihaz çevrimdışı (>1 saat nabız yok)`,
+      href: "/heartbeats",
+    });
   }
-  const topCategories = Object.entries(categoryCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6);
+  if (cmdError > 0) {
+    alerts.push({
+      id: "cmd-err",
+      tone: "danger",
+      message: `${cmdError} komut hata durumunda`,
+      href: "/komutlar?status=error",
+    });
+  }
+  if (cmdPending > 5) {
+    alerts.push({
+      id: "cmd-pending",
+      tone: "warning",
+      message: `${cmdPending} komut kuyrukta bekliyor`,
+      href: "/komutlar",
+    });
+  }
+  if (inactiveLicenses > 0) {
+    alerts.push({
+      id: "license",
+      tone: "warning",
+      message: `${inactiveLicenses} pasif lisans kaydı`,
+      href: "/lisanslar",
+    });
+  }
 
   return (
-    <div className="page-wrap">
-      <div className="page-header">
-        <div>
-          <div className="page-title">Dashboard</div>
-          <div className="page-sub">
-            Teklif Sunucu — {apiStats.total} API endpoint · {proposals.stats.inDb} uzak modül
-          </div>
-        </div>
-        <Refresher />
+    <div className="page-wrap page-wrap--wide">
+      <PageHeader
+        title="Dashboard"
+        subtitle={`Operasyon özeti · ${apiStats.total} API endpoint · ${modules.length} uzak modül`}
+        live
+      />
+
+      <AlertBanner items={alerts} />
+
+      <div className="stats-grid">
+        <StatCard
+          label="Çevrimiçi"
+          value={onlineCount}
+          hint={`${idleCount} boşta · ${offlineCount} kapalı`}
+          tone="green"
+          href="/heartbeats"
+        />
+        <StatCard
+          label="Bekleyen komut"
+          value={cmdPending}
+          hint={cmdError > 0 ? `${cmdError} hatalı` : "Kuyruk temiz"}
+          tone={cmdPending > 0 ? "yellow" : undefined}
+          href="/komutlar"
+        />
+        <StatCard
+          label="Aktif lisans"
+          value={activeLicenses.length}
+          hint={`${licenses.length} toplam kayıt`}
+          tone="accent"
+          href="/lisanslar"
+        />
+        <StatCard
+          label="Uzak modül"
+          value={modules.filter((m) => m.active !== false).length}
+          hint={`${modules.length} Neon DB`}
+          tone="accent"
+          href="/moduller"
+        />
       </div>
 
-      {/* Ana metrikler */}
-      <div className="stats-grid" style={{ marginBottom: 16 }}>
-        <div className="stat-card">
-          <div className="stat-label">Lisanslar</div>
-          <div className="stat-value">{licenses.length}</div>
-          <div className="stat-hint">{activeLicenses.length} aktif</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Çevrimiçi</div>
-          <div className="stat-value green">{onlineCount}</div>
-          <div className="stat-hint">{idleCount} boşta · {offlineCount} kapalı</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Bekleyen Komut</div>
-          <div className="stat-value" style={{ color: cmdPending > 0 ? "var(--yellow)" : undefined }}>
-            {cmdPending}
-          </div>
-          <div className="stat-hint">{cmdError > 0 ? `${cmdError} hatalı` : "Kuyruk temiz"}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Modül Önerileri</div>
-          <div className="stat-value accent">{proposals.stats.done}</div>
-          <div className="stat-hint">
-            {proposals.stats.missingFromDb > 0
-              ? `${proposals.stats.missingFromDb} DB eksik`
-              : `${proposals.stats.planned} planlı`}
-          </div>
-        </div>
-      </div>
-
-      {/* Hızlı erişim */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-        gap: 10,
-        marginBottom: 20,
-      }}>
-        {QUICK_LINKS.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="card"
-            style={{
-              padding: "12px 14px",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              transition: "border-color 0.15s",
-            }}
-          >
-            <span style={{ fontSize: 18 }}>{l.icon}</span>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>{l.label}</span>
+      <div className="quick-links">
+        {[
+          { href: "/komutlar", label: "Uzak Komutlar", icon: Terminal },
+          { href: "/heartbeats", label: "Nabız", icon: Radio },
+          { href: "/lisanslar", label: "Lisanslar", icon: KeyRound },
+          { href: "/moduller", label: "Modüller", icon: Package },
+        ].map(({ href, label, icon: Icon }) => (
+          <Link key={href} href={href} className="quick-link card">
+            <Icon size={18} />
+            <span>{label}</span>
           </Link>
         ))}
       </div>
 
-      <div className="grid-2" style={{ marginBottom: 16 }}>
-        {/* Nabız */}
+      <div className="grid-2">
         <div className="card">
           <div className="card-header">
-            <span className="card-title">📡 Son Nabız</span>
-            <Link href="/heartbeats" style={{ fontSize: 12, color: "var(--accent)" }}>Tümü →</Link>
+            <span className="card-title">Son nabız</span>
+            <Link href="/heartbeats" className="card-link">Tümü</Link>
           </div>
-          {heartbeats.length === 0 ? (
-            <div className="empty-state" style={{ padding: 24 }}><div>Henüz heartbeat yok</div></div>
-          ) : (
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead><tr><th></th><th>MAC</th><th>PC</th><th>Son</th></tr></thead>
-                <tbody>
-                  {heartbeats.slice(0, 5).map((h) => (
-                    <tr key={h.mac}>
-                      <td><HbDot lastSeen={h.last_seen} /></td>
-                      <td><span className="mono" style={{ fontSize: 11 }}>{h.mac}</span></td>
-                      <td style={{ fontSize: 13 }}>{h.hostname ?? "—"}</td>
-                      <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{timeAgo(h.last_seen)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable
+            data={heartbeats.slice(0, 8)}
+            pageSize={8}
+            emptyTitle="Henüz heartbeat yok"
+            rowKey={(h) => h.mac}
+            columns={[
+              {
+                key: "st",
+                header: "",
+                width: "32px",
+                render: (h) => <HeartbeatDot status={getHeartbeatStatus(h.last_seen)} />,
+              },
+              {
+                key: "mac",
+                header: "MAC",
+                sortable: true,
+                sortValue: (h) => h.mac,
+                render: (h) => <span className="mono">{h.mac}</span>,
+              },
+              {
+                key: "host",
+                header: "PC",
+                render: (h) => h.hostname ?? "—",
+              },
+              {
+                key: "seen",
+                header: "Son",
+                sortable: true,
+                sortValue: (h) => h.last_seen,
+                render: (h) => <span className="text-muted">{timeAgo(h.last_seen)}</span>,
+              },
+            ]}
+          />
         </div>
 
-        {/* Komutlar */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">🎮 Son Komutlar</span>
-            <Link href="/komutlar" style={{ fontSize: 12, color: "var(--accent)" }}>Tümü →</Link>
+            <span className="card-title">Son komutlar</span>
+            <Link href="/komutlar" className="card-link">Tümü</Link>
           </div>
-          {commands.length === 0 ? (
-            <div className="empty-state" style={{ padding: 24 }}><div>Komut yok</div></div>
-          ) : (
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead><tr><th>Modül</th><th>MAC</th><th>Durum</th></tr></thead>
-                <tbody>
-                  {commands.slice(0, 5).map((c) => (
-                    <tr key={c.id}>
-                      <td><span className="mono" style={{ fontSize: 12 }}>{c.moduleName}</span></td>
-                      <td><span className="mono" style={{ fontSize: 11 }}>{c.mac}</span></td>
-                      <td><CmdBadge status={c.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="grid-2" style={{ marginBottom: 16 }}>
-        {/* Lisanslar */}
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">🔑 Son Lisanslar</span>
-            <Link href="/lisanslar" style={{ fontSize: 12, color: "var(--accent)" }}>Tümü →</Link>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead><tr><th>MAC</th><th>Firma</th><th>Lisans</th></tr></thead>
-              <tbody>
-                {licenses.slice(0, 5).map((item) => (
-                  <tr key={item.macAdresi}>
-                    <td><span className="mono" style={{ fontSize: 11 }}>{item.macAdresi}</span></td>
-                    <td style={{ fontSize: 13 }}>{item.firmaAdi ?? "—"}</td>
-                    <td><LicenseBadge value={item.license} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Loglar */}
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">📋 Son Aktivite</span>
-            <Link href="/loglar" style={{ fontSize: 12, color: "var(--accent)" }}>Tümü →</Link>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead><tr><th>Olay</th><th>MAC</th><th>Zaman</th></tr></thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log.id}>
-                    <td style={{ fontSize: 12 }}>{log.eventType}</td>
-                    <td><span className="mono" style={{ fontSize: 11 }}>{log.macAdresi ?? "—"}</span></td>
-                    <td style={{ fontSize: 11, color: "var(--text-muted)" }}>{formatTR(log.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={commands.slice(0, 8)}
+            pageSize={8}
+            emptyTitle="Komut yok"
+            rowKey={(c) => c.id}
+            columns={[
+              {
+                key: "mod",
+                header: "Modül",
+                sortable: true,
+                sortValue: (c) => c.moduleName,
+                render: (c) => <span className="mono">{c.moduleName}</span>,
+              },
+              {
+                key: "mac",
+                header: "MAC",
+                render: (c) => <span className="mono">{c.mac}</span>,
+              },
+              {
+                key: "st",
+                header: "Durum",
+                render: (c) => <CommandStatusBadge status={c.status} />,
+              },
+            ]}
+          />
         </div>
       </div>
 
       <div className="grid-2">
-        {/* Modül kategorileri */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">📦 Modül Kategorileri</span>
-            <Link href="/moduller" style={{ fontSize: 12, color: "var(--accent)" }}>{modules.length} modül →</Link>
+            <span className="card-title">En çok çalışan modüller</span>
+            <Link href="/analitik" className="card-link">Analitik</Link>
           </div>
-          <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
-            {topCategories.map(([cat, n]) => (
-              <div key={cat} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 72, fontSize: 11, color: "var(--text-muted)", textTransform: "capitalize" }}>{cat}</span>
-                <div style={{ flex: 1, height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{
-                    width: `${Math.round((n / modules.length) * 100)}%`,
-                    height: "100%",
-                    background: "var(--accent)",
-                    borderRadius: 3,
-                  }} />
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 600, minWidth: 24, textAlign: "right" }}>{n}</span>
-              </div>
-            ))}
-          </div>
+          {topModules.length === 0 ? (
+            <p className="card-pad text-muted">Henüz çalışma verisi yok.</p>
+          ) : (
+            <div className="bar-list">
+              {topModules.map((m) => {
+                const max = topModules[0].runCount ?? 1;
+                const pct = Math.round(((m.runCount ?? 0) / max) * 100);
+                return (
+                  <div key={m.methodName} className="bar-list-row">
+                    <span className="mono bar-list-label">{m.methodName}</span>
+                    <div className="bar-track">
+                      <div className="bar-fill" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="bar-list-value">{m.runCount}×</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Sistem özeti */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">⚙ Sistem Özeti</span>
-            <Link href="/oneriler" style={{ fontSize: 12, color: "var(--accent)" }}>Öneriler →</Link>
+            <span className="card-title">Sistem özeti</span>
           </div>
-          <div style={{ padding: "14px 18px", fontSize: 13, color: "var(--text-muted)", display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Cihaz snapshot</span>
-              <strong style={{ color: "var(--text)" }}>{snapshots.length}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Modül çıktısı (son kayıtlar)</span>
-              <strong style={{ color: "var(--text)" }}>{outputs.length > 0 ? "✓ aktif" : "—"}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Firma oto-modül tanımı</span>
-              <strong style={{ color: "var(--text)" }}>{firmAutoModules.length}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>API endpoint</span>
-              <strong style={{ color: "var(--text)" }}>{apiStats.total}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Öneri → DB uyumu</span>
-              <strong style={{ color: proposals.stats.missingFromDb > 0 ? "var(--yellow)" : "var(--green)" }}>
-                {proposals.stats.missingFromDb === 0 ? "Tam" : `${proposals.stats.missingFromDb} eksik`}
-              </strong>
-            </div>
-            {firmAutoModules.length > 0 && (
-              <div style={{ marginTop: 6, paddingTop: 10, borderTop: "1px solid var(--border)", fontSize: 12 }}>
-                <div style={{ fontWeight: 600, marginBottom: 6, color: "var(--text)" }}>Global açılış zinciri</div>
+          <dl className="summary-list">
+            <div><dt>Cihaz snapshot</dt><dd>{snapshots.length}</dd></div>
+            <div><dt>Modül çıktısı</dt><dd>{outputs.length}</dd></div>
+            <div><dt>Firma oto-modül</dt><dd>{firmAutoModules.length}</dd></div>
+            <div><dt>API endpoint</dt><dd>{apiStats.total}</dd></div>
+          </dl>
+          {firmAutoModules.length > 0 && (
+            <div className="card-pad card-pad--border">
+              <div className="summary-chain-label">Global açılış zinciri</div>
+              <p className="summary-chain">
                 {(firmAutoModules.find((f) => f.firmaAdi === "*")?.onExcelOpen.modules ?? [])
                   .sort((a, b) => a.order - b.order)
                   .map((m) => m.methodName + (m.runOnce ? " (1×)" : ""))
                   .join(" → ") || "—"}
-              </div>
-            )}
-          </div>
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Son lisanslar</span>
+            <Link href="/lisanslar" className="card-link">Tümü</Link>
+          </div>
+          <DataTable
+            data={licenses.slice(0, 6)}
+            pageSize={6}
+            emptyTitle="Lisans yok"
+            rowKey={(l) => l.macAdresi}
+            columns={[
+              { key: "mac", header: "MAC", render: (l) => <span className="mono">{l.macAdresi}</span> },
+              { key: "firma", header: "Firma", render: (l) => l.firmaAdi ?? "—" },
+              { key: "lic", header: "Lisans", render: (l) => <LicenseBadge value={l.license} /> },
+            ]}
+          />
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Son aktivite</span>
+            <Link href="/loglar" className="card-link">Tümü</Link>
+          </div>
+          <DataTable
+            data={logs}
+            pageSize={8}
+            emptyTitle="Log yok"
+            rowKey={(l) => l.id}
+            columns={[
+              { key: "ev", header: "Olay", render: (l) => l.eventType },
+              { key: "mac", header: "MAC", render: (l) => <span className="mono">{l.macAdresi ?? "—"}</span> },
+              {
+                key: "t",
+                header: "Zaman",
+                render: (l) => <span className="text-muted">{formatTR(l.createdAt)}</span>,
+              },
+            ]}
+          />
+        </div>
+      </div>
+
+      {cmdErrorRecent.length > 0 && (
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Son hatalı komutlar</span>
+            <Link href="/komutlar?status=error" className="card-link">Filtrele</Link>
+          </div>
+          <DataTable
+            data={cmdErrorRecent}
+            pageSize={5}
+            rowKey={(c) => c.id}
+            columns={[
+              { key: "mod", header: "Modül", render: (c) => <span className="mono">{c.moduleName}</span> },
+              { key: "mac", header: "MAC", render: (c) => <span className="mono">{c.mac}</span> },
+              { key: "err", header: "Hata", render: (c) => <span className="text-muted">{c.errorMsg ?? "—"}</span> },
+            ]}
+          />
+        </div>
+      )}
     </div>
   );
 }

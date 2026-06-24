@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import type { HeartbeatRow } from "@/lib/db";
 import {
   formatTR,
@@ -8,6 +9,7 @@ import {
   timeAgo,
   type HeartbeatStatus,
 } from "@/lib/date-utils";
+import PageHeader from "./ui/PageHeader";
 
 const STATUS_STYLE: Record<HeartbeatStatus, { dot: string; label: string; color: string }> = {
   online:  { dot: "#22c55e", label: "Çevrimiçi",  color: "#16a34a" },
@@ -32,6 +34,8 @@ function TimeAgo({ iso }: { iso: string }) {
 }
 
 export default function HeartbeatsClient({ initial }: { initial: HeartbeatRow[] }) {
+  const searchParams = useSearchParams();
+  const macQuery = searchParams.get("q")?.toLowerCase() ?? "";
   const [rows, setRows] = useState<HeartbeatRow[]>(initial);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [countdown, setCountdown] = useState(30);
@@ -68,26 +72,21 @@ export default function HeartbeatsClient({ initial }: { initial: HeartbeatRow[] 
   const idle    = rows.filter((r) => getHeartbeatStatus(r.last_seen) === "idle").length;
   const offline = rows.filter((r) => getHeartbeatStatus(r.last_seen) === "offline").length;
 
+  const filtered = useMemo(() => {
+    if (!macQuery) return rows;
+    return rows.filter((r) => r.mac.toLowerCase().includes(macQuery));
+  }, [rows, macQuery]);
+
   return (
     <div className="page-wrap">
-      <div className="page-header">
-        <div>
-          <div className="page-title">Cihaz Nabız İzleme</div>
-          <div className="page-sub">
-            Excel istemcilerinin son aktiflik bilgileri —{" "}
-            <span className="mono">TeklifAgent</span> arka planda heartbeat gönderir
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            {countdown}s sonra yenilenir
-          </span>
-          <button className="btn btn-ghost" onClick={() => { refresh(); setCountdown(30); }}>
-            ↻ Yenile
-          </button>
-        </div>
-      </div>
-
+      <PageHeader
+        title="Cihaz Nabız İzleme"
+        subtitle="Excel istemcilerinin son aktiflik bilgileri — TeklifAgent arka planda heartbeat gönderir"
+        live
+        actions={
+          <span className="text-muted">Yenile: {countdown}s</span>
+        }
+      />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
         {([["online", online], ["idle", idle], ["offline", offline]] as [HeartbeatStatus, number][]).map(
           ([st, n]) => (
@@ -145,7 +144,7 @@ export default function HeartbeatsClient({ initial }: { initial: HeartbeatRow[] 
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => {
+              {filtered.map((row) => {
                 const st = getHeartbeatStatus(row.last_seen);
                 const s = STATUS_STYLE[st];
                 return (
