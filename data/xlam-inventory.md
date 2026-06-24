@@ -3,7 +3,8 @@
 **Kaynak:** `C:\Users\onurm\AppData\Roaming\Microsoft\AddIns\teklif.xlam`  
 **Son değişiklik:** 24.06.2026 · **Boyut:** ~1,3 MB · **vbaProject.bin:** ~3 MB (şifreli)
 
-> Bu belge, eklentinin mevcut yapısını Neon uzak modül önerileri (`module-proposals.md`) ile birleştirir.
+> Bu belge, eklentinin mevcut yapısını Neon uzak modül önerileri (`module-proposals.md`) ile birleştirir.  
+> **Aksiyon odaklı öneriler:** [xlam-recommendations.md](./xlam-recommendations.md)
 
 ---
 
