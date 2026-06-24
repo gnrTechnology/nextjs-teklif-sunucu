@@ -143,18 +143,6 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
     responses: [{ code: "200", desc: "Silindi" }],
     uiLink: "/moduller",
   },
-  {
-    group: "Uzak Modüller",
-    method: "GET|POST",
-    path: "/seed-modules/",
-    title: "Modül Seed (JSON → DB)",
-    desc: "data/modules.json içeriğini Neon DB'ye toplu aktarır.",
-    request: null,
-    response: `{ "success": true, "seeded": 146, "message": "..." }`,
-    responses: [{ code: "200", desc: "Seed tamam" }],
-    uiLink: "/oneriler",
-    tags: ["admin"],
-  },
 
   // ── Firma Oto-Modüller ──
   {
@@ -200,18 +188,6 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
     response: `{ "success": true, "data": { ... } }`,
     responses: [{ code: "200", desc: "Güncellendi" }],
     uiLink: "/firma-modulleri",
-  },
-  {
-    group: "Firma Oto-Modüller",
-    method: "GET",
-    path: "/firm-modules/seed/",
-    title: "Firma Seed (JSON → DB)",
-    desc: "data/firm-auto-modules.json → Neon DB.",
-    request: null,
-    response: `{ "success": true, "seeded": 2, "total": 2 }`,
-    responses: [{ code: "200", desc: "Seed tamam" }],
-    uiLink: "/firma-modulleri",
-    tags: ["admin"],
   },
 
   // ── Komut Kuyruğu ──
@@ -433,7 +409,7 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
     method: "GET",
     path: "/proposals/",
     title: "Modül Önerileri Durumu",
-    desc: "module-proposals.md + dll önerileri ile modules.json karşılaştırması.",
+    desc: "module-proposals.md + dll önerileri ile Neon modules tablosu karşılaştırması.",
     request: null,
     response: `{ "success": true, "data": { "implemented": 100, "planned": 400, "items": [...] } }`,
     responses: [{ code: "200", desc: "Özet" }],

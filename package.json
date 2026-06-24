@@ -9,8 +9,6 @@
     "start": "next start",
     "start:prod": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint",
-    "sync-modules": "node scripts/embed-fw-poll-helpers.js && node scripts/sync-modules.js && node scripts/sync-agent-modules.cjs",
-    "init-db": "node scripts/init-db.mjs",
     "create-poll-host": "powershell -ExecutionPolicy Bypass -File scripts/create-poll-host.ps1"
   },
   "dependencies": {

@@ -2,40 +2,16 @@ import {
   listFirmAutoModulesDb,
   getFirmAutoModuleDb,
   ensureFirmAutoModulesTable,
-  upsertFirmAutoModuleDb,
 } from "./db";
 import { getLicenseByMac } from "./db";
 import { listRemoteModuleNames } from "./modules";
 import type { FirmAutoModuleRecord, FirmAutoStartModule, FirmAutoStartResponse } from "./types";
 
-/** İlk kez çağrıldığında JSON'dan Neon'a seed eder (idempotent) */
-async function seedFromJsonIfEmpty(): Promise<void> {
-  try {
-    // Sadece Node.js ortamında (sunucu) çalışır
-    const { default: fs } = await import("fs");
-    const { default: path } = await import("path");
-    const filePath = path.join(process.cwd(), "data", "firm-auto-modules.json");
-    if (!fs.existsSync(filePath)) return;
-    const raw = fs.readFileSync(filePath, "utf-8");
-    const records: FirmAutoModuleRecord[] = JSON.parse(raw);
-    if (!Array.isArray(records)) return;
-    for (const rec of records) {
-      await upsertFirmAutoModuleDb(rec);
-    }
-  } catch {
-    /* seed başarısız olursa sessizce geç */
-  }
-}
-
-let _seeded = false;
-async function ensureSeeded(): Promise<void> {
-  if (_seeded) return;
+let _ready = false;
+async function ensureReady(): Promise<void> {
+  if (_ready) return;
   await ensureFirmAutoModulesTable();
-  const existing = await listFirmAutoModulesDb();
-  if (existing.length === 0) {
-    await seedFromJsonIfEmpty();
-  }
-  _seeded = true;
+  _ready = true;
 }
 
 function normalizeFirmaAdi(firmaAdi: string): string {
@@ -68,7 +44,7 @@ function mergeModules(
 export async function getAutoStartByFirma(
   firmaAdi: string,
 ): Promise<FirmAutoStartResponse | null> {
-  await ensureSeeded();
+  await ensureReady();
 
   const normalizedFirma = normalizeFirmaAdi(firmaAdi);
   const allRecords = (await listFirmAutoModulesDb()).filter((item) => item.enabled !== false);
@@ -111,11 +87,11 @@ export async function getAutoStartByMac(
 }
 
 export async function listFirmAutoModules(): Promise<FirmAutoModuleRecord[]> {
-  await ensureSeeded();
+  await ensureReady();
   return listFirmAutoModulesDb();
 }
 
 export async function getFirmAutoModule(firmaAdi: string): Promise<FirmAutoModuleRecord | undefined> {
-  await ensureSeeded();
+  await ensureReady();
   return getFirmAutoModuleDb(firmaAdi);
 }

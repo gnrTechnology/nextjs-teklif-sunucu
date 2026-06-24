@@ -22,8 +22,6 @@ export default function OnerilerClient({ summary }: { summary: ProposalsSummary 
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [source, setSource] = useState<"all" | "vba" | "dll">("all");
-  const [seeding, setSeeding] = useState(false);
-  const [seedMsg, setSeedMsg] = useState("");
 
   const dbSet = useMemo(
     () => new Set(summary.implementedInDb.map((n) => n.toLowerCase())),
@@ -49,19 +47,6 @@ export default function OnerilerClient({ summary }: { summary: ProposalsSummary 
       return true;
     });
   }, [summary.items, filter, search, source, dbSet]);
-
-  async function runSeed(endpoint: string, label: string) {
-    setSeeding(true);
-    setSeedMsg("");
-    try {
-      const r = await fetch(endpoint);
-      const j = await r.json();
-      setSeedMsg(j.success ? `✓ ${label}: ${j.message ?? j.seeded + " kayıt"}` : `✗ ${j.error ?? "Hata"}`);
-    } catch (e) {
-      setSeedMsg(`✗ ${String(e)}`);
-    }
-    setSeeding(false);
-  }
 
   const { stats } = summary;
 
@@ -100,22 +85,10 @@ export default function OnerilerClient({ summary }: { summary: ProposalsSummary 
       </div>
 
       <div className="card" style={{ marginBottom: 16, padding: "14px 18px" }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 10 }}>
-          Yönetim — Seed &amp; Senkron
-        </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-          <button className="btn btn-primary" disabled={seeding} onClick={() => runSeed("/api/seed-modules/", "Modül seed")}>
-            modules.json → DB
-          </button>
-          <button className="btn btn-ghost" disabled={seeding} onClick={() => runSeed("/api/firm-modules/seed/", "Firma seed")}>
-            firm-auto-modules → DB
-          </button>
           <a href="/api-referans" className="btn btn-ghost">API Referans →</a>
           <a href="/moduller" className="btn btn-ghost">Uzak Modüller →</a>
         </div>
-        {seedMsg && (
-          <div style={{ marginTop: 10, fontSize: 12, color: "var(--text-muted)" }}>{seedMsg}</div>
-        )}
       </div>
 
       <div className="card" style={{ marginBottom: 16, padding: "14px 18px" }}>

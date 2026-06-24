@@ -1,14 +1,12 @@
 import { NextRequest } from "next/server";
 import { errorResponse, jsonResponse } from "@/lib/api-response";
 import { ensureModulesTable, listDbModules, upsertDbModule, insertActivityLog } from "@/lib/db";
-import { syncMissingModulesFromJson } from "@/lib/modules";
 import type { ModuleUpsertBody } from "@/lib/types";
 
-/** GET /api/modules — tüm modülleri listele; eksikleri JSON'dan senkronize et */
+/** GET /api/modules — tüm modülleri listele */
 export async function GET() {
   try {
     await ensureModulesTable();
-    await syncMissingModulesFromJson();
     const modules = await listDbModules();
     return jsonResponse({ success: true, data: modules });
   } catch (err) {

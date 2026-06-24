@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { listDbModules } from "./db";
 
 export type ProposalStatus = "done" | "planned" | "blocked";
 
@@ -62,20 +63,14 @@ function parseProposalTable(
   return items;
 }
 
-function loadImplementedModuleNames(): Set<string> {
-  const filePath = path.join(process.cwd(), "data", "modules.json");
-  if (!fs.existsSync(filePath)) return new Set();
-  try {
-    const list = JSON.parse(fs.readFileSync(filePath, "utf-8")) as { methodName?: string }[];
-    return new Set(
-      list.filter((m) => m.methodName).map((m) => m.methodName!.toLowerCase()),
-    );
-  } catch {
-    return new Set();
-  }
+async function loadImplementedModuleNames(): Promise<Set<string>> {
+  const modules = await listDbModules();
+  return new Set(
+    modules.filter((m) => m.methodName).map((m) => m.methodName.toLowerCase()),
+  );
 }
 
-export function loadProposalsSummary(): ProposalsSummary {
+export async function loadProposalsSummary(): Promise<ProposalsSummary> {
   const root = process.cwd();
   const vbaPath = path.join(root, "data", "module-proposals.md");
   const dllPath = path.join(root, "data", "dll-module-proposals.md");
@@ -88,7 +83,7 @@ export function loadProposalsSummary(): ProposalsSummary {
     items.push(...parseProposalTable(fs.readFileSync(dllPath, "utf-8"), "dll"));
   }
 
-  const dbNames = loadImplementedModuleNames();
+  const dbNames = await loadImplementedModuleNames();
   const implementedInDb = Array.from(dbNames).sort();
 
   const proposalDoneNames = new Set(

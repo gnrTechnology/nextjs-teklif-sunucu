@@ -3,7 +3,7 @@ import OnerilerClient from "@/app/components/OnerilerClient";
 
 export const dynamic = "force-dynamic";
 
-export default function OnerilerPage() {
-  const summary = loadProposalsSummary();
+export default async function OnerilerPage() {
+  const summary = await loadProposalsSummary();
   return <OnerilerClient summary={summary} />;
 }

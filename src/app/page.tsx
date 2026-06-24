@@ -81,7 +81,7 @@ export default async function Dashboard() {
     listDeviceSnapshots(),
     listClientCommands({ limit: 200 }),
     listModuleOutputs({ limit: 1 }),
-    Promise.resolve(loadProposalsSummary()),
+    loadProposalsSummary(),
   ]);
 
   const apiStats = getApiCatalogStats();
