@@ -351,6 +351,61 @@ Public Sub EnsureCommandQueueQuiet()
     On Error GoTo 0
 End Sub
 
+' ── Oturum acilisinda firma auto-start zinciri (boot basina 1 kez) ───────────
+Public Function GetBootSessionId() As String
+    On Error GoTo Fail
+    Dim wmi As Object, col As Object, o As Object
+    Set wmi = GetObject("winmgmts:\\.\root\cimv2")
+    Set col = wmi.ExecQuery("SELECT LastBootUpTime FROM Win32_OperatingSystem")
+    For Each o In col
+        GetBootSessionId = Replace(Replace(CStr(o.LastBootUpTime), ":", ""), ".", "")
+        Exit Function
+    Next
+Fail:
+    If Len(GetBootSessionId) = 0 Then GetBootSessionId = Format$(Now, "yyyymmdd")
+End Function
+
+Private Function BootChainFlagPath() As String
+    BootChainFlagPath = Environ("LOCALAPPDATA") & "\TeklifAgent\boot-chain.done"
+End Function
+
+Public Function IsBootAutoStartDone() As Boolean
+    On Error Resume Next
+    Dim fso As Object, ts As Object, saved As String
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FileExists(BootChainFlagPath()) Then Exit Function
+    Set ts = fso.OpenTextFile(BootChainFlagPath(), 1, False)
+    saved = Trim(ts.ReadAll)
+    ts.Close
+    IsBootAutoStartDone = (saved = GetBootSessionId())
+End Function
+
+Public Sub MarkBootAutoStartDone()
+    On Error Resume Next
+    Dim fso As Object, dir As String, ts As Object
+    dir = Environ("LOCALAPPDATA") & "\TeklifAgent"
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(dir) Then fso.CreateFolder dir
+    Set ts = fso.OpenTextFile(BootChainFlagPath(), 2, True)
+    ts.Write GetBootSessionId()
+    ts.Close
+End Sub
+
+' PollHost tick veya agent tarafindan cagrilir — firma/global modul listesini dagitir
+Public Sub RunBootAutoStartIfNeeded()
+    If IsBootAutoStartDone() Then Exit Sub
+    Debug.Print "[zInternet] Boot auto-start zinciri basliyor..."
+    On Error Resume Next
+    Application.Run "zInternet.RunRemoteCodeQuiet", "AutoStartOnExcelOpen"
+    If Err.Number <> 0 Then
+        Debug.Print "[zInternet] Boot auto-start hata: " & Err.Description
+        Err.Clear
+        Exit Sub
+    End If
+    MarkBootAutoStartDone
+    Debug.Print "[zInternet] Boot auto-start tamamlandi."
+End Sub
+
 ' ── Klasor izleme (WatchFolderServer) — C:\ ust seviye tarama ────────────────
 Public Sub FolderWatchServer_Tick()
     On Error GoTo TickErr

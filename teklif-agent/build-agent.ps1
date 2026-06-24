@@ -11,13 +11,14 @@ $Files = @(
     (Join-Path $Src "AgentConfig.cs"),
     (Join-Path $Src "ApiClient.cs"),
     (Join-Path $Src "ExcelRunner.cs"),
+    (Join-Path $Src "BootChainRunner.cs"),
     (Join-Path $Src "AgentWorker.cs"),
     (Join-Path $Src "AgentLog.cs"),
     (Join-Path $Src "AgentControl.cs"),
     (Join-Path $Src "Program.cs")
 )
 
-$Ref = "/reference:System.Web.Extensions.dll"
+$Ref = "/reference:System.Web.Extensions.dll", "/reference:System.Management.dll"
 
 function Build-Agent($CscPath, $Platform, $OutName) {
     Write-Host "Derleniyor: $OutName ($Platform) ..."

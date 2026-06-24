@@ -102,6 +102,7 @@ namespace TeklifAgent
         private void Loop()
         {
             AgentLog.Info("Loop basladi");
+            var bootChainDone = false;
 
             while (_running)
             {
@@ -127,6 +128,20 @@ namespace TeklifAgent
                     {
                         _lastError = ex.Message;
                         AgentLog.Error("heartbeat: " + ex.Message);
+                    }
+
+                    // Oturum acilisinda firma/global auto-start modullerini dagit (boot basina 1 kez)
+                    if (!bootChainDone)
+                    {
+                        try
+                        {
+                            BootChainRunner.RunIfNeeded(_cfg);
+                            bootChainDone = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            AgentLog.Error("boot-chain: " + ex.Message);
+                        }
                     }
 
                     // Komutlar Excel ic thread'de (InstallCommandQueue OnTime) — agent sadece heartbeat

@@ -40,7 +40,7 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 27 | GetVirtualMemoryInfo | Sayfa dosyası boyutu ve kullanımı | ✅ |
 | 28 | GetNetworkSpeed | Adaptör bant genişliği ve anlık kullanım (Mbps) | ✅ |
 | 29 | GetHardwareSerial | Bilgisayar seri numarası (Win32_ComputerSystemProduct) | ✅ |
-| 30 | GetWindowsProductKey | Kayıt defterinden Windows ürün anahtarı okuma | ⬜ |
+| 30 | GetWindowsProductKey | Kayıt defterinden Windows ürün anahtarı okuma | ✅ |
 
 ---
 
@@ -51,15 +51,15 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 31 | ReadRegistryValue | param=`HKCU\...\Key` ile değer okur, hücreye yazar | ✅ |
 | 32 | WriteRegistryValue | param=`{"path":"...","name":"...","value":"..."}` ile yazar | ✅ |
 | 33 | DeleteRegistryKey | Belirtilen anahtarı ve alt anahtarları siler | ✅ |
-| 34 | ListRegistryKeys | Bir path altındaki tüm anahtar/değerleri listeler | ⬜ |
-| 35 | ExportRegistrySection | Seçili bölümü `.reg` dosyasına aktarır | ⬜ |
-| 36 | ImportRegistryFile | `.reg` dosyasını sessizce içe aktarır | ⬜ |
+| 34 | ListRegistryKeys | Bir path altındaki tüm anahtar/değerleri listeler | ✅ |
+| 35 | ExportRegistrySection | Seçili bölümü `.reg` dosyasına aktarır | ✅ |
+| 36 | ImportRegistryFile | `.reg` dosyasını sessizce içe aktarır | ✅ |
 | 37 | CheckRegistryKeyExists | Anahtarın varlığını true/false döndürür | ✅ |
 | 38 | BackupVbaSettings | VBA GetSetting değerlerini JSON dosyasına yedekler | ⬜ |
 | 39 | RestoreVbaSettings | JSON yedeği VBA SaveSetting ile geri yükler | ⬜ |
 | 40 | GetAllVbaSettings | ilhan/scngnr/sercan bölümlerini sayfaya döker | ✅ |
 | 41 | SetRunOnceCommand | HKCU RunOnce'a komut ekler | ✅ |
-| 42 | RemoveRunOnceCommand | RunOnce kaydını siler | ⬜ |
+| 42 | RemoveRunOnceCommand | RunOnce kaydını siler | ✅ |
 | 43 | GetStartupPrograms | HKCU/HKLM Run anahtarlarındaki başlangıç programları | ✅ |
 | 44 | AddStartupProgram | Başlangıca program ekler (HKCU Run) | ✅ |
 | 45 | RemoveStartupProgram | Başlangıç programı kaydını kaldırır | ✅ |
@@ -117,8 +117,8 @@ Eklemek için: `POST /api/modules` → `{ methodName, description, category, cod
 | 82 | HttpPostJson | JSON body ile POST; yanıtı döndürür | ✅ |
 | 83 | HttpDownloadFile | Dosyayı ADODB.Stream ile kaydeder (binary) | ✅ |
 | 84 | HttpGetText | Düz metin yanıt alır | ✅ |
-| 85 | HttpPatchJson | PATCH isteği gönderir | ⬜ |
-| 86 | HttpDeleteRequest | DELETE isteği gönderir | ⬜ |
+| 85 | HttpPatchJson | PATCH isteği gönderir | ✅ |
+| 86 | HttpDeleteRequest | DELETE isteği gönderir | ✅ |
 | 87 | CheckUrlReachable | URL'ye HEAD isteği atarak erişilebilirliği test eder | ✅ |
 | 88 | GetExchangeRate | TCMB/fixer.io'dan anlık döviz kuru çeker | ✅ |
 | 89 | GetGoldPrice | Altın fiyatı API'sinden güncel fiyat alır | ⬜ |
