@@ -1,0 +1,3754 @@
+[
+  {
+    "name": "AddFirewallRule",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "AddHostsEntry",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AddHyperlinksFromSheet",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AddLogoToAllSheets",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AddModuleReference",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AddSparklinesToColumn",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AddStartupProgram",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AddUserToLocalGroup",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AddWatermarkToSheet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AgentHealthDashboard",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "AnalyzeDiskUsageByFolder",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "AnimateStatusMessage",
+    "problems": [
+      "Application.Wait x1"
+    ]
+  },
+  {
+    "name": "AntiScreenCapture",
+    "problems": [
+      "Application.Wait x1",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AppendToTextFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ApplyConditionalFormatting",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ApplyDropdownFromList",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ApplyThemeToWorkbook",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ApprovalWorkflow",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AuditLogAction",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoArchiveOldRows",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "AutoDocumentWorkbook",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoFillFormFromApi",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoFillFromLookupTable",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoFitAllColumns",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoFormatAsTable",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoGenerateChartsForAllSheets",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoNumberRows",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "AutoStartOnExcelOpen",
+    "problems": [
+      "Application.Wait x1"
+    ]
+  },
+  {
+    "name": "AutoUpdateModules",
+    "problems": [
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "BackupFileWithTimestamp",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "BackupToFtpServer",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BackupVbaModulesToZip",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BackupVbaSettings",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BasicAuthGet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BatchProcessRows",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BearerTokenGet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BlacklistMacAddress",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BlockUserInput",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BuildDynamicQueryTable",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BuildMultiSheetWorkbook",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BulkFindAndReplace",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "BundleModuleDependencies",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CalculateCorrelation",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CalculateDescriptiveStats",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CallDllFunction",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CaptureActiveWindow",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CaptureScreenshot",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "CheckAdminRights",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CheckCertificateExpiry",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CheckDataCompleteness",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CheckDnsResolution",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CheckDomainConnectivity",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CheckFileIntegrity",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CheckForUpdate",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CheckLicenseStatus",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CheckSyncStatus",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CheckWindowsDefenderStatus",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CheckWindowsFirewallStatus",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CleanHtmlToText",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CleanTempFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ClearModuleContents",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ClearValidationRules",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CollectForensicSnapshot",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "CompareColumnDifferences",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CompareFilesIdentical",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "CompareRegistrySnapshot",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CompileVbaProject",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CompressAllImages",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CompressAndUpload",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConditionalModuleRunner",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConfigureAgentInterval",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConfigureAgentServerUrl",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConnectNamedPipeClient",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConnectToMySql",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConnectToPostgres",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConnectToSqlServer",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ConnectVpn",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConnectWifi",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertBase64ToFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertDateFormats",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertFileToBase64",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertFormulasToValues",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertImageFormat",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertPdfToText",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertSheetToHtmlTable",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertSheetToJson",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertTurkishChars",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertWordToPdf",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ConvertXmlToSheet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CopyFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "CopyFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "CopySheetToNewWorkbook",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateDashboardSheet",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateFileMapping",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "CreateHeatmapConditional",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateLocalUser",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateNamedPipeServer",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateNamedRangeFromSelection",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateOutlookAppointment",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateOutlookTask",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateShadowCopy",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateSharedFolder",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CreateSystemRestorePoint",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CrossPlatformAgentNote",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CsvToJsonApi",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CurlDownloadFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CurlHttpGet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "CurlHttpPostJson",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DailyDatabaseBackup",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DecryptCellRange",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DecryptDataDpapi",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "DecryptFileAES",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "DecryptTextXor",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DeleteFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "DeleteFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "DeltaUpdateAgent",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DetectCopyAndSelfDestruct",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DetectLanguage",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DetectOutliersIqr",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DetectSuspiciousProcesses",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DisableLocalUser",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "DisableScreenSaver",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "DisableUsbStorage",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "DisableWindowsFeature",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "DisableWindowsFirewall",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "DisconnectVpn",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DiscoverNetworkDevices",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DisplayQrCode",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DnsLookupHost",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DownloadAndExtract",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DownloadFromFtp",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DownloadFromOneDrive",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "DuckDbAnalytics",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ElevationRequestUac",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "EmbedImageInCell",
+    "problems": [
+      "Application.Wait x1",
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "EnableDhcp",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "EnableRemoteDesktop",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "EnableUsbStorage",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "EnableWindowsFeature",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "EnableWindowsFirewall",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "EncryptCellRange",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "EncryptDataDpapi",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "EncryptFileAES",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "EncryptRegistrySecrets",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "EncryptTextXor",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "EnumVisibleWindows",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExcelSafeRemoteExecute",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportAgentLogs",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportAllModules",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportAllSheetsAsPdf",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportContactsToVcard",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportMacroToServer",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportRangeAsImage",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportRegistrySection",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportSheetAsPdf",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExportToCsvAndPrint",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExtractEmailsFromSheet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExtractImagesFromSheet",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExtractKeywords",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ExtractTextFromWord",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FFmpegConvertVideo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FetchAndFillForm",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FetchCurrencyHistory",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FetchFromFirebase",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FileExists",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "FileQueueCommands",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FillWordTemplate",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FindWindowByTitle",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FitLinearRegression",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FlashTaskbarIcon",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FlushDnsCache",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "FormatCurrencyColumn",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FormatJsonString",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FreeLibraryDynamic",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FreezeFirstRowAndColumn",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FrequencyDistribution",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FtpDownloadFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FtpListDirectory",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "FtpUploadFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GenerateBarcode",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GenerateDiagnosticsReport",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GeneratePivotFromData",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GeneratePivotTableReport",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GenerateRandomToken",
+    "problems": [
+      "Set DynamicFunc = Nothing eksik",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GenerateReportFromTemplate",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GenerateSlug",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GenerateWordReport",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GeoLocateByIp",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetActiveConnections",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetAdaptersAddresses",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetAllNetworkAdapters",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetAppLockerPolicy",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetApplicationEventLog",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetArpTable",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetAudioDevices",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetAutoRunEntries",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetBatteryInfo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetBiosInfo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetBitLockerStatus",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetCertificateStore",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetClipboardSequence",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetComputerDescription",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetComputerName",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetComputerNameEx",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetComputerOuPath",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetCpuInfo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetCurrentUserGroups",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetCursorPosition",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetDiskFreeSpaceEx",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetDiskHealthStatus",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetDomainControllerInfo",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetDomainName",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetDomainPasswordPolicy",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetDomainUsers",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetDpiForWindow",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetEnvironmentBlock",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetEnvironmentVariables",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetEventLogErrors",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetFileAttributes",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetFileHashMd5",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetFileSize",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetFirewallRules",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetFirmwareType",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetFolderSize",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetForegroundWindowTitle",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetFromSalesforceApi",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetGoldPrice",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetGroupMembers",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetHostsFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetHotfixList",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetInstalledAntivirus",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetInstalledAppPaths",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetInstalledDrivers",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetInstalledPrinters",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetInstalledSoftwareList",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetInstalledWindowsFeatures",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetIpAddress",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetLastErrorMessage",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetLastInputIdleTime",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetLastLoginEvents",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetLatestModuleVersion",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetLineCountPerModule",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetLocalAdmins",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetLocalUsers",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetLoggedInUser",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetMacAddress",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetMacVendor",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetModuleFileName",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetMotherboardInfo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetNetworkConfig",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetNetworkRoutes",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetNetworkSpeed",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetNetworkStatistics",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetNewestFileInFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetPerformanceCounters",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetPowerPlan",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetPrinterList",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetPrinterStatus",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetProcedureList",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetProcessListNative",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetPsOutputToSheet",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetRamInfo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetRedirectedUrl",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetRunningProcesses",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetScreenSaverSettings",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetSecurityEventLog",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetServiceDependencies",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetServiceStatus",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetShadowCopies",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetSharedFolders",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetStartupPrograms",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetSystemEventLog",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetSystemLocale",
+    "problems": [
+      "Application.Wait x1",
+      "targetWb.Sheets(1) On Error yok",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetSystemMetrics",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetSystemRestorePoints",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetSystemTimes",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetSystemUptime",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetTcpTable",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetTeklifAgentStatus",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetTickCount64",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetTimeZone",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetTokenInformation",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetTopCpuProcesses",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetTopMemoryProcesses",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetUdpTable",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetUsbDevices",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetUserNameEx",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "GetVolumeSerialNumber",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetVpnConnections",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetWeatherData",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetWifiProfiles",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "GetWindowRect",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetWindowsActivationStatus",
+    "problems": [
+      "Application.Wait x1",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetWindowsLicenseInfo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetWindowsReliabilityHistory",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GetWindowsUpdateList",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "GetWindowsVersion",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GpuComputeReduce",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "GrpcAgentChannel",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "HashFileMd5Native",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "HashFilesSha256",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "HeartbeatPing",
+    "problems": [
+      "Application.Wait x2",
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "HideRibbonCustomGroup",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "HttpDeleteRequest",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "HttpDownloadFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "HttpGetJson",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "HttpGetText",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "HttpPatchJson",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "HttpPostJson",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok",
+      "Coklu Do/Loop (4)"
+    ]
+  },
+  {
+    "name": "ImportDataFromRestApi",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ImportJsonToSheet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ImportModuleFromFile",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ImportRegistryFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok",
+      "kodda 'aktar' geciyor — kontrol"
+    ]
+  },
+  {
+    "name": "ImportRegistrySettings",
+    "problems": [
+      "InputBox (etkilesimli tikanma)"
+    ]
+  },
+  {
+    "name": "ImportSheetFromFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "IncrementalBackup",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "InjectCodeToModule",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "InjectVbaModule",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "InsertChartFromData",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "InsertImageFromUrl",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "InsertRowAboveSelected",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "InstallCommandQueue",
+    "problems": [
+      "Coklu Do/Loop (4)"
+    ]
+  },
+  {
+    "name": "InstallTeklifAgent",
+    "problems": [
+      "Application.Wait x1",
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "InstallTeklifAgentService",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "InstallWindowsService",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "InstallWindowsUpdates",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "IsProcessRunning",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "IsUserAnAdmin",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "IsWow64Process",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "KillProcessByName",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "LibXlWriteFast",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ListAllModulesInWorkbook",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ListFolderContents",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ListRegisteredComObjects",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "LoadLibraryDynamic",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "LocalHttpAgentApi",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "LockWorkStation",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "LockWorkbookOnExpiry",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "LogWorkflowStep",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "LookupAccountSid",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MachineLearningOnnx",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MaskSensitiveData",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MaximizeExcelWindow",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MergeColumnsWithSeparator",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MergeJsonFiles",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MergeMultipleFiles",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MergeWordDocuments",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MinimizeExcelWindow",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MirrorFolderStructure",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MmfSharedStatusBlock",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ModuleTimeoutWatchdog",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ModuleVersionControl",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "MonitorCpuSpike",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "MoveFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "MoveFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "MoveWindowToPosition",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MovingAverageSmoothing",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "MsgParseOutlook",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "NormalizeDataMinMax",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "NormalizeIbanFormat",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "NormalizePhoneNumbers",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "OAuthGetToken",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "OpenFileWithDefaultApp",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "OpenServiceManager",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "OpenSslAesEncrypt",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "OpenSslRsaSign",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "OpenUrlInBrowser",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ParallelBatchRunner",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ParseTurkishDate",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PauseAndResume",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PdfExtractText",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PdfMergeNative",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PingHost",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PipeCancelRunningModule",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PipeGetLastResult",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PipeRequestRunModule",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PlayAudioFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PlaySystemBeep",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PlaySystemSound",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "PngEncodeScreenshot",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PostMessageCloseWindow",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PostToAirtable",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PostToGoogleSheets",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PostToJiraIssue",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PostToServer",
+    "problems": [
+      "Coklu Do/Loop (4)"
+    ]
+  },
+  {
+    "name": "PostToSupabase",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PrintRangeToPdf",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PrintSheetWithSettings",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "PrintWithWatermark",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ProfileCodeRuntime",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "ProtectAllSheets",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ProtectFormulaColumns",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "QueryActiveDirectoryLdap",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "QueryServiceStatus",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "QueueModuleWhenExcelBusy",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RateLimitModuleCalls",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReadBarcodeZxing",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReadCsvToSheet",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (4)",
+      "kodda 'aktar' geciyor — kontrol"
+    ]
+  },
+  {
+    "name": "ReadFromExcelOneDrive",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReadFromGoogleSheets",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReadFromNotion",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReadMemoryMappedFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReadQrCode",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReadTextFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ReadWriteNamedPipe",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RecordMacroToGif",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RefreshAllPivotTables",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RegOpenKeyExNative",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RegQueryValueExNative",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RegSetValueExNative",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RegexExtract",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RegexReplace",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RegisterComDll",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoteConfigLoader",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoteDesktopSession",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoteWipeWorkstation",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoveDuplicateRows",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoveModuleReference",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoveSharedFolder",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoveUserFromLocalGroup",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RemoveVbaModule",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "RenameFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "RenameVbaModule",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ReplaceTextInFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ReplyToEmail",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ResetLocalUserPassword",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ResetNetworkAdapter",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ResizeAllImages",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RestartWindowsService",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "RestoreFromBackup",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RestoreVbaSettings",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RetryOnFailure",
+    "problems": [
+      "Application.Wait x1"
+    ]
+  },
+  {
+    "name": "RollbackOnError",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RotateAgentLogFiles",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RotateBackupFiles",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RunAsAdmin",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RunAsDifferentUser",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RunCmdCommand",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "RunMacroInWorkbook",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "RunModuleWithTimeout",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "RunPsCommand",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "RunPsScript",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SandboxUntrustedMacro",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SaveAllWorkbooks",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ScanFolderForMalware",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "ScanOpenPorts",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "ScheduleBackupTask",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ScheduleTaskMonthly",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ScheduleTaskWeekly",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "SearchFilesByPattern",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "SearchInVbaCode",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SecureDeleteFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SelfHealingCheck",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SelfUpdateAddin",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "SendBulkEmail",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendErrorReportToServer",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "SendIcmpPing",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendKeystrokes",
+    "problems": [
+      "Application.Wait x1",
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendMessageToWindow",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendModuleResultSummary",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendSlackMessage",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendSmsViaTwilio",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendTeamsMessage",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendTelegramMessage",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "SendToMakeWebhook",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendToZapierWebhook",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendUdpPacket",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SendWhatsAppMessage",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SerialPortRead",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceBatteryAlert",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceCertificateExpiryCheck",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceCollectHardwareSnapshot",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceCommandPoll",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceDefenderStatusReport",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "ServiceDiskSpaceAlert",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceHeartbeatLoop",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceOfflineQueueFlush",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServicePendingRebootReport",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServicePrintQueueMonitor",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceProcessBlacklist",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceRecordAuditVideo",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceRunModuleNative",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceRunModuleViaExcel",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceRunScheduledModules",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceScreenCaptureScheduled",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceSyncFilesToServer",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceUsbInsertAlert",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceVpnReconnect",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ServiceWatchFolder",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetCursorPosition",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetDefaultPrinter",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetDnsServers",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetEnvironmentVariable",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetExcelAlwaysOnTop",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetExcelTitleBar",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetFileAttribute",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "SetPowerPlan",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetPsExecutionPolicy",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetRunOnceCommand",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetServiceAutoStart",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetStaticIp",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetSystemTime",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetWindowTransparency",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SetWorkbookMetadata",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SevenZipCompress",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SevenZipExtract",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SftpUploadFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SheetToPivotJson",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowBalloonTip",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowCalendarPicker",
+    "problems": [
+      "InputBox (etkilesimli tikanma)",
+      "Set DynamicFunc = Nothing eksik",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowCountdownTimer",
+    "problems": [
+      "Application.Wait x1",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowCustomInputForm",
+    "problems": [
+      "InputBox (etkilesimli tikanma)",
+      "Set DynamicFunc = Nothing eksik",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowDarkModeUserForm",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowFloatingToolbar",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowProgressBar",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowRibbonCustomGroup",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowStatusBarProgress",
+    "problems": [
+      "Application.Wait x1",
+      "Shell.Run sync=True (uzun blok)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ShowSystemTrayBalloon",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "ShowToastNotification",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "ShowYesNoCancelDialog",
+    "problems": [
+      "Set DynamicFunc = Nothing eksik",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SignPdfWithCertificate",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SignedModuleDelivery",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SimulateMouseClick",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SortSheetsByName",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SpellCheckText",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SplitCsvByColumn",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok",
+      "kodda 'aktar' geciyor — kontrol"
+    ]
+  },
+  {
+    "name": "SplitSheetByColumn",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SqliteQueryToSheet",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SseAgentToDashboard",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SshExecuteCommand",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "StartTeklifAgent",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "StartWindowsService",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "StopTeklifAgent",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "StopWindowsService",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SubmitFormData",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SummarizeText",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SyncFolderToServer",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SyncNamedRangeToServer",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SyncSheetWithDatabase",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SyncSystemTimeNtp",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SyncToNetworkShare",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "SyncToTrelloBoard",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TableToJsonAndPost",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TamperDetectAgent",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "TeklifServiceCom",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TerminateProcessByPid",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TesseractOcr",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TextToSpeechSave",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TimeGetTime",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TimeLimitedAccess",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TokenizeText",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TraceRouteToHost",
+    "problems": [
+      "Satir 4: PS tek tirnak"
+    ]
+  },
+  {
+    "name": "TranslateTextDeepL",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TranslateTextGoogle",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TriggerOnCellChange",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "TriggerWebhookOnChange",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UninstallTeklifAgentService",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UninstallWindowsService",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UnregisterComDll",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UnzipToFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "UpdateTeklifAgent",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UploadExcelToSharePoint",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UploadFileToBlobStorage",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UploadToAwsS3",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UploadToAzureBlob",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UploadToOneDrive",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "UsbDeviceMonitor",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateCreditCard",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateEmailAddress",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateIbanNumber",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateIpAddress",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateMacWithServer",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateSheetWithSchema",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateTCKimlik",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateTurkishPhone",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ValidateUrl",
+    "problems": [
+      "Stub (sheetNote)",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "VerifyAuthenticodeSignature",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "VerifyBackupIntegrity",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WakeOnLanSchedule",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WatchClipboard",
+    "problems": [
+      "Stub (sheetNote) — islev yok",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WatchFolderForNewFile",
+    "problems": [
+      "Application.Wait x1",
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WatchFolderServer",
+    "problems": [
+      "Coklu Do/Loop (4)"
+    ]
+  },
+  {
+    "name": "WatermarkVisibleOnPrint",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WebScrapeSimple",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WebSocketAgentStream",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WebhookListener",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WmCopyDataIpc",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WriteMemoryMappedFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "WriteRegistryValue",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)"
+    ]
+  },
+  {
+    "name": "WriteSheetToCsv",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "WriteTextFile",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ZipFolder",
+    "problems": [
+      "Shell.Run sync=True (uzun blok)",
+      "Coklu Do/Loop (3)"
+    ]
+  },
+  {
+    "name": "ZstdCompressFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "ZstdDecompressFile",
+    "problems": [
+      "targetWb.Sheets(1) On Error yok"
+    ]
+  },
+  {
+    "name": "getLicense",
+    "problems": [
+      "Application.Wait x2",
+      "Coklu Do/Loop (4)"
+    ]
+  }
+]

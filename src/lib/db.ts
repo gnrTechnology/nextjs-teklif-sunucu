@@ -7,6 +7,11 @@ import type {
   ModuleUpsertBody,
   FirmAutoModuleRecord,
 } from "./types";
+import type { UserPreferences } from "./user-preferences-types";
+import {
+  DEFAULT_USER_PREFERENCES,
+  mergeUserPreferences,
+} from "./user-preferences-types";
 
 type LicenseRow = {
   mac_adresi: string;
@@ -1649,4 +1654,51 @@ export async function listActivityLogs(options?: { limit?: number }): Promise<{
     source: r.source as string | null,
     createdAt: new Date(r.created_at as string).toISOString(),
   }));
+}
+
+// ── Kullanıcı UI tercihleri (tema, sayfa durumu) ─────────────────────────────
+
+export async function ensureUserPreferencesTable(): Promise<void> {
+  const sql = getSql();
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_ui_preferences (
+      user_key   TEXT PRIMARY KEY,
+      prefs      JSONB NOT NULL DEFAULT '{}',
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getUserPreferences(
+  userKey: string,
+): Promise<UserPreferences> {
+  await ensureUserPreferencesTable();
+  const sql = getSql();
+  const rows = await sql`
+    SELECT prefs FROM user_ui_preferences WHERE user_key = ${userKey} LIMIT 1
+  `;
+  const row = rows[0] as { prefs?: UserPreferences } | undefined;
+  if (!row?.prefs || typeof row.prefs !== "object") {
+    return { ...DEFAULT_USER_PREFERENCES };
+  }
+  return mergeUserPreferences(DEFAULT_USER_PREFERENCES, row.prefs);
+}
+
+export async function saveUserPreferences(
+  userKey: string,
+  patch: Partial<UserPreferences>,
+): Promise<UserPreferences> {
+  await ensureUserPreferencesTable();
+  const sql = getSql();
+  const current = await getUserPreferences(userKey);
+  const merged = mergeUserPreferences(current, patch);
+  const now = nowTR();
+  await sql`
+    INSERT INTO user_ui_preferences (user_key, prefs, updated_at)
+    VALUES (${userKey}, ${JSON.stringify(merged)}::jsonb, ${now})
+    ON CONFLICT (user_key) DO UPDATE SET
+      prefs = EXCLUDED.prefs,
+      updated_at = EXCLUDED.updated_at
+  `;
+  return merged;
 }

@@ -81,6 +81,14 @@ function checkVba(name, code) {
     problems.push(`End Function sayisi uyumsuz (${funcEnds}/${funcStarts})`);
   }
 
+  if (/Debug\.Print[^\n]*\),\s*vb/i.test(code)) {
+    problems.push("Bozuk Debug.Print — derleme hatasi");
+  }
+
+  if (/Debug\.Print[^\n]*(vbInformation|vbExclamation|vbCritical|vbYesNo)/i.test(code)) {
+    problems.push("MsgBox kalintisi (vb* sabitleri)");
+  }
+
   if (problems.length) ISSUES.push({ name, problems });
 }
 

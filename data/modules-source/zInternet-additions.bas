@@ -165,7 +165,7 @@ Private Sub RunRemoteCodeInternal(methodName As String, extraParam As Variant, q
     Set hostWb = GetHostWorkbook(ActiveWorkbook)
     If hostWb Is Nothing Then
         Debug.Print "[zInternet] Ana dosya bulunamadi."
-        If Not quiet Then MsgBox "Ana teklif dosyası bulunamadı.", vbCritical
+        If Not quiet Then Debug.Print "[zInternet] Ana teklif dosyasi bulunamadi."
         If quiet Then Err.Raise vbObjectError + 514, "zInternet", "Ana teklif dosyasi bulunamadi"
         Exit Sub
     End If
@@ -194,11 +194,11 @@ Private Sub RunRemoteCodeInternal(methodName As String, extraParam As Variant, q
                     On Error GoTo 0
                 End If
             Else
-                If Not quiet Then MsgBox "Sunucudan kod içeriği boş döndü.", vbExclamation
+                If Not quiet Then Debug.Print "[zInternet] Sunucudan kod icerigi bos."
                 If quiet Then Err.Raise vbObjectError + 515, "zInternet", "Sunucudan kod bos"
             End If
         Else
-            If Not quiet Then MsgBox "Sunucu Hatası (" & .Status & "): " & .responseText, vbCritical
+            If Not quiet Then Debug.Print "[zInternet] Sunucu hatasi " & .Status & ": " & Left$(.responseText, 200)
             If quiet Then Err.Raise vbObjectError + 516, "zInternet", "Sunucu hatasi " & .Status
         End If
     End With
@@ -211,7 +211,7 @@ Private Sub RunRemoteCodeInternal(methodName As String, extraParam As Variant, q
 ErrHandler:
     Application.ScreenUpdating = True
     Debug.Print "[zInternet] Baglanti hatasi: " & Err.Description
-    If Not quiet Then MsgBox "Bağlantı Hatası: " & Err.Description, vbCritical
+    If Not quiet Then Debug.Print "[zInternet] Baglanti hatasi: " & Err.Description
     Set http = Nothing
     If quiet Then Err.Raise Err.Number, "zInternet", Err.Description
 End Sub
@@ -222,11 +222,21 @@ Public Function ExecuteDynamicFunction(codeContent As String, targetWb As Workbo
     Dim modName As String
     Dim result As Object
     Dim fullCode As String
+    Dim prevAlerts As Boolean
+    Dim prevEvents As Boolean
+    Dim prevScreen As Boolean
+    Dim prevInteractive As Boolean
 
     Debug.Print "[zInternet] ExecuteDynamicFunction basladi. targetWb: " & targetWb.Name
 
     If IsMissing(param) Then param = ""
 
+    prevAlerts = Application.DisplayAlerts
+    prevEvents = Application.EnableEvents
+    prevScreen = Application.ScreenUpdating
+    prevInteractive = Application.Interactive
+
+    Application.DisplayAlerts = False
     Application.ScreenUpdating = False
     Application.EnableEvents = False
 
@@ -245,7 +255,6 @@ Public Function ExecuteDynamicFunction(codeContent As String, targetWb As Workbo
 
     Debug.Print "[zInternet] DynamicFunc cagriliyor..."
     Application.ScreenUpdating = True
-    Application.EnableEvents = True
     Application.Interactive = True
     DoEvents
     On Error GoTo Cleanup
@@ -253,13 +262,17 @@ Public Function ExecuteDynamicFunction(codeContent As String, targetWb As Workbo
     Set ExecuteDynamicFunction = result
 
 Cleanup:
+    On Error Resume Next
     If Not tempWb Is Nothing Then
+        tempWb.Saved = True
         tempWb.Close SaveChanges:=False
         Set tempWb = Nothing
     End If
 
-    Application.EnableEvents = True
-    Application.ScreenUpdating = True
+    Application.DisplayAlerts = prevAlerts
+    Application.EnableEvents = prevEvents
+    Application.ScreenUpdating = prevScreen
+    Application.Interactive = prevInteractive
 
     If Err.Number <> 0 Then
         Dim errNum As Long
@@ -267,7 +280,7 @@ Cleanup:
         errNum = Err.Number
         errDesc = Err.Description
         Debug.Print "[zInternet] ExecuteDynamicFunction hata: " & errDesc
-        If Not quiet Then MsgBox "Uzak modul hatasi:" & vbCrLf & errDesc, vbCritical, "RunRemoteCode"
+        If Not quiet Then Debug.Print "[zInternet] Uzak modul hatasi: " & errDesc
         Err.Clear
         Err.Raise errNum, "zInternet", errDesc
     End If
