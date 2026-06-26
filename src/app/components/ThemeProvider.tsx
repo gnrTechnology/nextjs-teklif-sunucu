@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useThemePreference } from "@/lib/user-preferences";
 
 type Theme = "dark" | "light" | "system";
 
@@ -20,6 +21,7 @@ function resolveTheme(theme: Theme): "dark" | "light" {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const { theme: dbTheme, setTheme: saveTheme, ready } = useThemePreference();
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolved, setResolved] = useState<"dark" | "light">("dark");
 
@@ -27,6 +29,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem("teklif-theme") as Theme | null;
     if (stored) setThemeState(stored);
   }, []);
+
+  useEffect(() => {
+    if (ready) setThemeState(dbTheme);
+  }, [ready, dbTheme]);
 
   useEffect(() => {
     const next = resolveTheme(theme);
@@ -47,10 +53,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mq.removeEventListener("change", onChange);
   }, [theme]);
 
-  const setTheme = useCallback((t: Theme) => {
-    setThemeState(t);
-    localStorage.setItem("teklif-theme", t);
-  }, []);
+  const setTheme = useCallback(
+    (t: Theme) => {
+      setThemeState(t);
+      localStorage.setItem("teklif-theme", t);
+      saveTheme(t);
+    },
+    [saveTheme],
+  );
 
   return (
     <ThemeContext.Provider value={{ theme, resolved, setTheme }}>

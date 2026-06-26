@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUserPreferences } from "@/lib/user-preferences";
 
 const STORAGE_KEY = "teklif_mac_filter";
 
@@ -18,7 +19,9 @@ export function MacFilterProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlMac = searchParams.get("mac") ?? "";
+  const { prefs, updatePrefs, ready } = useUserPreferences();
   const [mac, setMacState] = useState("");
+  const hydrated = useRef(false);
 
   useEffect(() => {
     if (urlMac) {
@@ -28,7 +31,23 @@ export function MacFilterProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* ignore */
       }
+      if (ready && urlMac !== prefs.macFilter) {
+        updatePrefs({ macFilter: urlMac });
+      }
       return;
+    }
+    if (ready && !hydrated.current) {
+      hydrated.current = true;
+      const fromDb = prefs.macFilter ?? "";
+      if (fromDb) {
+        setMacState(fromDb);
+        try {
+          sessionStorage.setItem(STORAGE_KEY, fromDb);
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
     }
     try {
       const stored = sessionStorage.getItem(STORAGE_KEY) ?? "";
@@ -36,7 +55,7 @@ export function MacFilterProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-  }, [urlMac]);
+  }, [urlMac, ready, prefs.macFilter, updatePrefs]);
 
   const setMac = useCallback(
     (value: string) => {
@@ -48,8 +67,9 @@ export function MacFilterProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* ignore */
       }
+      updatePrefs({ macFilter: v });
     },
-    [],
+    [updatePrefs],
   );
 
   const clearMac = useCallback(() => {

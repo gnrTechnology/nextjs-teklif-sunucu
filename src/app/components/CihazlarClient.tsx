@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Monitor,
   LayoutGrid,
@@ -13,6 +13,7 @@ import {
 import { formatTR } from "@/lib/date-utils";
 import type { DeviceSnapshot, DeviceSnapshotHistory } from "@/lib/db";
 import { useMacFilter } from "@/lib/mac-filter";
+import { useCihazlarPrefs } from "@/lib/user-preferences";
 import PageHeader from "./ui/PageHeader";
 import EmptyState from "./ui/EmptyState";
 import DetailDrawer from "./ui/DetailDrawer";
@@ -240,14 +241,35 @@ function DeviceGridCard({ snap, onOpen }: { snap: DeviceSnapshot; onOpen: () => 
 
 export default function CihazlarClient({ initial }: { initial: DeviceSnapshot[] }) {
   const { mac: globalMac, matchesMac } = useMacFilter();
+  const { page, setPage, ready: prefsReady } = useCihazlarPrefs();
   const [devices, setDevices] = useState<DeviceSnapshot[]>(initial);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [selected, setSelected] = useState<DeviceSnapshot | null>(null);
+  const hydrated = useRef(false);
 
   useEffect(() => {
     setDevices(initial);
   }, [initial]);
+
+  useEffect(() => {
+    if (!prefsReady || hydrated.current) return;
+    hydrated.current = true;
+    if (page.search != null) setSearch(page.search);
+    if (page.view) setView(page.view);
+    if (page.selectedMac) {
+      const snap = initial.find((d) => d.mac === page.selectedMac);
+      if (snap) setSelected(snap);
+    }
+  }, [prefsReady, page, initial]);
+
+  useEffect(() => {
+    if (!hydrated.current) return;
+    const t = setTimeout(() => {
+      setPage({ search, view, selectedMac: selected?.mac ?? null });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search, view, selected, setPage]);
 
   async function reload() {
     const r = await fetch("/api/device-info");

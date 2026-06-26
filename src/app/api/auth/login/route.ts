@@ -11,11 +11,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false }, { status: 401 });
   }
   const res = NextResponse.json({ success: true });
-  res.cookies.set("teklif_admin", adminPassword, {
+  const userKey = process.env.ADMIN_USER_ID ?? "admin";
+  const cookieOpts = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "lax" as const,
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
-  });
+  };
+  res.cookies.set("teklif_admin", adminPassword, cookieOpts);
+  res.cookies.set("teklif_user", userKey, cookieOpts);
   return res;
 }
