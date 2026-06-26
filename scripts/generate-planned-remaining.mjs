@@ -5,6 +5,7 @@
  */
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, "data", "modules-staging");
@@ -147,6 +148,152 @@ End Function`;
 }
 
 const CUSTOM = {
+  FlashTaskbarIcon: apiModule(`#If VBA7 Then
+Private Declare PtrSafe Function FlashWindowEx Lib "user32" (pfwi As FLASHWINFO) As Long
+Private Type FLASHWINFO
+    cbSize As Long: hwnd As LongPtr: dwFlags As Long
+    uCount As Long: dwTimeout As Long
+End Type
+#Else
+Private Declare Function FlashWindowEx Lib "user32" (pfwi As FLASHWINFO) As Long
+Private Type FLASHWINFO
+    cbSize As Long: hwnd As Long: dwFlags As Long
+    uCount As Long: dwTimeout As Long
+End Type
+#End If
+Private Const FLASHW_ALL As Long = 3`, `    Dim fw As FLASHWINFO
+    fw.cbSize = Len(fw) : fw.hwnd = Application.hwnd
+    fw.dwFlags = FLASHW_ALL : fw.uCount = CLng(IIf(Len(Trim$(CStr(param))) > 0, Val(param), 5))
+    fw.dwTimeout = 0
+    FlashWindowEx fw
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Flash" : ws.Range("B1").Value = fw.uCount
+    Set DynamicFunc = Nothing`),
+
+  SendMessageToWindow: apiModule(`#If VBA7 Then
+Private Declare PtrSafe Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As LongPtr, ByVal wMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
+#Else
+Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+#End If`, `    Dim parts() As String : parts = Split(CStr(param), "|")
+    Dim hwnd As LongPtr : hwnd = CLng(Val(parts(0)))
+    Dim wMsg As Long : wMsg = CLng(Val(IIf(UBound(parts) >= 1, parts(1), 0)))
+    Dim wParam As LongPtr : wParam = CLng(Val(IIf(UBound(parts) >= 2, parts(2), 0)))
+    Dim lParam As LongPtr : lParam = CLng(Val(IIf(UBound(parts) >= 3, parts(3), 0)))
+    Dim ret As LongPtr : ret = SendMessage(hwnd, wMsg, wParam, lParam)
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "SendMessage" : ws.Range("B1").Value = ret
+    Set DynamicFunc = Nothing`),
+
+  SetWindowTransparency: apiModule(`#If VBA7 Then
+Private Declare PtrSafe Function GetWindowLong Lib "user32" Alias "GetWindowLongA" (ByVal hwnd As LongPtr, ByVal nIndex As Long) As Long
+Private Declare PtrSafe Function SetWindowLong Lib "user32" Alias "SetWindowLongA" (ByVal hwnd As LongPtr, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+Private Declare PtrSafe Function SetLayeredWindowAttributes Lib "user32" (ByVal hwnd As LongPtr, ByVal crKey As Long, ByVal bAlpha As Byte, ByVal dwFlags As Long) As Long
+#Else
+Private Declare Function GetWindowLong Lib "user32" Alias "GetWindowLongA" (ByVal hwnd As Long, ByVal nIndex As Long) As Long
+Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongA" (ByVal hwnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+Private Declare Function SetLayeredWindowAttributes Lib "user32" (ByVal hwnd As Long, ByVal crKey As Long, ByVal bAlpha As Byte, ByVal dwFlags As Long) As Long
+#End If
+Private Const GWL_EXSTYLE As Long = -20
+Private Const WS_EX_LAYERED As Long = &H80000
+Private Const LWA_ALPHA As Long = 2`, `    Dim alpha As Long : alpha = CLng(Val(CStr(param)))
+    If alpha < 0 Then alpha = 0
+    If alpha > 255 Then alpha = 255
+    Dim hwnd As LongPtr : hwnd = Application.hwnd
+    SetWindowLong hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) Or WS_EX_LAYERED
+    SetLayeredWindowAttributes hwnd, 0, CByte(alpha), LWA_ALPHA
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Alpha" : ws.Range("B1").Value = alpha
+    Set DynamicFunc = Nothing`),
+
+  SimulateMouseClick: apiModule(`#If VBA7 Then
+Private Declare PtrSafe Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dx As Long, ByVal dy As Long, ByVal dwData As Long, ByVal dwExtraInfo As LongPtr)
+#Else
+Private Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dx As Long, ByVal dy As Long, ByVal dwData As Long, ByVal dwExtraInfo As Long)
+#End If
+Private Const MOUSEEVENTF_LEFTDOWN As Long = &H2
+Private Const MOUSEEVENTF_LEFTUP As Long = &H4`, `    mouse_event MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0
+    mouse_event MOUSEEVENTF_LEFTUP, 0, 0, 0, 0
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Click" : ws.Range("B1").Value = "OK"
+    Set DynamicFunc = Nothing`),
+
+  GetClipboardSequence: apiModule(`Private Declare PtrSafe Function GetClipboardSequenceNumber Lib "user32" () As Long`, `    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Seq" : ws.Range("B1").Value = GetClipboardSequenceNumber()
+    Set DynamicFunc = Nothing`),
+
+  LockWorkStation: apiModule(`Private Declare PtrSafe Function LockWorkStation Lib "user32" () As Long`, `    LockWorkStation
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Locked" : ws.Range("B1").Value = "OK"
+    Set DynamicFunc = Nothing`),
+
+  BlockUserInput: apiModule(`Private Declare PtrSafe Function BlockInput Lib "user32" (ByVal fBlockIt As Long) As Long`, `    BlockInput CLng(IIf(CBool(param), 1, 0))
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "BlockInput" : ws.Range("B1").Value = CBool(param)
+    Set DynamicFunc = Nothing`),
+
+  GetSystemTimes: apiModule(`#If VBA7 Then
+Private Declare PtrSafe Function GetSystemTimes Lib "kernel32" (idleTime As Currency, kernelTime As Currency, userTime As Currency) As Long
+#Else
+Private Declare Function GetSystemTimes Lib "kernel32" (idleTime As Currency, kernelTime As Currency, userTime As Currency) As Long
+#End If`, `    Dim idleT As Currency, kernelT As Currency, userT As Currency
+    GetSystemTimes idleT, kernelT, userT
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Idle" : ws.Range("B1").Value = idleT
+    ws.Range("A2").Value = "Kernel" : ws.Range("B2").Value = kernelT
+    ws.Range("A3").Value = "User" : ws.Range("B3").Value = userT
+    Set DynamicFunc = Nothing`),
+
+  GetComputerNameEx: apiModule(`#If VBA7 Then
+Private Declare PtrSafe Function GetComputerNameEx Lib "kernel32" Alias "GetComputerNameExW" (ByVal NameType As Long, ByVal lpBuffer As LongPtr, nSize As Long) As Long
+#Else
+Private Declare Function GetComputerNameEx Lib "kernel32" Alias "GetComputerNameExW" (ByVal NameType As Long, ByVal lpBuffer As Long, nSize As Long) As Long
+#End If`, `    Dim buf As String : buf = String$(256, 0)
+    Dim sz As Long : sz = 256
+    GetComputerNameEx 3, StrPtr(buf), sz
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "DNS" : ws.Range("B1").Value = Left$(buf, sz)
+    Set DynamicFunc = Nothing`),
+
+  EnumVisibleWindows: `#If VBA7 Then
+Private Declare PtrSafe Function EnumWindows Lib "user32" (ByVal lpEnumFunc As LongPtr, ByVal lParam As LongPtr) As Long
+Private Declare PtrSafe Function IsWindowVisible Lib "user32" (ByVal hwnd As LongPtr) As Long
+Private Declare PtrSafe Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hwnd As LongPtr, ByVal lpString As String, ByVal cch As Long) As Long
+#Else
+Private Declare Function EnumWindows Lib "user32" (ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
+Private Declare Function IsWindowVisible Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
+#End If
+Private gWs As Worksheet
+Private gRow As Long
+#If VBA7 Then
+Private Function EnumProc(ByVal hwnd As LongPtr, ByVal lParam As LongPtr) As Long
+#Else
+Private Function EnumProc(ByVal hwnd As Long, ByVal lParam As Long) As Long
+#End If
+    If IsWindowVisible(hwnd) Then
+        Dim buf As String : buf = String$(256, 0)
+        If GetWindowText(hwnd, buf, 255) > 0 Then
+            Dim title As String : title = Trim$(buf)
+            If Len(title) > 0 Then
+                gRow = gRow + 1
+                gWs.Cells(gRow, 1).Value = hwnd
+                gWs.Cells(gRow, 2).Value = title
+                If gRow >= 500 Then EnumProc = 0 : Exit Function
+            End If
+        End If
+    End If
+    EnumProc = 1
+End Function
+Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
+    Set gWs = targetWb.Sheets(1)
+    gWs.Cells.ClearContents
+    gWs.Range("A1").Value = "HWND" : gWs.Range("B1").Value = "Baslik"
+    gRow = 1
+    EnumWindows AddressOf EnumProc, 0
+    gWs.Columns.AutoFit
+    Set DynamicFunc = Nothing
+End Function`,
+
   MinimizeExcelWindow: wrap(`    Application.WindowState = xlMinimized
     ${WS} : ws.Range("A1").Value = "Durum" : ws.Range("B1").Value = "Minimized"
     Set DynamicFunc = Nothing`),
@@ -183,16 +330,8 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     Set DynamicFunc = Nothing
 End Function`,
 
-  GetTickCount64: apiModule(`#If VBA7 Then
-Private Declare PtrSafe Function GetTickCount64 Lib "kernel32" () As LongLong
-#Else
-Private Declare Function GetTickCount Lib "kernel32" () As Long
-#End If`, `    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
-    #If VBA7 Then
+  GetTickCount64: apiModule(`Private Declare PtrSafe Function GetTickCount64 Lib "kernel32" () As LongLong`, `    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
     ws.Range("A1").Value = "Tick64" : ws.Range("B1").Value = GetTickCount64()
-    #Else
-    ws.Range("A1").Value = "Tick" : ws.Range("B1").Value = GetTickCount()
-    #End If
     Set DynamicFunc = Nothing`),
 
   FindWindowByTitle: apiModule(`#If VBA7 Then
@@ -326,7 +465,67 @@ Private Declare Function GetDiskFreeSpaceEx Lib "kernel32" Alias "GetDiskFreeSpa
     ws.Range("A1").Value = "Ms" : ws.Range("B1").Value = timeGetTime()
     Set DynamicFunc = Nothing`),
 
-  GetVolumeSerialNumber: psRun(`(Get-Volume -DriveLetter C).UniqueId`, "VolumeId"),
+  GetModuleFileName: apiModule(`Private Declare PtrSafe Function GetModuleFileName Lib "kernel32" Alias "GetModuleFileNameA" (ByVal hModule As LongPtr, ByVal lpFileName As String, ByVal nSize As Long) As Long`, `    Dim buf As String : buf = String$(260, 0)
+    Dim n As Long : n = GetModuleFileName(0, buf, 260)
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Exe" : ws.Range("B1").Value = Left$(buf, n)
+    Set DynamicFunc = Nothing`),
+
+  IsWow64Process: apiModule(`Private Declare PtrSafe Function IsWow64Process Lib "kernel32" (ByVal hProcess As LongPtr, Wow64Process As Long) As Long`, `    Dim flag As Long
+    IsWow64Process -1, flag
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Wow64" : ws.Range("B1").Value = (flag <> 0)
+    Set DynamicFunc = Nothing`),
+
+  GetFirmwareType: apiModule(`Private Declare PtrSafe Function GetFirmwareType Lib "kernel32" (FirmwareType As Long) As Long`, `    Dim ft As Long
+    GetFirmwareType ft
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Firmware" : ws.Range("B1").Value = ft
+    Set DynamicFunc = Nothing`),
+
+  GetLastErrorMessage: apiModule(`Private Declare PtrSafe Function GetLastError Lib "kernel32" () As Long
+Private Declare PtrSafe Function FormatMessage Lib "kernel32" Alias "FormatMessageA" (ByVal dwFlags As Long, lpSource As LongPtr, ByVal dwMessageId As Long, ByVal dwLanguageId As Long, ByVal lpBuffer As String, ByVal nSize As Long, Arguments As LongPtr) As Long`, `    Dim errNum As Long : errNum = GetLastError()
+    Dim buf As String : buf = String$(512, 0)
+    FormatMessage &H1000, 0, errNum, 0, buf, 512, 0
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = errNum : ws.Range("B1").Value = Trim$(buf)
+    Set DynamicFunc = Nothing`),
+
+  SetEnvironmentVariable: apiModule(`Private Declare PtrSafe Function SetEnvironmentVariable Lib "kernel32" Alias "SetEnvironmentVariableA" (ByVal lpName As String, ByVal lpValue As String) As Long`, `    Dim parts() As String : parts = Split(CStr(param), "=", 2)
+    SetEnvironmentVariable Trim$(parts(0)), IIf(UBound(parts) >= 1, Trim$(parts(1)), vbNullString)
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Env" : ws.Range("B1").Value = CStr(param)
+    Set DynamicFunc = Nothing`),
+
+  GetDpiForWindow: apiModule(`Private Declare PtrSafe Function GetDpiForWindow Lib "user32" (ByVal hwnd As LongPtr) As Long`, `    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "DPI" : ws.Range("B1").Value = GetDpiForWindow(Application.hwnd)
+    Set DynamicFunc = Nothing`),
+
+  DnsLookupHost: apiModule(`Private Declare PtrSafe Function DnsQuery Lib "dnsapi" Alias "DnsQuery_A" (ByVal pszName As String, ByVal wType As Integer, ByVal Options As Long, ByVal pExtra As LongPtr, ppQueryResults As LongPtr, ByVal pReserved As LongPtr) As Long`, `    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Host" : ws.Range("B1").Value = Trim$(CStr(param))
+    ws.Range("A2").Value = "Not" : ws.Range("B2").Value = "DnsQuery_A — sonuc icin iphlpapi genisletmesi"
+    Set DynamicFunc = Nothing`),
+
+  TerminateProcessByPid: apiModule(`Private Declare PtrSafe Function OpenProcess Lib "kernel32" (ByVal dwDesiredAccess As Long, ByVal bInheritHandle As Long, ByVal dwProcessId As Long) As LongPtr
+Private Declare PtrSafe Function TerminateProcess Lib "kernel32" (ByVal hProcess As LongPtr, ByVal uExitCode As Long) As Long
+Private Declare PtrSafe Function CloseHandle Lib "kernel32" (ByVal hObject As LongPtr) As Long
+Private Const PROCESS_TERMINATE As Long = &H1`, `    Dim pid As Long : pid = CLng(Val(CStr(param)))
+    Dim h As LongPtr : h = OpenProcess(PROCESS_TERMINATE, 0, pid)
+    Dim ok As Long : ok = 0
+    If h <> 0 Then ok = TerminateProcess(h, 0) : CloseHandle h
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "PID" : ws.Range("B1").Value = pid
+    ws.Range("A2").Value = "OK" : ws.Range("B2").Value = (ok <> 0)
+    Set DynamicFunc = Nothing`),
+
+  GetVolumeSerialNumber: apiModule(`Private Declare PtrSafe Function GetVolumeInformation Lib "kernel32" Alias "GetVolumeInformationA" (ByVal lpRootPathName As String, ByVal lpVolumeNameBuffer As String, ByVal nVolumeNameSize As Long, lpVolumeSerialNumber As Long, lpMaximumComponentLength As Long, lpFileSystemFlags As Long, ByVal lpFileSystemNameBuffer As String, ByVal nFileSystemNameSize As Long) As Long`, `    Dim drive As String : drive = Trim$(CStr(param))
+    If Len(drive) = 0 Then drive = "C:\\"
+    If Right$(drive, 1) <> "\\" Then drive = drive & "\\"
+    Dim serial As Long
+    GetVolumeInformation drive, vbNullString, 0, serial, 0, 0, vbNullString, 0
+    Dim ws As Worksheet : Set ws = targetWb.Sheets(1)
+    ws.Range("A1").Value = "Serial" : ws.Range("B1").Value = Hex$(serial)
+    Set DynamicFunc = Nothing`),
 
   IsProcessRunning: psRun(`if (Get-Process -Name $env:TEKLIF_PARAM -ErrorAction SilentlyContinue) { '1' } else { '0' }`, "Process"),
 
@@ -690,20 +889,40 @@ function generateCode(name) {
 }
 
 const meta = JSON.parse(fs.readFileSync(META_PATH, "utf8"));
-let written = 0;
 
-for (const name of allPending) {
-  const code = generateCode(name);
-  const out = code.trim().endsWith("End Function") ? code.trim() + "\n" : code + "\n";
-  fs.writeFileSync(path.join(OUT, `${name}.bas`), out, "utf8");
-  if (!meta[name]) {
-    meta[name] = {
-      description: name.replace(/([A-Z])/g, " $1").trim(),
-      category: name.match(/^Teklif/) ? "com" : name.match(/^(Get|Set|Find|Move|Post|Play|Time|Query|Start|List|Call)/) ? "dll" : name.startsWith("D") ? "dll" : name.match(/^(Get|Set|Check|Send|Post|Export|Import)/) ? name.replace(/^(Get|Set|Check|Send|Post|Export|Import).*/, "$1").toLowerCase() : "genel",
-    };
+const isMain =
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+
+if (isMain) {
+  let written = 0;
+
+  if (process.argv.includes("--export-dll-json")) {
+    const dllOnly = {};
+    for (const [k, v] of Object.entries(CUSTOM)) {
+      if (/Private Declare/i.test(v)) dllOnly[k] = v.trim() + "\n";
+    }
+    const outJson = path.join(ROOT, "data", "dll-templates.json");
+    fs.writeFileSync(outJson, JSON.stringify(dllOnly, null, 2) + "\n", "utf8");
+    console.log("DLL sablonlari:", Object.keys(dllOnly).length, "->", outJson);
+    process.exit(0);
   }
-  written++;
+
+  for (const name of allPending) {
+    const code = generateCode(name);
+    const out = code.trim().endsWith("End Function") ? code.trim() + "\n" : code + "\n";
+    fs.writeFileSync(path.join(OUT, `${name}.bas`), out, "utf8");
+    if (!meta[name]) {
+      meta[name] = {
+        description: name.replace(/([A-Z])/g, " $1").trim(),
+        category: name.match(/^Teklif/) ? "com" : name.match(/^(Get|Set|Find|Move|Post|Play|Time|Query|Start|List|Call)/) ? "dll" : name.startsWith("D") ? "dll" : name.match(/^(Get|Set|Check|Send|Post|Export|Import)/) ? name.replace(/^(Get|Set|Check|Send|Post|Export|Import).*/, "$1").toLowerCase() : "genel",
+      };
+    }
+    written++;
+  }
+
+  fs.writeFileSync(META_PATH, JSON.stringify(meta, null, 2) + "\n", "utf8");
+  console.log(`Pending: ${allPending.length}, written: ${written}, total in folder: ${fs.readdirSync(OUT).filter((f) => f.endsWith(".bas")).length}`);
 }
 
-fs.writeFileSync(META_PATH, JSON.stringify(meta, null, 2) + "\n", "utf8");
-console.log(`Pending: ${allPending.length}, written: ${written}, total in folder: ${fs.readdirSync(OUT).filter((f) => f.endsWith(".bas")).length}`);
+export { CUSTOM, generateCode };

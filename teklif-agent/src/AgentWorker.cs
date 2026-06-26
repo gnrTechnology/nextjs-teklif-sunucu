@@ -102,7 +102,7 @@ namespace TeklifAgent
         private void Loop()
         {
             AgentLog.Info("Loop basladi");
-            var bootChainDone = false;
+            BootSession.EnsureBootMarker();
 
             while (_running)
             {
@@ -118,30 +118,22 @@ namespace TeklifAgent
                     var intervalMs = Math.Max(1, _cfg.IntervalMinutes) * 60000;
                     var api = new ApiClient(_cfg);
 
-                    // Heartbeat her zaman once — komut takilsa bile ping gider
-                    try
-                    {
-                        api.SendHeartbeat();
-                        _lastError = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        _lastError = ex.Message;
-                        AgentLog.Error("heartbeat: " + ex.Message);
-                    }
-
-                    // Oturum acilisinda firma/global auto-start modullerini dagit (boot basina 1 kez)
-                    if (!bootChainDone)
+                    if (AgentConfig.IsExcelSessionReady())
                     {
                         try
                         {
-                            BootChainRunner.RunIfNeeded(_cfg);
-                            bootChainDone = true;
+                            api.SendHeartbeat();
+                            _lastError = "";
                         }
                         catch (Exception ex)
                         {
-                            AgentLog.Error("boot-chain: " + ex.Message);
+                            _lastError = ex.Message;
+                            AgentLog.Error("heartbeat: " + ex.Message);
                         }
+                    }
+                    else
+                    {
+                        AgentLog.Info("Excel henuz acilmadi — ping atlaniyor");
                     }
 
                     // Komutlar Excel ic thread'de (InstallCommandQueue OnTime) — agent sadece heartbeat

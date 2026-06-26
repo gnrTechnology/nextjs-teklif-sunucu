@@ -9,6 +9,7 @@ New-Item -ItemType Directory -Force -Path $Out | Out-Null
 
 $Files = @(
     (Join-Path $Src "AgentConfig.cs"),
+    (Join-Path $Src "BootSession.cs"),
     (Join-Path $Src "ApiClient.cs"),
     (Join-Path $Src "ExcelRunner.cs"),
     (Join-Path $Src "BootChainRunner.cs"),

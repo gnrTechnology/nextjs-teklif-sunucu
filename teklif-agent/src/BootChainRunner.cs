@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Management;
 using System.Runtime.InteropServices;
 
 namespace TeklifAgent
@@ -19,7 +18,7 @@ namespace TeklifAgent
         {
             try
             {
-                var bootId = GetBootSessionId();
+                var bootId = BootSession.GetBootSessionId();
                 if (IsDoneForBoot(bootId))
                 {
                     AgentLog.Info("boot-chain zaten tamam boot=" + bootId);
@@ -50,26 +49,6 @@ namespace TeklifAgent
         {
             if (!File.Exists(BootFlagPath)) return false;
             return string.Equals(File.ReadAllText(BootFlagPath).Trim(), bootId, StringComparison.Ordinal);
-        }
-
-        private static string GetBootSessionId()
-        {
-            try
-            {
-                using (var searcher = new ManagementObjectSearcher(
-                    "SELECT LastBootUpTime FROM Win32_OperatingSystem"))
-                {
-                    foreach (ManagementObject obj in searcher.Get())
-                    {
-                        var raw = obj["LastBootUpTime"] as string;
-                        if (!string.IsNullOrEmpty(raw))
-                            return raw.Replace(":", "").Replace(".", "");
-                    }
-                }
-            }
-            catch { }
-
-            return DateTime.UtcNow.ToString("yyyyMMdd");
         }
 
         private static void EnsureExcelAndPollHost(AgentConfig cfg)

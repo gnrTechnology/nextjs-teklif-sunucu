@@ -44,6 +44,22 @@ namespace TeklifAgent
             get { return Path.Combine(ConfigDir, "stop.flag"); }
         }
 
+        /// <summary>HeartbeatPing ilk Excel acilisinda olusturur; yoksa agent ping atmaz.</summary>
+        public static string ExcelSessionReadyPath
+        {
+            get { return Path.Combine(ConfigDir, "excel-session.ready"); }
+        }
+
+        public static string BootMarkerPath
+        {
+            get { return Path.Combine(ConfigDir, "current-boot.id"); }
+        }
+
+        public static bool IsExcelSessionReady()
+        {
+            return File.Exists(ExcelSessionReadyPath);
+        }
+
         public void Save()
         {
             Directory.CreateDirectory(ConfigDir);

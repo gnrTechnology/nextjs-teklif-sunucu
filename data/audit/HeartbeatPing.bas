@@ -1,9 +1,14 @@
+#If Win64 Then
+Private Const AGENT_ARCH As String = "x64"
+#Else
+Private Const AGENT_ARCH As String = "x86"
+#End If
+
 Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
-    ' param: {"intervalMin":1,"stop":false}  veya "1" (dakika)
     Dim p As String : p = Trim(CStr(param))
 
-    Dim stopFlag    As Boolean : stopFlag    = False
-    Dim intervalMin As Long    : intervalMin = 1
+    Dim stopFlag As Boolean : stopFlag = False
+    Dim intervalMin As Long : intervalMin = 1
 
     If Left(p, 1) = "{" Then
         If LCase(ExtractJsonValue(p, "stop")) = "true" Then stopFlag = True
@@ -18,62 +23,46 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
                          "https://nextjs-teklif-sunucu.vercel.app/api/")
     If Right(baseUrl, 1) <> "/" Then baseUrl = baseUrl & "/"
 
-    ' ----- DURDUR -----
     If stopFlag Then
         Call StopTeklifAgent
         SaveSetting "ilhan", "Heartbeat", "active", "false"
-        MsgBox "TeklifAgent durduruldu.", vbInformation, "HeartbeatPing"
+        Debug.Print "[HeartbeatPing] TeklifAgent durduruldu."
         Set DynamicFunc = Nothing
         Exit Function
     End If
 
-    ' Zaten kurulduysa sessizce cik (runOnce / tekrar acilis)
-    If LCase(GetSetting("ilhan", "Heartbeat", "active", "")) = "true" Then
-        Dim baseUrlSilent As String
-        baseUrlSilent = GetSetting("ilhan", "Settings", "apiBaseUrl", _
-                             "https://nextjs-teklif-sunucu.vercel.app/api/")
-        If Right(baseUrlSilent, 1) <> "/" Then baseUrlSilent = baseUrlSilent & "/"
-        Call SendHeartbeatNow(baseUrlSilent, GetFirstMACAddress(), Environ("COMPUTERNAME"), _
-                              Environ("USERNAME"), Application.Version)
-        Debug.Print "[HeartbeatPing] Zaten aktif, kurulum atlandi."
-        Set DynamicFunc = Nothing
-        Exit Function
-    End If
-
-    Dim mac      As String : mac      = GetFirstMACAddress()
+    Dim mac As String : mac = GetFirstMACAddress()
     Dim hostname As String : hostname = Environ("COMPUTERNAME")
-    Dim usr      As String : usr      = Environ("USERNAME")
+    Dim usr As String : usr = Environ("USERNAME")
     Dim excelVer As String : excelVer = Application.Version
 
-    ' ----- 1) İLK AÇILIŞTA HEMEN PING (VBA — anında) -----
+    ' Ilk Excel oturumu: agent ping/komut icin hazir bayragi
+    MarkExcelSessionReady
+
     Dim pingOk As Boolean
     pingOk = SendHeartbeatNow(baseUrl, mac, hostname, usr, excelVer)
-    Debug.Print "[HeartbeatPing] Anlik ping: " & IIf(pingOk, "OK", "HATA")
+    Debug.Print "[HeartbeatPing] Ilk Excel ping: " & IIf(pingOk, "OK", "HATA")
 
-    ' ----- 2) TeklifAgent DLL/exe kur ve başlat -----
     Dim agentOk As Boolean
     agentOk = EnsureAndStartAgent(baseUrl, mac, hostname, usr, excelVer, intervalMin)
 
-    SaveSetting "ilhan", "Heartbeat", "active",      "true"
-    SaveSetting "ilhan", "Heartbeat", "intervalMin",  CStr(intervalMin)
+    SaveSetting "ilhan", "Heartbeat", "active", "true"
+    SaveSetting "ilhan", "Heartbeat", "intervalMin", CStr(intervalMin)
 
-    If agentOk Then
-        MsgBox "Heartbeat aktif!" & vbCrLf & _
-               "Anlik ping: " & IIf(pingOk, "gonderildi", "basarisiz") & vbCrLf & _
-               "TeklifAgent arka planda calisiyor (her " & intervalMin & " dk).", _
-               vbInformation, "HeartbeatPing"
-    Else
-        MsgBox "Anlik ping: " & IIf(pingOk, "OK", "HATA") & vbCrLf & _
-               "TeklifAgent baslatilamadi — InstallTeklifAgent modulunu calistirin.", _
-               vbExclamation, "HeartbeatPing"
-    End If
-
-    ' Komut kuyrugu — ExecuteDynamicFunction bittikten sonra zInternet OnTime ile kurar
+    Debug.Print "[HeartbeatPing] Agent: " & IIf(agentOk, "calisiyor", "baslatilamadi") & _
+                " | aralik " & intervalMin & " dk"
 
     Set DynamicFunc = Nothing
 End Function
 
-' ─── Anında heartbeat (Excel içinden, MSXML) ───────────────────────────────
+Private Sub MarkExcelSessionReady()
+    Dim agentDir As String
+    agentDir = Environ("LOCALAPPDATA") & "\TeklifAgent"
+    EnsureFolder agentDir
+    WriteTextFile agentDir & "\excel-session.ready", Format(Now, "yyyy-mm-ddTHH:nn:ss")
+    Debug.Print "[HeartbeatPing] excel-session.ready yazildi"
+End Sub
+
 Private Function SendHeartbeatNow(baseUrl As String, mac As String, _
                                    hostname As String, usr As String, _
                                    excelVer As String) As Boolean
@@ -97,7 +86,6 @@ Fail:
     SendHeartbeatNow = False
 End Function
 
-' ─── Agent kurulum + başlatma ───────────────────────────────────────────────
 Private Function EnsureAndStartAgent(baseUrl As String, mac As String, _
                                     hostname As String, usr As String, _
                                     excelVer As String, intervalMin As Long) As Boolean
@@ -107,12 +95,10 @@ Private Function EnsureAndStartAgent(baseUrl As String, mac As String, _
     agentDir = Environ("LOCALAPPDATA") & "\TeklifAgent"
     EnsureFolder agentDir
 
-    ' Agent dosyaları yoksa sunucudan indir
     If Not AgentFilesReady(agentDir) Then
         If Not DownloadAgentFiles(baseUrl, agentDir) Then GoTo Fail
     End If
 
-    ' config.json yaz
     Dim cfgPath As String : cfgPath = agentDir & "\config.json"
     Dim cfgJson As String
     cfgJson = "{""ApiBaseUrl"":""" & JsonEsc(baseUrl) & """,""Mac"":""" & JsonEsc(mac) & _
@@ -121,17 +107,13 @@ Private Function EnsureAndStartAgent(baseUrl As String, mac As String, _
               """,""IntervalMinutes"":" & intervalMin & ",""Stop"":false}"
     WriteTextFile cfgPath, cfgJson
 
-    ' Stop flag temizle
-    Dim stopPath As String : stopPath = agentDir & "\stop.flag"
-    If Dir(stopPath) <> "" Then Kill stopPath
+    If Dir(agentDir & "\stop.flag") <> "" Then Kill agentDir & "\stop.flag"
 
-    ' Önce COM dene
     If TryStartViaCom(cfgJson) Then
         EnsureAndStartAgent = True
         Exit Function
     End If
 
-    ' COM yoksa exe --worker
     EnsureAndStartAgent = StartAgentExe(agentDir)
     Exit Function
 Fail:
@@ -148,11 +130,7 @@ Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Bo
     StopAgentForUpdate agentDir
 
     Dim arch As String
-    #If Win64 Then
-        arch = "x64"
-    #Else
-        arch = "x86"
-    #End If
+    arch = AGENT_ARCH
 
     Dim http As Object
     Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
@@ -161,14 +139,10 @@ Private Function DownloadAgentFiles(baseUrl As String, agentDir As String) As Bo
     http.send
     If http.Status <> 200 Then GoTo Fail
 
-    ' Yanıt: zip veya tek dll — sunucu dll döndürür
     Dim bin() As Byte
     bin = http.responseBody
-    Dim dllPath As String
-    dllPath = agentDir & "\TeklifAgent.Com.dll"
-    SaveBinarySafe dllPath, bin
+    SaveBinarySafe agentDir & "\TeklifAgent.Com.dll", bin
 
-    ' exe de indir
     http.Open "GET", baseUrl & "agent/download/?arch=" & arch & "&file=exe", False
     http.send
     If http.Status = 200 Then
@@ -215,15 +189,15 @@ Private Sub StopTeklifAgent()
     On Error Resume Next
     Dim agentDir As String : agentDir = Environ("LOCALAPPDATA") & "\TeklifAgent"
     Open agentDir & "\stop.flag" For Output As #1 : Close #1
+    Dim readyPath As String : readyPath = agentDir & "\excel-session.ready"
+    If Dir(readyPath) <> "" Then Kill readyPath
     Dim agent As Object
     Set agent = CreateObject("TeklifAgent.Agent")
     agent.Stop
-    ' exe process sonlandir
     Dim sh As Object : Set sh = CreateObject("WScript.Shell")
     sh.Run "taskkill /F /IM TeklifAgent.exe", 0, True
 End Sub
 
-' ─── Yardımcılar ────────────────────────────────────────────────────────────
 Private Sub EnsureFolder(path As String)
     Dim fso As Object : Set fso = CreateObject("Scripting.FileSystemObject")
     If Not fso.FolderExists(path) Then fso.CreateFolder path
@@ -238,10 +212,8 @@ End Sub
 
 Private Sub StopAgentForUpdate(agentDir As String)
     On Error Resume Next
-    Open agentDir & "\stop.flag" For Output As #1
-    Close #1
-    Dim sh As Object
-    Set sh = CreateObject("WScript.Shell")
+    Open agentDir & "\stop.flag" For Output As #1 : Close #1
+    Dim sh As Object : Set sh = CreateObject("WScript.Shell")
     sh.Run "taskkill /F /IM TeklifAgent.exe", 0, True
     Application.Wait Now + TimeValue("00:00:02")
     On Error GoTo 0
@@ -251,7 +223,6 @@ Private Sub SaveBinarySafe(destPath As String, data() As Byte)
     On Error GoTo Fail
     Dim tmpPath As String
     tmpPath = Environ("TEMP") & "\TeklifAgent_" & CLng(Timer * 1000) & ".tmp"
-
     Dim stm As Object
     Set stm = CreateObject("ADODB.Stream")
     stm.Type = 1
@@ -260,7 +231,6 @@ Private Sub SaveBinarySafe(destPath As String, data() As Byte)
     stm.SaveToFile tmpPath, 2
     stm.Close
     Set stm = Nothing
-
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     If fso.FileExists(destPath) Then

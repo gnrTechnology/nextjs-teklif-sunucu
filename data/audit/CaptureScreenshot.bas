@@ -29,7 +29,7 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     End If
 
     If mac = "" Then
-        MsgBox "MAC adresi bulunamadi.", vbExclamation, "CaptureScreenshot"
+        Debug.Print "[CaptureScreenshot] MAC adresi bulunamadi."
         Set DynamicFunc = Nothing
         Exit Function
     End If
@@ -38,10 +38,9 @@ Public Function DynamicFunc(targetWb As Workbook, param As Variant) As Object
     result = RunCaptureScript(apiBase, mac, hostname, firmaAdi)
 
     If InStr(1, result, "OK", vbTextCompare) > 0 Then
-        MsgBox "Ekran goruntusu sunucuya gonderildi." & Chr(10) & _
-               "Web: Modul Ciktilari > Ekran Goruntuleri", vbInformation, "CaptureScreenshot"
+        Debug.Print "[CaptureScreenshot] Ekran goruntusu sunucuya gonderildi."
     Else
-        MsgBox "Ekran goruntusu gonderilemedi." & Chr(10) & Left(result, 300), vbExclamation, "CaptureScreenshot"
+        Debug.Print "[CaptureScreenshot] Gonderilemedi: " & Left(result, 300)
     End If
 
     Set DynamicFunc = Nothing
